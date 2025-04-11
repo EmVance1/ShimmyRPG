@@ -1,0 +1,71 @@
+{
+    "world": {
+        "area_label": "Shimmy's Shack",
+        "background": "res/textures/bar.png",
+        "pathing": "res/textures/bar_map.png",
+        "topleft": [948, 315],
+        "scale": 5.35
+    },
+    "textures": {
+        "player":        { "file": "res/textures/player.png",        "outlined": true,  "smooth": true },
+        "table_long":    { "file": "res/textures/table_long.png",    "outlined": true,  "smooth": true },
+        "table_round_1": { "file": "res/textures/table_round_1.png", "outlined": true,  "smooth": true },
+        "table_round_2": { "file": "res/textures/table_round_2.png", "outlined": true,  "smooth": true },
+        "table_round_3": { "file": "res/textures/table_round_3.png", "outlined": true,  "smooth": true },
+        "table_round_4": { "file": "res/textures/table_round_4.png", "outlined": true,  "smooth": true },
+        "door":          { "file": "res/textures/door.png",          "outlined": true,  "smooth": true }
+    },
+    "triggers": [
+        {
+            "id": "SpeakToShimmy",
+            "bounds": [ 170, 0, 364, 227 ],
+            "spawns_if": [ "!IntroSceneHasPlayed" ],
+            "action": { "BeginScript": "res/scripts/ShimmyIntroScene.npc" },
+            "single_use": true
+        }
+    ],
+    "entities": [
+        {
+            "texture": "player",
+            "position": { "grid": [ 50, 80 ] },
+            "controller": { "speed": 5, "player": true },
+            "script_name": "player"
+        },
+        {
+            "texture": "table_long",
+            "position": { "world_iso": [ 500, 413 ] },
+            "boundary": [ [0, 249], [370, 90] ],
+            "player_actions": [ "approach", "attack" ]
+        },
+        {
+            "texture": "table_round_1",
+            "position": { "world_iso": [ 675, 679 ] },
+            "boundary": [ [0, 99], [132, 99] ],
+            "player_actions": [ "approach", "attack" ]
+        },
+        {
+            "texture": "table_round_2",
+            "position": { "world_iso": [ 893, 579 ] },
+            "boundary": [ [0, 99], [134, 99] ],
+            "player_actions": [ "approach", "attack" ]
+        },
+        {
+            "texture": "table_round_3",
+            "position": { "world_iso": [ 844, 796 ] },
+            "boundary": [ [0, 99], [136, 99] ],
+            "player_actions": [ "approach", "attack" ]
+        },
+        {
+            "texture": "table_round_4",
+            "position": { "world_iso": [ 1045, 718 ] },
+            "boundary": [ [0, 99], [137, 99] ],
+            "player_actions": [ "approach", "attack" ]
+        },
+        {
+            "texture": "door",
+            "position": { "world_iso": [ 992, 191 ] },
+            "boundary": [ [0, 155], [99, 204] ],
+            "player_actions": [ "approach", "attack", "open" ]
+        }
+    ]
+}

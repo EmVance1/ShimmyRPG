@@ -1,0 +1,13 @@
+{
+    "background_color_1": [ 110, 38, 18 ],
+    "background_color_2": [ 94,  32, 15 ],
+    "background_color_3": [ 82,  28, 13 ],
+    "outline_color_1": [ 200, 130, 0 ],
+    "outline_color_2": [ 255, 255, 255 ],
+    "outline_color_3": [ 0, 0, 0 ],
+    "text_color_1": [ 255, 180, 50 ],
+    "text_color_2": [ 255, 255, 255 ],
+    "text_color_3": [ 0, 0, 0 ],
+    "outline_width": 1,
+    "fontfile": "res/fonts/calibri.ttf"
+}

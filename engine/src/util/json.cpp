@@ -1,0 +1,49 @@
+#include "pch.h"
+#include "json.h"
+
+
+sf::Vector2f json_to_vector2f(const rapidjson::Value& arr) {
+    return sf::Vector2f(arr.GetArray()[0].GetFloat(), arr.GetArray()[1].GetFloat());
+}
+
+sf::Vector2i json_to_vector2i(const rapidjson::Value& arr) {
+    return sf::Vector2i(arr.GetArray()[0].GetInt(), arr.GetArray()[1].GetInt());
+}
+
+sf::Vector2u json_to_vector2u(const rapidjson::Value& arr) {
+    return sf::Vector2u(arr.GetArray()[0].GetUint(), arr.GetArray()[1].GetUint());
+}
+
+
+sf::FloatRect json_to_floatrect(const rapidjson::Value& arr) {
+    return sf::FloatRect(
+        { arr.GetArray()[0].GetFloat(),
+          arr.GetArray()[1].GetFloat() },
+        { arr.GetArray()[2].GetFloat(),
+          arr.GetArray()[3].GetFloat() }
+    );
+}
+
+sf::IntRect json_to_intrect(const rapidjson::Value& arr) {
+    return sf::IntRect(
+        { arr.GetArray()[0].GetInt(),
+          arr.GetArray()[1].GetInt() },
+        { arr.GetArray()[2].GetInt(),
+          arr.GetArray()[3].GetInt() }
+    );
+}
+
+
+sf::Color json_to_color(const rapidjson::Value& arr) {
+    if (arr.GetArray().Size() == 3) {
+        return sf::Color((uint8_t)arr.GetArray()[0].GetUint(),
+                         (uint8_t)arr.GetArray()[1].GetUint(),
+                         (uint8_t)arr.GetArray()[2].GetUint());
+    } else {
+        return sf::Color((uint8_t)arr.GetArray()[0].GetUint(),
+                         (uint8_t)arr.GetArray()[1].GetUint(),
+                         (uint8_t)arr.GetArray()[2].GetUint(),
+                         (uint8_t)arr.GetArray()[3].GetUint());
+    }
+}
+

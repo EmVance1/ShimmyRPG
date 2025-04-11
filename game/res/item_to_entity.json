@@ -1,0 +1,10 @@
+{
+    "basic_healing_potion": {
+        "texture": "basic_healing_potion",
+        "boundary": [ [0, 20], [20, 20] ],
+    },
+    "shimmy_brew_barrel": {
+        "texture": "shimmy_brew_barrell",
+        "boundary": [ [0, 60], [40, 60] ],
+    }
+}

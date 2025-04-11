@@ -1,0 +1,14 @@
+safecode.txt
+game/combat_ideas.txt
+
+archive/bin/
+archive/compile_flags.txt
+editor/bin/
+editor/compile_flags.txt
+engine/bin/
+engine/lib/
+engine/compile_flags.txt
+game/bin/
+game/lib/
+game/compile_flags.txt
+
