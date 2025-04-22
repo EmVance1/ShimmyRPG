@@ -1,0 +1,39 @@
+{
+    "world": {
+        "area_label": "Fountain Road",
+        "background": "res/textures/fountainroad.png",
+        "pathing": "res/textures/fountainroad_map.png",
+        "topleft": [960, 800],
+        "scale": 5.35
+    },
+    "triggers": [
+        {
+            "id": "ShimmyFrontDoor",
+            "bounds": [ 200, 0, 120, 30 ],
+            "active_if": "1",
+            "action": { "GotoArea": { "index": 0, "spawnpos": [ 365, 555 ], "suppress_triggers": true } },
+            "single_use": false
+        }
+    ],
+    "entities": [
+        {
+            "texture": "player_placeholder",
+            "position": { "grid": [ 70, 90 ] },
+            "controller": { "speed": 5 },
+            "ids": { "script": "player", "dialogue": "-" },
+            "tags": [ "player" ]
+        },
+        {
+            "texture": "table_long",
+            "position": { "world_iso": [ 500, 413 ] },
+            "boundary": [ [0, 249], [370, 90] ],
+            "tags": [ "furniture", "wood" ]
+        },
+        {
+            "texture": "door",
+            "position": { "world_iso": [ 1170, 250 ] },
+            "boundary": [ [0, 155], [99, 204] ],
+            "tags": [ "door", "wood", "simple_lock" ]
+        }
+    ]
+}

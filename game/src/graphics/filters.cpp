@@ -151,9 +151,58 @@ sf::Image map_area_threaded(const sf::Image& img, int avoid_radius) {
 }
 
 
-sf::Image gen_clickmap(const sf::Image& tex) {
+
+static void fill_clickmap(sf::Image& result, const sf::Image& tex, const sf::Vector2u& pos, int width) {
+    for (int y = (int)pos.y - width; y < (int)pos.y + width + 1; y++) {
+        for (int x = (int)pos.x - width; x < (int)pos.x + width + 1; x++) {
+            if (!(y == (int)pos.y && x == (int)pos.x) && y >= 0 && y < (int)tex.getSize().y && x >= 0 && x < (int)tex.getSize().x) {
+                const auto diff = sf::Vector2f(sf::Vector2i(pos) - sf::Vector2i(x, y));
+                if (diff.lengthSquared() <= (float)(width * width)) {
+                    result.setPixel({(uint32_t)x, (uint32_t)y}, sf::Color(0, 0, 0));
+                }
+            }
+        }
+    }
+}
+
+
+sf::Image gen_clickmap(const sf::Image& tex, int width) {
     auto result = sf::Image(tex.getSize(), sf::Color::Transparent);
+
+    for (uint32_t y = 0; y < tex.getSize().y; y++) {
+        for (uint32_t x = 0; x < tex.getSize().x; x++) {
+            if (tex.getPixel({x, y}).a > TRANSPARENT_THRESHOLD) {
+                result.setPixel({x, y}, tex.getPixel({x, y}));
+                if (is_border(tex, {(int)x, (int)y})) {
+                    fill_outline(result, tex, {x, y}, width);
+                }
+            }
+        }
+    }
+
     return result;
 }
 
+sf::Image gen_clickmap_threaded(const sf::Image& tex, int width) {
+    auto result = sf::Image(tex.getSize(), sf::Color::Transparent);
+    auto pool = dp::thread_pool(std::thread::hardware_concurrency());
+
+    for (uint32_t i = 0; i < tex.getSize().y; i += 20) {
+        pool.enqueue_detach([=, &tex, &result](){
+            for (uint32_t y = i; y < i + 20 && y < tex.getSize().y; y++) {
+                for (uint32_t x = 0; x < tex.getSize().x; x++) {
+                    if (tex.getPixel({x, y}).a > TRANSPARENT_THRESHOLD) {
+                        result.setPixel({x, y}, tex.getPixel({x, y}));
+                        if (is_border(tex, {(int)x, (int)y})) {
+                            fill_outline(result, tex, {x, y}, width);
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    pool.wait_for_tasks();
+    return result;
+}
 

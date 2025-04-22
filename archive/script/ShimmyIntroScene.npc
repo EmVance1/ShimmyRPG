@@ -1,0 +1,15 @@
+
+lock(player)
+
+wait(1.0)
+
+start_dialogue("ShimmyIntroScene.dia")
+
+set_path(ShimmyPrime, 50, 50)
+
+wait(3.0)
+
+unlock(player)
+
+set_flag("ShimmyIntroScene_HasPlayed", 1)
+

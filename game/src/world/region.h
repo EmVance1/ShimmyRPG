@@ -10,13 +10,20 @@ private:
     std::unordered_map<std::string, sf::Image> m_pathmaps;
     std::unordered_map<std::string, sfu::AlphaMap> m_alphamaps;
     std::vector<Area> m_areas;
+    gui::Style m_guistyle;
     size_t m_active_area = 0;
 
 public:
-    void load_from_file(const std::string& filename);
+    void load_from_folder(const std::string& folder);
 
-    Area& active_area() { return m_areas[m_active_area]; }
+    Area& get_active_area() { return m_areas[m_active_area]; }
+    size_t get_active_area_index() const { return m_active_area; };
+    void set_active_area(size_t index);
 
-    friend class Area;
+    const gui::Style& get_style() const { return m_guistyle; }
+
+    void update_all();
+
+    friend struct Area;
 };
 

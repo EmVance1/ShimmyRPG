@@ -1,0 +1,63 @@
+{
+    "world": {
+        "area_label": "Fountain Road",
+        "background": "res/textures/fountainroad.png",
+        "pathing": "res/textures/fountainroad_map.png",
+        "topleft": [948, 315],
+        "scale": 5.35
+    },
+    "triggers": [
+        {
+            "id": "ShimmyFrontDoor",
+            "bounds": [ 280, 0, 120, 30 ],
+            "active_if": "1",
+            "action": { "GotoArea": { "index": 0, "spawnpos": [ 365, 555 ], "suppress_triggers": true } },
+            "single_use": false
+        }
+    ],
+    "entities": [
+        {
+            "texture": "player_placeholder",
+            "position": { "grid": [ 70, 90 ] },
+            "controller": { "speed": 5 },
+            "ids": { "script": "player", "dialogue": "-" },
+            "tags": [ "player" ]
+        },
+        {
+            "texture": "table_long",
+            "position": { "world_iso": [ 500, 413 ] },
+            "boundary": [ [0, 249], [370, 90] ],
+            "tags": [ "furniture", "wood" ]
+        },
+        {
+            "texture": "table_round_1",
+            "position": { "world_iso": [ 675, 679 ] },
+            "boundary": [ [0, 99], [132, 99] ],
+            "tags": [ "furniture", "wood" ]
+        },
+        {
+            "texture": "table_round_2",
+            "position": { "world_iso": [ 893, 579 ] },
+            "boundary": [ [0, 99], [134, 99] ],
+            "tags": [ "furniture", "wood" ]
+        },
+        {
+            "texture": "table_round_3",
+            "position": { "world_iso": [ 844, 796 ] },
+            "boundary": [ [0, 99], [136, 99] ],
+            "tags": [ "furniture", "wood" ]
+        },
+        {
+            "texture": "table_round_4",
+            "position": { "world_iso": [ 1045, 718 ] },
+            "boundary": [ [0, 99], [137, 99] ],
+            "tags": [ "furniture", "wood" ]
+        },
+        {
+            "texture": "door",
+            "position": { "world_iso": [ 992, 191 ] },
+            "boundary": [ [0, 155], [99, 204] ],
+            "tags": [ "door", "wood", "simple_lock" ]
+        }
+    ]
+}

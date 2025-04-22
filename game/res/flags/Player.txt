@@ -1,0 +1,3 @@
+Player_Origin  0
+Player_Alcohol 0
+

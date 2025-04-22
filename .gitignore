@@ -11,4 +11,6 @@ engine/compile_flags.txt
 game/bin/
 game/lib/
 game/compile_flags.txt
+script_compiler/
+imgui/
 

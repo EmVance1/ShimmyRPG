@@ -1,0 +1,10 @@
+{
+    "library": "nlohmannjson",
+    "minstd" : "c++17",
+    "include": "include/",
+    "all": {
+        "links": [],
+        "binary.debug": "",
+        "binary.release": ""
+    }
+}

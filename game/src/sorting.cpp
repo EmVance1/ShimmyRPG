@@ -2,7 +2,7 @@
 #include "sorting.h"
 
 
-std::vector<Entity*> sort_sprites(std::unordered_map<std::string, Entity>& entities) {
+std::vector<Entity*> sprites_topo_sort(std::unordered_map<std::string, Entity>& entities) {
     auto result = std::vector<Entity*>();
     result.reserve(entities.size());
 

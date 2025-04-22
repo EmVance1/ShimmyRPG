@@ -1,33 +1,41 @@
 #pragma once
 #include <SFML/Graphics.hpp>
+#include <iostream>
 
 
-class PartialLine : public sf::Drawable {
+class PartialLine : public sf::Drawable, public sf::Transformable {
 private:
     std::vector<sf::Vertex> m_data;
-    size_t m_count;
+    size_t m_begin = 0;
+    size_t m_end = 0;
 
 public:
     explicit PartialLine(size_t vertexCount = 0) {
         m_data.resize(vertexCount);
     }
     template<typename T>
-    static PartialLine from_path(const std::vector<sf::Vector2<T>>& points, float scale, const sf::Vector2f& offset) {
+    static PartialLine from_path(const std::vector<sf::Vector2<T>>& points) {
         PartialLine result;
         result.m_data.resize(points.size());
         for (size_t i = 0; i < points.size(); i++) {
-            result.m_data[points.size() - i - 1] = sf::Vertex(sf::Vector2f(points[i]) * scale + offset, sf::Color::White);
+            result.m_data[points.size() - i - 1] = sf::Vertex(sf::Vector2f(points[i]), sf::Color::White);
         }
         return result;
     }
 
+    [[nodiscard]] size_t get_start() const {
+        return m_begin;
+    }
+    void set_start(size_t start) {
+        m_begin = start;
+    }
     [[nodiscard]] size_t get_count() const {
-        return m_count;
+        return m_end - m_begin;;
     }
     void set_count(size_t count) {
-        m_count = count;
+        m_end = m_begin + count;
     }
-    [[nodiscard]] size_t size() const {
+    [[nodiscard]] size_t get_size() const {
         return m_data.size();
     }
     [[nodiscard]] sf::Vertex& operator[](size_t index) {
@@ -38,6 +46,8 @@ public:
     }
     void clear() {
         m_data.clear();
+        m_begin = 0;
+        m_end = 0;
     }
     void resize(size_t vertexCount) {
         m_data.resize(vertexCount);
@@ -47,8 +57,10 @@ public:
     }
 
     void draw(sf::RenderTarget& target, sf::RenderStates states) const override {
-        const auto count = std::min(m_data.size(), m_count);
-        target.draw(m_data.data(), count, sf::PrimitiveType::LineStrip, states);
+        if (m_data.size() == 0 || m_data.size() < m_begin) { return; }
+        const auto count = std::min(m_data.size() - m_begin, get_count());
+        states.transform *= getTransform();
+        target.draw(m_data.data() + m_begin, count, sf::PrimitiveType::LineStrip, states);
     }
 };
 

@@ -1,0 +1,109 @@
+{
+    "world": {
+        "area_label": "Shimmy's Shack",
+        "background": "res/textures/shimmyshack.png",
+        "pathing": "res/textures/shimmyshack_map.png",
+        "topleft": [948, 315],
+        "scale": 5.35
+    },
+    "triggers": [
+        {
+            "id": "SpeakToShimmy",
+            "bounds": [ 170, 0, 364, 350 ],
+            "active_if": "!ShimmyIntroScene_HasPlayed",
+            "action": { "BeginScript": "res/scripts/ShimmyIntroScene.lua" },
+            "single_use": true
+        },
+        {
+            "id": "ShimmyCurfewBlocker",
+            "bounds": [ 315, 535, 115, 40 ],
+            "active_if": "Ademmar_CurfewInPlace",
+            "action": { "Popup": "There is a curfew in place. It is unwise to go outside." },
+            "single_use": false
+        },
+        {
+            "id": "ShimmyFrontDoor",
+            "bounds": [ 315, 535, 115, 40 ],
+            "active_if": "!Ademmar_CurfewInPlace",
+            "action": { "GotoArea": { "index": 1, "spawnpos": [ 260, 20 ], "suppress_triggers": true } },
+            "single_use": false
+        }
+    ],
+    "entities": [
+        {
+            "texture": "player_placeholder",
+            "position": { "grid": [ 60, 90 ] },
+            "controller": { "speed": 5 },
+            "ids": { "script": "player", "dialogue": "-" },
+            "tags": [ "player" ]
+        },
+        {
+            "texture": "npc_friendly_placeholder",
+            "position": { "grid": [ 60, 10 ] },
+            "controller": { "speed": 4 },
+            "ids": { "script": "ShimmyPrime", "dialogue": "Shimmy" },
+            "tags": [ "npc", "trader", "shimmy_staff" ],
+            "dialogue": { "file": "res/scripts/ShimmyDialogue.dia" }
+        },
+        {
+            "texture": "npc_friendly_placeholder",
+            "position": { "grid": [ 90, 55 ] },
+            "controller": { "speed": 4 },
+            "ids": { "script": "BrianPrime", "dialogue": "Brian" },
+            "tags": [ "npc", "shimmy_customer" ],
+            "dialogue": { "file": "res/scripts/BrianDialogue.dia" }
+        },
+        {
+            "texture": "npc_neutral_placeholder",
+            "position": { "grid": [ 90, 25 ] },
+            "controller": { "speed": 4 },
+            "ids": { "script": "Sally", "dialogue": "Sally" },
+            "tags": [ "npc" ],
+            "dialogue": { "line": "This curfew nonsense is a bad fucking joke..." }
+        },
+        {
+            "texture": "npc_neutral_placeholder",
+            "position": { "grid": [ 80, 25 ] },
+            "controller": { "speed": 4 },
+            "ids": { "script": "Bill", "dialogue": "Bill" },
+            "tags": [ "npc" ],
+            "dialogue": { "line": "Shimmy really knows how to brew a strong drink." }
+        },
+        {
+            "texture": "table_long",
+            "position": { "world_iso": [ 500, 413 ] },
+            "boundary": [ [0, 260], [370, 105] ],
+            "tags": [ "furniture", "wood" ]
+        },
+        {
+            "texture": "table_round_1",
+            "position": { "world_iso": [ 675, 679 ] },
+            "boundary": [ [-10, 99], [142, 99] ],
+            "tags": [ "furniture", "wood" ]
+        },
+        {
+            "texture": "table_round_2",
+            "position": { "world_iso": [ 893, 579 ] },
+            "boundary": [ [-10, 99], [144, 99] ],
+            "tags": [ "furniture", "wood" ]
+        },
+        {
+            "texture": "table_round_3",
+            "position": { "world_iso": [ 844, 796 ] },
+            "boundary": [ [-10, 99], [146, 99] ],
+            "tags": [ "furniture", "wood" ]
+        },
+        {
+            "texture": "table_round_4",
+            "position": { "world_iso": [ 1045, 718 ] },
+            "boundary": [ [-10, 99], [147, 99] ],
+            "tags": [ "furniture", "wood" ]
+        },
+        {
+            "texture": "door",
+            "position": { "world_iso": [ 992, 191 ] },
+            "boundary": [ [0, 155], [99, 204] ],
+            "tags": [ "door", "wood", "locked", "simple_lock" ]
+        }
+    ]
+}

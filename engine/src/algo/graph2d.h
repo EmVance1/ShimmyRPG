@@ -31,10 +31,10 @@ protected:
 
 public:
     SpatialGraph2d() : m_size(0, 0), m_is_grid(false) {}
-    SpatialGraph2d(const sf::Vector2i& size) : m_size(size), m_is_grid(true) {}
+    SpatialGraph2d(const sf::Vector2u& size) : m_size(size), m_is_grid(true) {}
     SpatialGraph2d(const SpatialGraph2d& other) : m_graph(other.m_graph), m_size(other.m_size), m_is_grid(other.m_is_grid) {}
 
-    static SpatialGraph2d create_grid(const sf::Vector2i& size);
+    static SpatialGraph2d create_grid(const sf::Vector2u& size);
 
     void remove_vertex(const sf::Vector2i& id);
     void set_vertex_weight(const sf::Vector2i& id, float weight);

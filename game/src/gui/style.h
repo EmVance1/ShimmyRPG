@@ -14,6 +14,8 @@ struct Style {
     sf::Color text_color_1 = sf::Color(0, 0, 0);
     sf::Color text_color_2 = sf::Color(120, 120, 120);
     sf::Color text_color_3 = sf::Color(255, 255, 255);
+    sf::Texture background_texture;
+    bool textured = false;
     float outline_width = 0.f;
     sf::Font font;
 
@@ -23,13 +25,13 @@ struct Style {
     bool load_from_file(const std::string& filename);
 };
 
+enum class Alignment {
+    TopLeft,    CenterLeft,  BottomLeft,
+    TopCenter,  Center,      BottomCenter,
+    TopRight,   CenterRight, BottomRight,
+};
 
 struct Position {
-    enum class Alignment {
-        TopLeft,    CenterLeft,  BottomLeft,
-        TopCenter,  Center,      BottomCenter,
-        TopRight,   CenterRight, BottomRight,
-    };
     Alignment alignment;
     sf::Vector2f offset;
 

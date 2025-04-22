@@ -1,5 +1,6 @@
 {
     "project": "editor",
     "cpp": "c++20",
-    "dependencies": [ "../../_Libs/SFML-3.static", "../../sfutil" ]
+    "pch": "pch.h",
+    "dependencies": [ "../../_Libs/SFML-3.static", "../../sfutil", "../imgui", "nlohmannjson" ]
 }

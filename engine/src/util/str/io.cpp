@@ -10,10 +10,9 @@ std::string read_to_string(const std::string& filename) {
     f.seekg(0, std::ios::beg);
 
     auto buf = std::string("");
-    buf.resize(size + 1);
+    buf.resize(size);
     f.read(buf.data(), size);
     f.close();
-    buf[size] = '\0';
     return buf;
 }
 

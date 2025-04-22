@@ -1,0 +1,9 @@
+
+entry(default) = BrianPrime: [ "Oh hello there. Fancy a game of cards?" ] => {
+    "Sure."               => v01,
+    "Another time maybe." => v02,
+}
+
+v01 = BrianPrime: [ "Good lad." ]     => exit
+v02 = BrianPrime: [ "What a shame." ] => exit
+

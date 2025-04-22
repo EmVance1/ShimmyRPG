@@ -6,15 +6,23 @@ class PathTracker {
 private:
     const SpatialGraph2d* grid = nullptr;
     SpatialGraph2d::Path path;
+    std::optional<sf::Vector2i> path_queue;
     size_t path_index = 0;
     float path_prog = 0.f;
-    std::optional<sf::Vector2i> path_queue;
+    float path_trim = 0.f;
+    float path_clamp = std::numeric_limits<float>::infinity();
 
     sf::Vector2f position;
     float speed = 0.1f;
     float scale = 1.f;
 
     bool override_stop = false;
+
+private:
+    void trim_path_radial();
+    void trim_path_walked();
+    void clamp_path_radial();
+    void clamp_path_walked();
 
 public:
     constexpr static float MAX_PENALTY = 100000.f;
@@ -39,12 +47,25 @@ public:
     bool set_path_grid(const sf::Vector2i& goal);
     bool set_path_world(const sf::Vector2f& goal);
 
+    void trim_path_radial_grid(float dist);
+    void trim_path_radial_world(float dist);
+
+    void trim_path_walked_grid(float dist);
+    void trim_path_walked_world(float dist);
+
+    void clamp_path_radial_grid(float max);
+    void clamp_path_radial_world(float max);
+
+    void clamp_path_walked_grid(float max);
+    void clamp_path_walked_world(float max);
+
     const SpatialGraph2d::Path& get_active_path() const { return path; }
     size_t get_current_index() const { return path_index; }
-    size_t get_inverse_index() const { return path.size() - path_index - 1; }
+    size_t get_inverse_index() const { return path.size() - 1 - path_index; }
 
     bool is_moving() const { return !path.empty() && !(path_index == path.size() - 1) && !override_stop; }
-    void stop() { override_stop = true; }
+    void pause() { override_stop = true; }
+    void stop() { override_stop = true; path.clear(); path_index = 0; path_prog = 0; }
     void start() { override_stop = false; }
 
     void progress();

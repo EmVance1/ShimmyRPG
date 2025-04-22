@@ -16,6 +16,13 @@ float SortBoundary::get_threshold(const sf::Vector2f& point) const {
     return m * point.x + q;
 }
 
+sf::Vector2f SortBoundary::get_center_of_mass() const {
+    if (is_point) {
+        return left;
+    } else {
+        return left + (right - left) * 0.5f;
+    }
+}
 
 
 Entity::Entity(
@@ -30,14 +37,14 @@ Entity::Entity(
     p_texture(&texture),
     p_outline(&outline),
     m_id(id),
-    m_sprite(texture),
+    m_sprite(texture, {1, 1}),
     m_tracker(pathfinder, pathscale),
     m_is_character(_is_character)
 {
     if (m_is_character) {
         m_sprite.setOrigin(sf::Vector2f((float)texture.getSize().x * 0.5f, (float)texture.getSize().y - 10.f));
         m_boundary.is_point = true;
-        m_collider.radius = 30.f;
+        m_collider.radius = 10.f;
     } else {
         m_boundary.is_point = false;
     }
@@ -48,7 +55,7 @@ const std::string& Entity::get_id() const {
     return m_id;
 }
 
-const sf::Sprite& Entity::get_sprite() const {
+const sfu::AnimatedSprite& Entity::get_sprite() const {
     return m_sprite;
 }
 
@@ -61,7 +68,7 @@ SortBoundary Entity::get_boundary() const {
 }
 
 sf::FloatRect Entity::get_AABB() const {
-    return m_sprite.getGlobalBounds();
+    return { m_sprite.getPosition() - m_sprite.getOrigin(), m_sprite.getSize() };
 }
 
 sfu::FloatCircle Entity::get_trigger_collider() const {
@@ -79,6 +86,10 @@ void Entity::set_position(const sf::Vector2f& position, const sf::Transform& car
     m_collider.position = position;
 }
 
+void Entity::set_animation(size_t index) {
+    m_sprite.setRow((uint32_t)index);
+}
+
 
 void Entity::set_sorting_boundary(const sf::Vector2f& pos) {
     m_boundary.left = pos;
@@ -92,25 +103,17 @@ void Entity::set_sorting_boundary(const sf::Vector2f& left, const sf::Vector2f& 
 }
 
 
-bool Entity::set_tracker_target(const sf::Vector2f& cartesian) {
-    return m_tracker.set_path_world(cartesian);
+void Entity::set_dialogue(const std::string& filename) {
+    m_dialogue_file = filename;
 }
 
-sf::Vector2f Entity::get_tracker_target() const {
-    return m_tracker.get_target_position_world();
-}
-
-void Entity::set_tracker_speed(float speed) {
-    m_tracker.set_speed(speed);
-}
-
-bool Entity::is_moving() const {
-    return m_tracker.is_moving();
+const std::string& Entity::get_dialogue() const {
+    return m_dialogue_file;
 }
 
 
 bool Entity::contains(const sf::Vector2f& point) const {
-    if (!m_sprite.getGlobalBounds().contains(point)) {
+    if (!get_AABB().contains(point)) {
         return false;
     }
     const auto inv = m_sprite.getInverseTransform().transformPoint(point);
@@ -124,10 +127,10 @@ bool Entity::contains(const sf::Vector2f& point) const {
 void Entity::set_hovered(bool hovered) {
     if (hovered) {
         m_is_hovered = true;
-        m_sprite.setTexture(*p_outline);
+        m_sprite.setAnimation(*p_outline, {1, 1});
     } else {
         m_is_hovered = false;
-        m_sprite.setTexture(*p_texture);
+        m_sprite.setAnimation(*p_texture, {1, 1});
     }
 }
 

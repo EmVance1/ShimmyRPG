@@ -2,13 +2,16 @@
 #include "flags.h"
 
 
-bool operator==(const FlagMod& a, const FlagMod& b) {
+bool operator==(const FlagModifier& a, const FlagModifier& b) {
     if (a.index() != b.index()) {
         return false;
     }
-    if (const auto a_inc = std::get_if<FlagInc>(&a)) {
-        const auto b_inc = std::get<FlagInc>(b);
-        return a_inc->dif == b_inc.dif;
+    if (const auto a_add = std::get_if<FlagAdd>(&a)) {
+        const auto b_add = std::get<FlagAdd>(b);
+        return a_add->dif == b_add.dif;
+    } else if (const auto a_sub = std::get_if<FlagSub>(&a)) {
+        const auto b_sub = std::get<FlagSub>(b);
+        return a_sub->dif == b_sub.dif;
     } else {
         const auto a_set = std::get<FlagSet>(a);
         const auto b_set = std::get<FlagSet>(b);
@@ -16,19 +19,17 @@ bool operator==(const FlagMod& a, const FlagMod& b) {
     }
 }
 
-std::ostream& operator<<(std::ostream& stream, const FlagMod& p) {
-    if (const auto inc = std::get_if<FlagInc>(&p)) {
-        if (inc->dif >= 0) {
-            return stream << "+" << std::to_string(inc->dif);
-        } else {
-            return stream << std::to_string(inc->dif);
-        }
+std::ostream& operator<<(std::ostream& stream, const FlagModifier& p) {
+    if (const auto add = std::get_if<FlagAdd>(&p)) {
+        return stream << "Add(" << std::to_string(add->dif) << ")";
+    } else if (const auto sub = std::get_if<FlagSub>(&p)) {
+        return stream << "Sub(" << std::to_string(sub->dif) << ")";
     } else {
         const auto set = std::get<FlagSet>(p);
-        return stream << std::to_string(set.val);
+        return stream << "Set(" << std::to_string(set.val) << ")";
     }
 }
 
 
-std::unordered_map<std::string, int> FlagTable::cache;
+std::unordered_map<std::string, uint32_t> FlagTable::cache;
 

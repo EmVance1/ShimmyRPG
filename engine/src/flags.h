@@ -1,35 +1,41 @@
+#pragma once
 #include <iostream>
 #include <variant>
 #include <unordered_map>
 
 
-struct FlagInc{ int dif; };
+struct FlagAdd{ int dif; };
+struct FlagSub{ int dif; };
 struct FlagSet{ int val; };
-using FlagMod = std::variant<FlagInc, FlagSet>;
+using FlagModifier = std::variant<FlagAdd, FlagSub, FlagSet>;
 
 
-bool operator==(const FlagMod& a, const FlagMod& b);
-std::ostream& operator<<(std::ostream& stream, const FlagMod& p);
+bool operator==(const FlagModifier& a, const FlagModifier& b);
+std::ostream& operator<<(std::ostream& stream, const FlagModifier& p);
 
 
 class FlagTable {
 private:
-    static std::unordered_map<std::string, int> cache;
+    static std::unordered_map<std::string, uint32_t> cache;
 
-private:
-    static void change_flag(const std::string& key, const FlagMod& mod) {
-        if (const auto inc = std::get_if<FlagInc>(&mod)) {
-            cache[key] += inc->dif;
+public:
+    static void change_flag(const std::string& key, const FlagModifier& mod) {
+        if (const auto add = std::get_if<FlagAdd>(&mod)) {
+            cache[key] += add->dif;
+        } else if (const auto sub = std::get_if<FlagSub>(&mod)) {
+            if (sub->dif >= (int)cache[key]) {
+                cache[key] = 0;
+            } else {
+                cache[key] -= sub->dif;
+            }
         } else {
-            const auto set = std::get<FlagSet>(mod);
-            cache[key] = set.val;
+            cache[key] = std::get<FlagSet>(mod).val;
         }
     }
-    static void set_flag(const std::string& key, const int& val) {
+    static void set_flag(const std::string& key, int val) {
         cache[key] = val;
     }
-
-    static int get_flag(const std::string& key) {
+    static uint32_t get_flag(const std::string& key) {
         return cache[key];
     }
 };
