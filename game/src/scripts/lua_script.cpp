@@ -43,7 +43,8 @@ void LuaScript::load_from_file(const std::string& filename, bool autoplay) {
         auto& asfunc = m_coroutines[Callback::OnStart];
         if (autoplay && asfunc.thread) {
             int retvalcount = 1;
-            if (lua_resume(asfunc.thread, m_state, 0, &retvalcount) == LUA_YIELD) {
+            if (lua_resume(asfunc.thread, 0) == LUA_YIELD) {
+            // if (lua_resume(asfunc.thread, m_state, 0, &retvalcount) == LUA_YIELD) {
                 asfunc.resumable = true;
             } else {
                 asfunc.resumable = false;
@@ -77,7 +78,8 @@ void LuaScript::update() {
     if (asfunc.thread && asfunc.delay <= 0) {
         lua_pushnumber(asfunc.thread, deltatime);
         int retvalcount = 1;
-        if (lua_resume(asfunc.thread, m_state, 1, &retvalcount) == LUA_YIELD) {
+        if (lua_resume(asfunc.thread, 1) == LUA_YIELD) {
+        // if (lua_resume(asfunc.thread, m_state, 1, &retvalcount) == LUA_YIELD) {
             asfunc.resumable = true;
         } else {
             asfunc.resumable = false;
@@ -90,7 +92,8 @@ void LuaScript::update() {
         co.delay -= deltatime;
         if (co.delay <= 0 && co.resumable) {
             int retvalcount = 1;
-            if (lua_resume(co.thread, m_state, 0, &retvalcount) == LUA_YIELD) {
+            if (lua_resume(co.thread, 0) == LUA_YIELD) {
+            // if (lua_resume(co.thread, m_state, 0, &retvalcount) == LUA_YIELD) {
                 co.resumable = true;
             } else {
                 co.resumable = false;

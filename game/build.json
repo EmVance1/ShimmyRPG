@@ -2,5 +2,5 @@
     "project": "dungeon",
     "cpp": "c++20",
     "pch": "pch.h",
-    "dependencies": [ "../../_Libs/SFML-3.static", "../../_Libs/lua", "../../sfutil", "../engine", "thread_pool", "rapidjson" ]
+    "dependencies": [ "../../_Libs/SFML-3.static", "../../_Libs/luajit", "../../sfutil", "../engine", "thread_pool", "rapidjson" ]
 }

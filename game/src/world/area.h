@@ -25,10 +25,10 @@ struct Area {
     const std::string id;
     std::string area_label;
 
-    SpatialGraph2d pathfinder;
-    sf::Vector2f topleft;
-    sf::Sprite background;
-    float scale;
+    const SpatialGraph2d pathfinder;
+    const sf::Sprite background;
+    const sf::Vector2f topleft;
+    const float scale;
 
     const sf::Transform cart_to_iso;
     const sf::Transform iso_to_cart;
@@ -37,7 +37,7 @@ struct Area {
     std::unordered_map<std::string, std::string> script_name_LUT;
     std::unordered_map<std::string, std::string> dialogue_name_LUT;
     std::vector<Entity*> sorted_entities;
-    std::string player_id;
+    std::string player_id = "";
 
     std::vector<Trigger> triggers;
     bool suppress_triggers = false;
@@ -66,13 +66,14 @@ struct Area {
     AreaDebugView debugger;
 #endif
 
-    Area(const std::string& id, Region* parent_region, const sf::Vector2f& topleft, float pathscale);
+    Area(const std::string& id, Region* parent_region, const sf::Vector2f& topleft, float scale);
 
-    void init(const rapidjson::Document& doc);
+    void load_prefab(const rapidjson::Value& prefabs, const rapidjson::Value& value, const std::string& name);
+    void load_entity(const rapidjson::Value& prefabs, const rapidjson::Value& value);
+
+    void init(const rapidjson::Value& prefabs, const rapidjson::Document& doc);
     void set_mode(GameMode mode, bool dramatic);
 
-    void set_player_position(const sf::Vector2f& position, bool suppress_triggers);
-    void sort_sprites();
     Entity& get_player();
     void update_motionguide();
     void handle_trigger(const Trigger& trigger);

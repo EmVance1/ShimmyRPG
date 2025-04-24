@@ -9,15 +9,6 @@
 #include "gui/gui.h"
 
 
-void Area::set_player_position(const sf::Vector2f& position, bool _suppress_triggers) {
-    entities[player_id].set_position(position, cart_to_iso);
-    suppress_triggers = _suppress_triggers;
-}
-
-void Area::sort_sprites() {
-    sorted_entities = sprites_topo_sort(entities);
-}
-
 Entity& Area::get_player() {
     return entities[player_id];
 }
@@ -37,9 +28,7 @@ void Area::update_motionguide() {
 }
 
 void Area::handle_trigger(const Trigger& trigger) {
-    if (!flagexpr_from_string(trigger.condition).evaluate()) {
-        return;
-    }
+    if (!flagexpr_from_string(trigger.condition).evaluate()) { return; }
 
     switch (trigger.action.index()) {
     case 0: {
@@ -56,7 +45,8 @@ void Area::handle_trigger(const Trigger& trigger) {
     case 3: {
         const auto gotoarea = std::get<GotoArea>(trigger.action);
         p_region->set_active_area(gotoarea.index);
-        p_region->get_active_area().set_player_position(gotoarea.spawnpos, gotoarea.suppress_triggers);
+        p_region->get_active_area().get_player().set_position(gotoarea.spawnpos, cart_to_iso);
+        p_region->get_active_area().suppress_triggers = gotoarea.suppress_triggers;
         break; }
     }
 }
@@ -132,6 +122,10 @@ void Area::update() {
         break;
     }
 
+    update_motionguide();
+
+    sorted_entities = sprites_topo_sort(entities);
+
     if (cinematic_timer > 0.f) {
         cinematic_timer -= Time::deltatime();
         if (gamemode == GameMode::Cinematic) {
@@ -143,18 +137,15 @@ void Area::update() {
         }
     }
 
-    update_motionguide();
-
 #ifdef DEBUG
     debugger.update();
 #endif
 }
 
 void Area::render(sf::RenderTarget& target) {
-    target.clear(sf::Color(50, 50, 50));
-
     target.setView(camera);
 
+    target.clear(sf::Color(50, 50, 50));
     target.draw(background);
 
 #ifdef DEBUG
@@ -171,7 +162,6 @@ void Area::render(sf::RenderTarget& target) {
     for (const auto& e : sorted_entities) {
         target.draw(e->get_sprite());
     }
-
 
 #ifdef DEBUG
     debugger.render(target);

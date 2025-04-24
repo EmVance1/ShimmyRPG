@@ -1,4 +1,3 @@
-#include "imgui/imgui-SFML.h"
 #include "imgui/imgui.h"
 #include "pch.h"
 #include "iso_math.h"
@@ -12,6 +11,7 @@ namespace nl = nlohmann;
 
 
 struct Level {
+    std::string texfile;
     sf::Sprite background;
     std::unordered_map<std::string, Entity> entities;
     std::vector<Trigger> triggers;
@@ -28,6 +28,11 @@ enum class Layer {
     PathMap = 1 << 2,
 };
 
+enum class EditMode {
+    Object = 1 << 0,
+    Paint  = 1 << 1,
+};
+
 
 Level load_level_file(const std::string& filename) {
     auto area_file = std::ifstream(filename);
@@ -36,6 +41,7 @@ Level load_level_file(const std::string& filename) {
     TextureMap::load_texture("background", area["world"]["background"]);
     auto level = Level(TextureMap::get_texture("background"));
     auto _ = level.pathmap.resize({1920, 1080});
+    level.texfile = area["world"]["background"];
     level.topleft = json_to_vector2f(area["world"]["topleft"]);
     level.scale = area["world"]["scale"];
     for (const auto& e : area["entities"]) {
@@ -54,6 +60,7 @@ void save_level_file(const std::string& filename, const Level& level) {
 
     json["world"]["topleft"] = vector2f_to_json(level.topleft);
     json["world"]["scale"] = level.scale;
+    json["world"]["background"] = level.texfile;
 
     json["entities"] = nm::json::array();
     for (const auto& [_, e] : level.entities) {
@@ -65,7 +72,7 @@ void save_level_file(const std::string& filename, const Level& level) {
     }
 
     auto file = std::ofstream("res/world/" + filename + ".json");
-    file << json;
+    file << json.dump(2);
 }
 
 
@@ -73,7 +80,7 @@ void save_level_file(const std::string& filename, const Level& level) {
 void EntityMenu(Entity& e, bool is_active, const sf::Vector2f& topleft, float scale) {
     ImGui::Begin("Entity Editor", &is_active, ImGuiWindowFlags_MenuBar);
 
-    ImGui::InputFloat2("position", (float*)&e.position.pos);
+    ImGui::DragFloat2("position", (float*)&e.position.pos);
 
     Position last = e.position;
     if (ImGui::RadioButton("grid",      (int*)&e.position.mode, (int)Position::Mode::Grid) ||
@@ -101,8 +108,8 @@ void TriggerMenu(Trigger& t, bool is_active, bool& delete_active) {
     ImGui::Begin("Trigger Editor", &is_active, ImGuiWindowFlags_MenuBar);
 
     ImGui::InputText("name", &t.id);
-    ImGui::InputFloat2("position", (float*)&t.bounds.position);
-    ImGui::InputFloat2("size",     (float*)&t.bounds.size);
+    ImGui::DragFloat2("position", (float*)&t.bounds.position);
+    ImGui::DragFloat2("size",     (float*)&t.bounds.size);
     ImGui::InputText("active_if", &t.active_if);
 
     ImGui::End();
@@ -119,9 +126,10 @@ int main() {
     auto _ = ImGui::SFML::Init(window);
     ImGui::GetIO().Fonts->Clear();
     ImGui::GetIO().Fonts->AddFontFromFileTTF("res/fonts/calibri.ttf", 20.f);
+    ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     _ = ImGui::SFML::UpdateFontTexture();
 
-    // auto active_layer = Layer::Trigger;
+    auto active_layer = EditMode::Object;
     auto visible_layers = (int)Layer::Trigger|(int)Layer::Entity|(int)Layer::PathMap;
 
     auto texture_file = std::ifstream("res/world/ademmar/textures.json");
@@ -132,14 +140,16 @@ int main() {
 
     auto level = load_level_file("res/world/ademmar/fountainroad.json");
 
-    const auto grid_to_cart = grid_to_cartesian(level.scale);
-    const auto cart_to_iso  = cartesian_to_isometric(level.topleft);
-    const auto grid_to_iso  = grid_to_isometric(level.topleft, level.scale);
-    const auto iso_to_cart  = isometric_to_cartesian(level.topleft);
-    const auto iso_to_grid  = isometric_to_grid(level.topleft, level.scale);
+    auto grid_to_cart = grid_to_cartesian(level.scale);
+    auto cart_to_iso  = cartesian_to_isometric(level.topleft);
+    auto grid_to_iso  = grid_to_isometric(level.topleft, level.scale);
+    auto iso_to_cart  = isometric_to_cartesian(level.topleft);
+    auto iso_to_grid  = isometric_to_grid(level.topleft, level.scale);
 
     auto bg_map    = sf::Sprite(TextureMap::get_texture("pathmap"));
 
+    Trigger* active_trigger = nullptr;
+    Entity* active_entity = nullptr;
     Trigger* selected_trigger = nullptr;
     Entity* selected_entity = nullptr;
     bool mouse_held = false;
@@ -157,39 +167,48 @@ int main() {
             window.close();
             ImGui::SFML::Shutdown();
             return 0;
+        } else if (auto kyp = event->getIf<sf::Event::KeyPressed>()) {
+            if (kyp->code == sf::Keyboard::Key::E && kyp->control) {
+                show_export = true;
+            }
         } else if (auto mbp = event->getIf<sf::Event::MouseButtonPressed>()) {
+            selected_trigger = nullptr;
+            selected_entity = nullptr;
             mouse_held = true;
             clickdiff = sf::Vector2f(0, 0);
-            const auto cart = iso_to_cart.transformPoint(sf::Vector2f(mbp->position));
-            for (auto& t : level.triggers) {
-                t.outline.setOutlineThickness(1.f);
-                if (t.bounds.contains(cart)) {
-                    if (selected_trigger) {
-                        selected_trigger->outline.setOutlineThickness(1.f);
+            if (active_layer == EditMode::Object) {
+                const auto cart = iso_to_cart.transformPoint(sf::Vector2f(mbp->position));
+                for (auto& t : level.triggers) {
+                    if (t.bounds.contains(cart)) {
+                        if (active_trigger) {
+                            active_trigger->outline.setOutlineThickness(1.f);
+                        }
+                        if (selected_entity) {
+                            selected_entity->outline.setOutlineThickness(1.f);
+                            selected_entity = nullptr;
+                        }
+                        selected_trigger = &t;
+                        active_trigger = &t;
+                        clickdiff = cart - t.bounds.position;
+                        t.outline.setOutlineThickness(2.f);
                     }
-                    if (selected_entity) {
-                        selected_entity->outline.setOutlineThickness(1.f);
-                        selected_entity = nullptr;
-                    }
-                    selected_trigger = &t;
-                    clickdiff = cart - t.bounds.position;
-                    t.outline.setOutlineThickness(2.f);
                 }
-            }
-            for (auto& [_, e] : level.entities) {
-                e.outline.setOutlineThickness(1.f);
-                if (e.outline.getGlobalBounds().contains(sf::Vector2f(mbp->position))) {
-                    if (selected_trigger) {
-                        selected_trigger->outline.setOutlineThickness(1.f);
-                        selected_trigger = nullptr;
+                for (auto& [_, e] : level.entities) {
+                    if (e.outline.getGlobalBounds().contains(sf::Vector2f(mbp->position))) {
+                        if (active_entity) {
+                            active_entity->outline.setOutlineThickness(1.f);
+                        }
+                        if (selected_trigger) {
+                            selected_trigger->outline.setOutlineThickness(1.f);
+                            selected_trigger = nullptr;
+                        }
+                        selected_entity = &e;
+                        active_entity = &e;
+                        clickdiff = sf::Vector2f(mbp->position) - e.outline.getPosition();
+                        e.outline.setOutlineThickness(2.f);
                     }
-                    if (selected_entity) {
-                        selected_entity->outline.setOutlineThickness(1.f);
-                    }
-                    selected_entity = &e;
-                    clickdiff = sf::Vector2f(mbp->position) - e.outline.getPosition();
-                    e.outline.setOutlineThickness(2.f);
                 }
+            } else {
             }
         } else if (auto mmv = event->getIf<sf::Event::MouseMoved>()) {
             if (mouse_held) {
@@ -213,19 +232,25 @@ int main() {
             }
         } else if (auto mbr = event->getIf<sf::Event::MouseButtonReleased>()) {
             mouse_held = false;
-        } else if (auto kyp = event->getIf<sf::Event::KeyPressed>()) {
-            if (kyp->code == sf::Keyboard::Key::E && kyp->control) {
-                show_export = true;
-            }
         }
 
         ImGui::SFML::Update(window, deltatime);
 
+        // ImGuiID dockspace_id = ImGui::GetID("dockspace");
+        // ImGui::DockSpaceOverViewport(dockspace_id, ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
+
         bool delete_active_trigger = false;
-        if (selected_entity) {
-            EntityMenu(*selected_entity, true, level.topleft, level.scale);
-        } else if (selected_trigger) {
-            TriggerMenu(*selected_trigger, true, delete_active_trigger);
+        if (active_entity) {
+            EntityMenu(*active_entity, true, level.topleft, level.scale);
+        } else {
+            auto temp = Entity("player_placeholder");
+            EntityMenu(temp, true, level.topleft, level.scale);
+        }
+        if (active_trigger) {
+            TriggerMenu(*active_trigger, true, delete_active_trigger);
+        } else {
+            auto temp = Trigger();
+            TriggerMenu(temp, true, delete_active_trigger);
         }
 
         if (show_export) {
@@ -237,6 +262,14 @@ int main() {
             }
             ImGui::End();
         }
+        ImGui::Begin("world");
+        if (ImGui::DragFloat2("top left", (float*)&level.topleft)) {
+            cart_to_iso  = cartesian_to_isometric(level.topleft);
+            grid_to_iso  = grid_to_isometric(level.topleft, level.scale);
+            iso_to_cart  = isometric_to_cartesian(level.topleft);
+            iso_to_grid  = isometric_to_grid(level.topleft, level.scale);
+        }
+        ImGui::End();
 
         window.clear();
         window.draw(level.background);

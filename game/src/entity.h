@@ -30,10 +30,10 @@ struct SortBoundary {
 
 class Entity {
 private:
-    sfu::AlphaMap m_bitmap;
-    const sf::Texture* p_texture = nullptr;
-    const sf::Texture* p_outline = nullptr;
     std::string m_id;
+    const sfu::TextureAtlas* p_texture = nullptr;
+    const sfu::TextureAtlas* p_outline = nullptr;
+    sfu::AlphaMap m_bitmap;
     sfu::AnimatedSprite m_sprite;
     PathTracker m_tracker;
     SortBoundary m_boundary;
@@ -44,14 +44,14 @@ private:
     std::string m_dialogue_file;
 
 public:
-    static const sf::Texture& default_texture() { static sf::Texture tex(sf::Image({1, 1}, sf::Color::White)); return tex; }
+    static const sfu::TextureAtlas& default_texture() { static sfu::TextureAtlas tex(sf::Image({1, 1}, sf::Color::White), {1, 1}); return tex; }
 
 public:
-    Entity() : m_sprite(Entity::default_texture(), {1, 1}), m_tracker(nullptr, 1.f) {}
-    Entity(const sfu::AlphaMap& bitmap,
-           const sf::Texture& texture,
-           const sf::Texture& outline,
-           const std::string& id,
+    Entity() : m_sprite(Entity::default_texture()), m_tracker(nullptr, 1.f) {}
+    Entity(const std::string& id,
+           const sfu::TextureAtlas& texture,
+           const sfu::TextureAtlas& outline,
+           const sfu::AlphaMap& bitmap,
            const SpatialGraph2d* pathfinder,
            float pathscale, bool character);
 

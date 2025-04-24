@@ -1,6 +1,6 @@
 #include "pch.h"
-#include "area.h"
-#include "region.h"
+#include "world/area.h"
+#include "world/region.h"
 #include "util/str.h"
 #include "util/json.h"
 #include "algo/iso_map.h"
@@ -14,20 +14,20 @@
 const sf::RenderWindow* Area::window = nullptr;
 
 
-Area::Area(const std::string& _id, Region* parent_region, const sf::Vector2f& _topleft, float pathscale)
+Area::Area(const std::string& _id, Region* parent_region, const sf::Vector2f& _topleft, float _scale)
     : p_region(parent_region),
     id(_id),
     pathfinder(load_grid_from_image(parent_region->m_pathmaps.at(id + "_pathmap"))),
+    background(parent_region->m_textures.at(id + "_texture")),
     topleft(_topleft),
-    background(parent_region->m_textures.at(id + "_background_texture")),
-    scale(pathscale),
+    scale(_scale),
     cart_to_iso(cartesian_to_isometric(topleft)),
     iso_to_cart(isometric_to_cartesian(topleft)),
     camera(sf::FloatRect({0, 0}, {1920, 1080})),
     gui(gui::Position::topleft({0, 0}), sf::Vector2f(window->getSize()), parent_region->get_style())
 
 #ifdef DEBUG
-    , debugger(id, pathscale)
+    , debugger(id, scale)
 #endif
 {
     motionguide_square.setFillColor(sf::Color::Transparent);
@@ -46,75 +46,14 @@ Area::Area(const std::string& _id, Region* parent_region, const sf::Vector2f& _t
 }
 
 
-void Area::init(const rapidjson::Document& doc) {
-    bool has_player = false;
-
+void Area::init(const rapidjson::Value& prefabs, const rapidjson::Document& doc) {
     area_label = std::string(doc["world"].GetObject()["area_label"].GetString());
 
     for (const auto& e : doc["entities"].GetArray()) {
-        const auto e_id = Uuid::generate_v4();
-        const auto tex = e.GetObject()["texture"].GetString();
-        entities[e_id] = Entity(
-                p_region->m_alphamaps.at(tex + std::string("_map")),
-                p_region->m_textures.at(tex + std::string("_texture")),
-                p_region->m_textures.at(tex + std::string("_outline")),
-                e_id, &pathfinder, scale, e.GetObject().HasMember("controller")
-            );
-        auto& entity = entities[e_id];
-        const auto pos = e.GetObject()["position"].GetObject();
-        if (pos.HasMember("grid")) {
-            entity.set_position(json_to_vector2f(pos["grid"]) * scale, cart_to_iso);
-        } else if (pos.HasMember("world_iso")) {
-            entity.set_sprite_position(json_to_vector2f(pos["world_iso"]));
-        }
-        if (e.GetObject().HasMember("controller")) {
-            const auto con = e.GetObject()["controller"].GetObject();
-            entity.get_tracker().set_speed(con["speed"].GetFloat());
-        }
-        if (e.GetObject().HasMember("boundary")) {
-            const auto bry = e.GetObject()["boundary"].GetArray();
-            entity.set_sorting_boundary(json_to_vector2f(bry[0]), json_to_vector2f(bry[1]));
-        } else {
-            entity.set_sorting_boundary(sf::Vector2f(0, 0));
-        }
-        if (e.GetObject().HasMember("ids")) {
-            const auto ids = e.GetObject()["ids"].GetObject();
-            script_name_LUT[ids["script"].GetString()] = e_id;
-            dialogue_name_LUT[ids["script"].GetString()] = ids["dialogue"].GetString();
-        }
-        if (e.GetObject().HasMember("dialogue")) {
-            const auto dia = e.GetObject()["dialogue"].GetObject();
-            if (dia.HasMember("file")) {
-                entity.set_dialogue(dia["file"].GetString());
-            } else {
-                entity.set_dialogue(dia["line"].GetString());
-            }
-        }
-        auto taglist = std::unordered_set<std::string>();
-        for (const auto& tag : e.GetObject()["tags"].GetArray()) {
-            taglist.emplace(tag.GetString());
-        }
-
-        if (taglist.contains("player")) {
-            if (has_player) {
-                std::cout << "CANNOT HAVE 2 PLAYER CONTROLLERS\n";
-            } else {
-                player_id = e_id;
-                has_player = true;
-            }
-        } else {
-            entity.get_actions().emplace_back(MoveToAction{});
-            entity.get_actions().emplace_back(AttackAction{});
-            if (taglist.contains("npc"))         { entity.get_actions().emplace_back(SpeakAction{}); }
-            if (taglist.contains("door"))        { entity.get_actions().emplace_back(OpenDoorAction{}); }
-            if (taglist.contains("chest"))       { entity.get_actions().emplace_back(OpenInvAction{}); }
-            if (taglist.contains("simple_lock")) { entity.get_actions().emplace_back(LockpickAction{}); }
-            if (taglist.contains("carryable"))   { entity.get_actions().emplace_back(PickUpAction{}); }
-        }
+        load_entity(prefabs, e);
     }
 
-
-    if (!has_player) {
+    if (player_id == "") {
         std::cout << "MUST HAVE PLAYER CONTROLLER\n";
     }
 

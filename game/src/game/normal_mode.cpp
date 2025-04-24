@@ -43,6 +43,7 @@ void NormalMode::speak_action(const std::string& target, const std::string& spee
 }
 
 
+
 void NormalMode::handle_event(const sf::Event& event) {
     if (p_area->gui.handle_event(event)) {
         if (auto mbp = event.getIf<sf::Event::MouseButtonPressed>()) {
@@ -125,8 +126,6 @@ void NormalMode::update() {
         speak_action(act.target, act.speech);
         p_area->queued = {};
     }
-
-    p_area->sort_sprites();
 
     p_area->camera.update(Time::deltatime());
     p_area->camera.setTrackingPos(p_area->get_player().get_sprite().getPosition());

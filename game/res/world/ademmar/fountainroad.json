@@ -24,13 +24,13 @@
             "tags": [ "player" ]
         },
         {
-            "texture": "table_long",
+            "texture": "table_simple_wooden_long",
             "position": { "world_iso": [ 500, 413 ] },
             "boundary": [ [0, 249], [370, 90] ],
             "tags": [ "furniture", "wood" ]
         },
         {
-            "texture": "door",
+            "texture": "door_simple_wooden_single",
             "position": { "world_iso": [ 1170, 250 ] },
             "boundary": [ [0, 155], [99, 204] ],
             "tags": [ "door", "wood", "simple_lock" ]

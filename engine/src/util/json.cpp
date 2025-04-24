@@ -47,3 +47,15 @@ sf::Color json_to_color(const rapidjson::Value& arr) {
     }
 }
 
+
+rapidjson::Document load_json_from_file(const std::string& filename) {
+    FILE* fp = nullptr;
+    fopen_s(&fp, filename.c_str(), "rb");
+    char readBuffer[65536];
+    rapidjson::FileReadStream is(fp, readBuffer, sizeof(readBuffer));
+    rapidjson::Document doc;
+    doc.ParseStream(is);
+    fclose(fp);
+    return doc;
+}
+

@@ -70,8 +70,6 @@ void CinematicMode::update() {
         }
     }
 
-    p_area->sort_sprites();
-
     p_area->camera.update(Time::deltatime());
     // p_area->camera.setTrackingPos(p_area->get_player().get_sprite().getPosition());
 

@@ -21,3 +21,7 @@
 #include <functional>
 #include <stdexcept>
 
+#include <rapidjson/rapidjson.h>
+#include <rapidjson/filereadstream.h>
+#include <rapidjson/document.h>
+

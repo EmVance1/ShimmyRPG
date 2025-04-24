@@ -1,14 +1,11 @@
 {
     "textures": {
-        "player_placeholder":       { "file": "res/textures/player_placeholder.png",       "outlined": true, "smooth": true, "looped": false },
-        "npc_neutral_placeholder":  { "file": "res/textures/npc_neutral_placeholder.png",  "outlined": true, "smooth": true, "looped": false },
-        "npc_friendly_placeholder": { "file": "res/textures/npc_friendly_placeholder.png", "outlined": true, "smooth": true, "looped": false },
-        "table_long":    { "file": "res/textures/table_long.png",    "outlined": true, "smooth": true, "looped": false },
-        "table_round_1": { "file": "res/textures/table_round_1.png", "outlined": true, "smooth": true, "looped": false },
-        "table_round_2": { "file": "res/textures/table_round_2.png", "outlined": true, "smooth": true, "looped": false },
-        "table_round_3": { "file": "res/textures/table_round_3.png", "outlined": true, "smooth": true, "looped": false },
-        "table_round_4": { "file": "res/textures/table_round_4.png", "outlined": true, "smooth": true, "looped": false },
-        "door":          { "file": "res/textures/door.png",          "outlined": true, "smooth": true, "looped": false }
+        "player_placeholder":        { "file": "res/textures/player_placeholder.png",       "outlined": true, "smooth": true, "dims": [1, 1] },
+        "npc_neutral_placeholder":   { "file": "res/textures/npc_neutral_placeholder.png",  "outlined": true, "smooth": true, "dims": [1, 1] },
+        "npc_friendly_placeholder":  { "file": "res/textures/npc_friendly_placeholder.png", "outlined": true, "smooth": true, "dims": [1, 1] },
+        "table_simple_wooden_long":  { "file": "res/textures/table_long.png",               "outlined": true, "smooth": true, "dims": [1, 1] },
+        "table_simple_wooden_round": { "file": "res/textures/table_round_1.png",            "outlined": true, "smooth": true, "dims": [1, 1] },
+        "door_simple_wooden_single": { "file": "res/textures/door.png",                     "outlined": true, "smooth": true, "dims": [1, 1] }
     },
     "areas": [
         {

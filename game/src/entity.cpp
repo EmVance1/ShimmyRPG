@@ -26,23 +26,23 @@ sf::Vector2f SortBoundary::get_center_of_mass() const {
 
 
 Entity::Entity(
-        const sfu::AlphaMap& bitmap,
-        const sf::Texture& texture,
-        const sf::Texture& outline,
         const std::string& id,
+        const sfu::TextureAtlas& texture,
+        const sfu::TextureAtlas& outline,
+        const sfu::AlphaMap& bitmap,
         const SpatialGraph2d* pathfinder,
-        float pathscale, bool _is_character
-    )
-    : m_bitmap(bitmap),
+        float pathscale, bool is_character
+    ) :
+    m_id(id),
     p_texture(&texture),
     p_outline(&outline),
-    m_id(id),
-    m_sprite(texture, {1, 1}),
+    m_bitmap(bitmap),
+    m_sprite(texture),
     m_tracker(pathfinder, pathscale),
-    m_is_character(_is_character)
+    m_is_character(is_character)
 {
     if (m_is_character) {
-        m_sprite.setOrigin(sf::Vector2f((float)texture.getSize().x * 0.5f, (float)texture.getSize().y - 10.f));
+        m_sprite.setOrigin(sf::Vector2f((float)texture.getCellSize().x * 0.5f, (float)texture.getCellSize().y - 10.f));
         m_boundary.is_point = true;
         m_collider.radius = 10.f;
     } else {
@@ -127,10 +127,10 @@ bool Entity::contains(const sf::Vector2f& point) const {
 void Entity::set_hovered(bool hovered) {
     if (hovered) {
         m_is_hovered = true;
-        m_sprite.setAnimation(*p_outline, {1, 1});
+        m_sprite.setAnimation(*p_outline);
     } else {
         m_is_hovered = false;
-        m_sprite.setAnimation(*p_texture, {1, 1});
+        m_sprite.setAnimation(*p_texture);
     }
 }
 

@@ -13,4 +13,5 @@ sf::IntRect json_to_intrect(const rapidjson::Value& arr);
 
 sf::Color json_to_color(const rapidjson::Value& arr);
 
+rapidjson::Document load_json_from_file(const std::string& filename);
 

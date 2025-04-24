@@ -1,63 +1,60 @@
 {
-    "world": {
-        "area_label": "Fountain Road",
-        "background": "res/textures/fountainroad.png",
-        "pathing": "res/textures/fountainroad_map.png",
-        "topleft": [948, 315],
-        "scale": 5.35
+  "world": {
+    "background": "res/textures/fountainroad.png",
+    "scale": 5.35,
+    "topleft": [ 962.0, 253.0 ]
+  },
+  "triggers": [
+    {
+      "active_if": "1",
+      "bounds": [ 182.5, -1.49, 111.0, 29.0 ],
+      "id": "ShimmyFrontDoor",
+      "single_use": false
+    }
+  ],
+  "entities": [
+    {
+      "ids": { "dialogue": "", "script": "" },
+      "position": { "world_iso": [ 893.0, 579.0 ] },
+      "tags": [ "furniture", "wood" ],
+      "texture": "table_round_2"
     },
-    "triggers": [
-        {
-            "id": "ShimmyFrontDoor",
-            "bounds": [ 280, 0, 120, 30 ],
-            "active_if": "1",
-            "action": { "GotoArea": { "index": 0, "spawnpos": [ 365, 555 ], "suppress_triggers": true } },
-            "single_use": false
-        }
-    ],
-    "entities": [
-        {
-            "texture": "player_placeholder",
-            "position": { "grid": [ 70, 90 ] },
-            "controller": { "speed": 5 },
-            "ids": { "script": "player", "dialogue": "-" },
-            "tags": [ "player" ]
-        },
-        {
-            "texture": "table_long",
-            "position": { "world_iso": [ 500, 413 ] },
-            "boundary": [ [0, 249], [370, 90] ],
-            "tags": [ "furniture", "wood" ]
-        },
-        {
-            "texture": "table_round_1",
-            "position": { "world_iso": [ 675, 679 ] },
-            "boundary": [ [0, 99], [132, 99] ],
-            "tags": [ "furniture", "wood" ]
-        },
-        {
-            "texture": "table_round_2",
-            "position": { "world_iso": [ 893, 579 ] },
-            "boundary": [ [0, 99], [134, 99] ],
-            "tags": [ "furniture", "wood" ]
-        },
-        {
-            "texture": "table_round_3",
-            "position": { "world_iso": [ 844, 796 ] },
-            "boundary": [ [0, 99], [136, 99] ],
-            "tags": [ "furniture", "wood" ]
-        },
-        {
-            "texture": "table_round_4",
-            "position": { "world_iso": [ 1045, 718 ] },
-            "boundary": [ [0, 99], [137, 99] ],
-            "tags": [ "furniture", "wood" ]
-        },
-        {
-            "texture": "door",
-            "position": { "world_iso": [ 992, 191 ] },
-            "boundary": [ [0, 155], [99, 204] ],
-            "tags": [ "door", "wood", "simple_lock" ]
-        }
-    ]
+    {
+      "ids": { "dialogue": "", "script": "" },
+      "position": { "world_iso": [ 844.0, 796.0 ] },
+      "tags": [ "furniture", "wood" ],
+      "texture": "table_round_3"
+    },
+    {
+      "controller": { "speed": 5.0 },
+      "ids": { "dialogue": "-", "script": "player" },
+      "position": { "grid": [ 70.0, 90.0 ] },
+      "tags": [ "player" ],
+      "texture": "player_placeholder"
+    },
+    {
+      "ids": { "dialogue": "", "script": "" },
+      "position": { "world_iso": [ 500.0, 413.0 ] },
+      "tags": [ "furniture", "wood" ],
+      "texture": "table_long"
+    },
+    {
+      "ids": { "dialogue": "", "script": "" },
+      "position": { "world_iso": [ 1149.0, 236.0 ] },
+      "tags": [ "door", "wood", "simple_lock" ],
+      "texture": "door"
+    },
+    {
+      "ids": { "dialogue": "", "script": "" },
+      "position": { "world_iso": [ 675.0, 679.0 ] },
+      "tags": [ "furniture", "wood" ],
+      "texture": "table_round_1"
+    },
+    {
+      "ids": { "dialogue": "", "script": "" },
+      "position": { "world_iso": [ 1045.0, 718.0 ] },
+      "tags": [ "furniture", "wood" ],
+      "texture": "table_round_4"
+    }
+  ]
 }

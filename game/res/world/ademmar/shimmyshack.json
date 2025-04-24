@@ -70,40 +70,31 @@
             "dialogue": { "line": "Shimmy really knows how to brew a strong drink." }
         },
         {
-            "texture": "table_long",
+            "texture": "table_simple_wooden_long",
             "position": { "world_iso": [ 500, 413 ] },
             "boundary": [ [0, 260], [370, 105] ],
             "tags": [ "furniture", "wood" ]
         },
         {
-            "texture": "table_round_1",
-            "position": { "world_iso": [ 675, 679 ] },
-            "boundary": [ [-10, 99], [142, 99] ],
-            "tags": [ "furniture", "wood" ]
+            "prefab": "table_simple_wooden_round",
+            "position": { "world_iso": [ 675, 679 ] }
         },
         {
-            "texture": "table_round_2",
-            "position": { "world_iso": [ 893, 579 ] },
-            "boundary": [ [-10, 99], [144, 99] ],
-            "tags": [ "furniture", "wood" ]
+            "prefab": "table_simple_wooden_round",
+            "position": { "world_iso": [ 893, 579 ] }
         },
         {
-            "texture": "table_round_3",
-            "position": { "world_iso": [ 844, 796 ] },
-            "boundary": [ [-10, 99], [146, 99] ],
-            "tags": [ "furniture", "wood" ]
+            "prefab": "table_simple_wooden_round",
+            "position": { "world_iso": [ 844, 796 ] }
         },
         {
-            "texture": "table_round_4",
-            "position": { "world_iso": [ 1045, 718 ] },
-            "boundary": [ [-10, 99], [147, 99] ],
-            "tags": [ "furniture", "wood" ]
+            "prefab": "table_simple_wooden_round",
+            "position": { "world_iso": [ 1045, 718 ] }
         },
         {
-            "texture": "door",
+            "prefab": "door_simple_wooden_single",
             "position": { "world_iso": [ 992, 191 ] },
-            "boundary": [ [0, 155], [99, 204] ],
-            "tags": [ "door", "wood", "locked", "simple_lock" ]
+            "tags": [ "locked", "-y" ]
         }
     ]
 }

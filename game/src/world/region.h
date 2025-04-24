@@ -1,11 +1,13 @@
 #pragma once
 #include <unordered_map>
 #include <string>
+#include <sfutil/sfutil.h>
 #include "area.h"
 
 
 class Region {
 private:
+    std::unordered_map<std::string, sfu::TextureAtlas> m_atlases;
     std::unordered_map<std::string, sf::Texture> m_textures;
     std::unordered_map<std::string, sf::Image> m_pathmaps;
     std::unordered_map<std::string, sfu::AlphaMap> m_alphamaps;
