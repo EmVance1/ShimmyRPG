@@ -2,39 +2,23 @@
 #include "time/deltatime.h"
 #include "world/region.h"
 #include "world/area.h"
-#include "flags.h"
+#include "io/load_flags.h"
 
 
 #ifdef DEBUG
     #define VIDEO_MODE sf::VideoMode({1920, 1080})
     #define SCREEN_MODE sf::Style::Default
 #else
-    #define VIDEO_MODE sf::VideoMode::getFullscreenModes()[0]
+    #define VIDEO_MODE sf::VideoMode::getDesktopMode()
+    // #define SCREEN_MODE sf::Style::Default
     #define SCREEN_MODE sf::State::Fullscreen
 #endif
 
 
-void load_flags() {
-    FlagTable::set_flag("default", 1);
-
-    auto flag_file = std::ifstream("res/flags/flags.txt");
-    auto line = std::string("");
-    while (std::getline(flag_file, line)) {
-        if (line.empty() || (line[0] == '/' && line[1] == '/')) {
-            continue;
-        }
-        auto stream = std::stringstream(line);
-        auto f = std::string("");
-        auto v = 0u;
-        stream >> f >> v;
-        FlagTable::set_flag(f, v);
-    }
-}
-
-
 int main() {
-    auto window = sf::RenderWindow(sf::VideoMode({1920, 1080}), "Shimmy", SCREEN_MODE);
+    auto window = sf::RenderWindow(VIDEO_MODE, "Shimmy", SCREEN_MODE);
     // window.setVerticalSyncEnabled(true);
+    window.setFramerateLimit(120);
     window.setPosition({0, 0});
     Area::window = &window;
 
@@ -66,7 +50,6 @@ int main() {
                     region.set_active_area(temp);
                 }
             }
-
 
             region.get_active_area().handle_event(*event);
         }

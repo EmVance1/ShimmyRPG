@@ -5,10 +5,9 @@
 #include "util/json.h"
 #include "algo/iso_map.h"
 #include "algo/graph2d.h"
-#include "uuid.h"
-#include "gui/gui.h"
 #include "trigger.h"
 #include "scripts/lua_script.h"
+#include "gui/gui.h"
 
 
 const sf::RenderWindow* Area::window = nullptr;
@@ -17,13 +16,11 @@ const sf::RenderWindow* Area::window = nullptr;
 Area::Area(const std::string& _id, Region* parent_region, const sf::Vector2f& _topleft, float _scale)
     : p_region(parent_region),
     id(_id),
-    pathfinder(load_grid_from_image(parent_region->m_pathmaps.at(id + "_pathmap"))),
-    background(parent_region->m_textures.at(id + "_texture")),
     topleft(_topleft),
     scale(_scale),
     cart_to_iso(cartesian_to_isometric(topleft)),
     iso_to_cart(isometric_to_cartesian(topleft)),
-    camera(sf::FloatRect({0, 0}, {1920, 1080})),
+    camera(sf::FloatRect({0, 0}, sf::Vector2f(window->getSize()))),
     gui(gui::Position::topleft({0, 0}), sf::Vector2f(window->getSize()), parent_region->get_style())
 
 #ifdef DEBUG
@@ -49,13 +46,15 @@ Area::Area(const std::string& _id, Region* parent_region, const sf::Vector2f& _t
 void Area::init(const rapidjson::Value& prefabs, const rapidjson::Document& doc) {
     area_label = std::string(doc["world"].GetObject()["area_label"].GetString());
 
+    background.load_from_json(doc["background"]);
+
+    pathfinder = load_grid_from_image(p_region->m_pathmaps.at(id + "_pathmap"));
+
     for (const auto& e : doc["entities"].GetArray()) {
         load_entity(prefabs, e);
     }
 
-    if (player_id == "") {
-        std::cout << "MUST HAVE PLAYER CONTROLLER\n";
-    }
+    if (player_id == "") { std::cout << "error parsing entities: must have player controller\n"; throw std::exception(); }
 
     for (const auto& e : doc["triggers"].GetArray()) {
         auto& t = triggers.emplace_back();
@@ -81,16 +80,16 @@ void Area::init(const rapidjson::Value& prefabs, const rapidjson::Document& doc)
             try {
                 const auto expr = flagexpr_from_string(cond);
             } catch (const std::exception& e) {
-                std::cout << "active_if: " << e.what() << "\n";
+                std::cout << "error parsing 'active_if': " << e.what() << "\n";
             }
             t.condition = cond;
         }
     }
 
-    camera.move({0.f, 100.f});
     camera.zoom(0.9f);
     camera.setTrackingOffset(50.f);
-    camera.setTrackingMode(sfu::Camera::ControlMode::TrackAhead);
+    camera.setCenter(get_player().get_sprite().getPosition(), true);
+    camera.setTrackingMode(sfu::Camera::ControlMode::TrackBehind);
 
     gui.set_style(p_region->get_style());
     gui.set_size(sf::Vector2f(window->getSize()));

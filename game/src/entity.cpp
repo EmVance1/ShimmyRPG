@@ -68,7 +68,7 @@ SortBoundary Entity::get_boundary() const {
 }
 
 sf::FloatRect Entity::get_AABB() const {
-    return { m_sprite.getPosition() - m_sprite.getOrigin(), m_sprite.getSize() };
+    return { m_sprite.getPosition() - m_sprite.getOrigin(), (sf::Vector2f)m_sprite.getTexture().getSize() };
 }
 
 sfu::FloatCircle Entity::get_trigger_collider() const {

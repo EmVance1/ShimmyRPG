@@ -40,8 +40,6 @@ void Region::load_from_folder(const std::string& folder) {
     const auto prefabs = load_json_from_file("res/prefabs.json");
     for (const auto& area : doc.GetObject()["areas"].GetArray()) {
         const auto area_file = std::string(area.GetObject()["file"].GetString());
-        auto _ = m_textures[area_file + "_texture"].loadFromFile(area.GetObject()["background"].GetString());
-        m_textures[area_file + "_texture"].setSmooth(true);
         m_pathmaps[area_file + "_pathmap"] = map_area(sf::Image(area.GetObject()["pathing"].GetString()), 3);
         m_areas.emplace_back(area_file, this, json_to_vector2f(area.GetObject()["topleft"]), area.GetObject()["scale"].GetFloat());
     }
@@ -50,6 +48,7 @@ void Region::load_from_folder(const std::string& folder) {
         const auto area_file = std::string(area.GetObject()["file"].GetString());
         const auto area_doc = load_json_from_file(folder + area_file + ".json");;
         m_areas[i].init(prefabs, area_doc);
+        m_areas[i].set_mode(GameMode::Sleep, false);
         i++;
     }
 }

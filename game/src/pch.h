@@ -19,6 +19,7 @@
 #include <functional>
 #include <stdexcept>
 #include <chrono>
+#include <filesystem>
 
 #include <SFML/Graphics.hpp>
 #include <SFML/Window.hpp>
@@ -35,4 +36,6 @@
 #include <thread_pool/thread_pool.h>
 
 #include <sfutil/sfutil.h>
+
+namespace std { namespace fs = filesystem; }
 

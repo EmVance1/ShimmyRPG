@@ -1,11 +1,13 @@
 {
     "world": {
         "area_label": "Shimmy's Shack",
-        "background": "res/textures/shimmyshack.png",
         "pathing": "res/textures/shimmyshack_map.png",
         "topleft": [948, 315],
         "scale": 5.35
     },
+    "background": [
+        { "file": "res/textures/shimmyshack.png", "bounds": [ 390, 0, 1115, 1080 ] }
+    ],
     "triggers": [
         {
             "id": "SpeakToShimmy",

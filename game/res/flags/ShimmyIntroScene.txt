@@ -1,2 +1,3 @@
-HasPlayed 0
+HasPlayed false
+IsActive  true
 

@@ -26,13 +26,20 @@ public:
 
 protected:
     std::unordered_map<sf::Vector2i, Vertex> m_graph;
-    const sf::Vector2i m_size;
-    const bool m_is_grid;
+    sf::Vector2i m_size;
+    bool m_is_grid;
 
 public:
     SpatialGraph2d() : m_size(0, 0), m_is_grid(false) {}
     SpatialGraph2d(const sf::Vector2u& size) : m_size(size), m_is_grid(true) {}
     SpatialGraph2d(const SpatialGraph2d& other) : m_graph(other.m_graph), m_size(other.m_size), m_is_grid(other.m_is_grid) {}
+
+    SpatialGraph2d& operator=(const SpatialGraph2d& other) {
+        m_graph = other.m_graph;
+        m_size = other.m_size;
+        m_is_grid = other.m_is_grid;
+        return *this;
+    }
 
     static SpatialGraph2d create_grid(const sf::Vector2u& size);
 

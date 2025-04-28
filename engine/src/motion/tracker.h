@@ -19,10 +19,13 @@ private:
     bool override_stop = false;
 
 private:
+    void prune();
     void trim_path_radial();
     void trim_path_walked();
     void clamp_path_radial();
     void clamp_path_walked();
+
+    void init_path();
 
 public:
     constexpr static float MAX_PENALTY = 100000.f;

@@ -1,0 +1,24 @@
+// world constants
+Nomad     0
+Twinvayne 1
+Dovara    2
+Xudovara  3
+Obsidian  4
+Saffarin  5
+Vertebrum 6
+
+// world variables
+Ademmar_CurfewInPlace true
+
+// player
+Player_Origin  0
+Player_Coin    100
+Player_Alcohol 0
+
+// shimmy
+Shimmy_Approval 50
+
+// intro scene
+ShimmyIntroScene_IsActive  true
+ShimmyIntroScene_HasPlayed false
+

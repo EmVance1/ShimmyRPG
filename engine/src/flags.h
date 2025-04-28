@@ -32,7 +32,7 @@ public:
             cache[key] = std::get<FlagSet>(mod).val;
         }
     }
-    static void set_flag(const std::string& key, int val) {
+    static void set_flag(const std::string& key, uint32_t val) {
         cache[key] = val;
     }
     static uint32_t get_flag(const std::string& key) {

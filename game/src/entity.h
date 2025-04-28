@@ -31,6 +31,7 @@ struct SortBoundary {
 class Entity {
 private:
     std::string m_id;
+    std::string m_script_id;
     const sfu::TextureAtlas* p_texture = nullptr;
     const sfu::TextureAtlas* p_outline = nullptr;
     sfu::AlphaMap m_bitmap;
@@ -40,6 +41,7 @@ private:
     sfu::FloatCircle m_collider;
     bool m_is_character = true;
     bool m_is_hovered = false;
+    std::unordered_set<std::string> m_tags;
     std::vector<ContextAction> m_actions;
     std::string m_dialogue_file;
 
@@ -55,6 +57,7 @@ public:
            const SpatialGraph2d* pathfinder,
            float pathscale, bool character);
 
+
     const std::string& get_id() const;
     const sfu::AnimatedSprite& get_sprite() const;
     SortBoundary get_boundary() const;
@@ -64,10 +67,12 @@ public:
     void set_sprite_position(const sf::Vector2f& position);
     void set_animation(size_t index);
     void set_position(const sf::Vector2f& position, const sf::Transform& cart_to_iso);
-    // void get_position(const sf::Transform& cart_to_iso);
 
     void set_sorting_boundary(const sf::Vector2f& pos);
     void set_sorting_boundary(const sf::Vector2f& left, const sf::Vector2f& right);
+
+    void set_script_id(const std::string& id) { m_script_id = id; }
+    const std::string& get_script_id() const { return m_script_id; }
 
     void set_dialogue(const std::string& filename);
     const std::string& get_dialogue() const;
@@ -77,6 +82,9 @@ public:
 
     const std::vector<ContextAction>& get_actions() const { return m_actions; }
     std::vector<ContextAction>& get_actions() { return m_actions; }
+
+    const std::unordered_set<std::string>& get_tags() const { return m_tags; }
+    std::unordered_set<std::string>& get_tags() { return m_tags; }
 
     bool is_character() const { return m_is_character; }
 

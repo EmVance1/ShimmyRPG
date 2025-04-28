@@ -9,13 +9,13 @@
 
 
 void NormalMode::move_to_action(const std::string& target) {
-    const auto thresh = 10.f;
-    const auto& other = p_area->entities[target];
-    if (other.is_character()) {
-        p_area->get_player().get_tracker().set_path_world(other.get_tracker().get_position_world());
+    const auto& t = p_area->entities.at(target);
+    const auto thresh = 15.f;
+    if (t.is_character()) {
+        p_area->get_player().get_tracker().set_path_world(t.get_tracker().get_position_world());
         p_area->get_player().get_tracker().trim_path_radial_grid(thresh);
     } else {
-        const auto abs = other.get_boundary().get_center_of_mass();
+        const auto abs = t.get_boundary().get_center_of_mass();
         const auto pos = p_area->iso_to_cart.transformPoint(abs);
         p_area->get_player().get_tracker().set_path_world(pos);
     }
@@ -23,16 +23,16 @@ void NormalMode::move_to_action(const std::string& target) {
 }
 
 void NormalMode::speak_action(const std::string& target, const std::string& speech) {
-    const float thresh = 10.f;
+    const auto& t = p_area->entities.at(target);
+    const float thresh = 15.f;
     if (sf::Vector2f(p_area->get_player().get_tracker().get_position_grid()
-                - p_area->entities[target].get_tracker().get_position_grid()).lengthSquared() < (thresh * thresh * 1.2f)) {
+                         - t.get_tracker().get_position_grid()).lengthSquared() < (thresh * thresh * 1.2f)) {
         if (speech.ends_with(".dia")) {
             const auto graph = dialogue_from_file(speech);
             p_area->begin_dialogue(graph);
             p_area->set_mode(GameMode::Cinematic, false);
         } else {
-            // p_area->dialogue_name_LUT.at(p_area->script_name_LUT.at(target))
-            const auto graph = dialogue_from_line("NOPE", speech);
+            const auto graph = dialogue_from_line(t.get_script_id(), speech);
             p_area->begin_dialogue(graph);
             p_area->set_mode(GameMode::Cinematic, false);
         }
@@ -99,15 +99,14 @@ void NormalMode::handle_event(const sf::Event& event) {
         for (Entity* e : p_area->sorted_entities) {
             e->set_hovered(false);
         }
-        auto top = top_contains(p_area->sorted_entities, mapped);
-        if (top) {
+        if (auto top = top_contains(p_area->sorted_entities, mapped)) {
             top->set_hovered(true);
         }
     } else if (auto scrl = event.getIf<sf::Event::MouseWheelScrolled>()) {
         const auto zoom = (scrl->delta > 0) ? 0.98f : 1.02f;
-        const auto begin = Area::window->mapPixelToCoords(scrl->position, p_area->camera);
+        const auto begin = p_area->get_player().get_sprite().getPosition();
         p_area->camera.zoom(zoom);
-        const auto end = Area::window->mapPixelToCoords(scrl->position, p_area->camera);
+        const auto end = p_area->get_player().get_sprite().getPosition();
         p_area->camera.move(begin - end);
     }
 }
@@ -129,6 +128,7 @@ void NormalMode::update() {
 
     p_area->camera.update(Time::deltatime());
     p_area->camera.setTrackingPos(p_area->get_player().get_sprite().getPosition());
+    // std::cout << "(" << p_area->camera.getCenter().x << ", " << p_area->camera.getCenter().y << ") " << p_area->id << "\n";
 
     for (auto& t : p_area->triggers) {
         if (p_area->get_player().get_trigger_collider().intersects(t.bounds)) {

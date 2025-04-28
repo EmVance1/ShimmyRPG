@@ -1,4 +1,5 @@
 safecode.txt
+game/todo.txt
 game/combat_ideas.txt
 
 archive/bin/
@@ -13,4 +14,5 @@ game/lib/
 game/compile_flags.txt
 script_compiler/
 imgui/
+.vs/
 

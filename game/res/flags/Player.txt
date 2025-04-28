@@ -1,3 +1,4 @@
-Player_Origin  0
-Player_Alcohol 0
+Origin  1
+Alcohol 0
+Coin    100
 

@@ -25,3 +25,5 @@
 #include <rapidjson/filereadstream.h>
 #include <rapidjson/document.h>
 
+#include <thread_pool/thread_pool.h>
+

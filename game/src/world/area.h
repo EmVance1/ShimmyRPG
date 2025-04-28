@@ -3,15 +3,15 @@
 #include <unordered_map>
 #include <rapidjson/document.h>
 #include <sfutil/camera.h>
-#include "action.h"
 #include "algo/graph2d.h"
-#include "gui/panel.h"
-#include "graphics/partialline.h"
 #include "entity.h"
+#include "action.h"
 #include "trigger.h"
 #include "debugger.h"
 #include "scripts/lua_script.h"
 #include "scripts/dialogue.h"
+#include "gui/panel.h"
+#include "background.h"
 
 #include "game/game_mode.h"
 
@@ -25,8 +25,8 @@ struct Area {
     const std::string id;
     std::string area_label;
 
-    const SpatialGraph2d pathfinder;
-    const sf::Sprite background;
+    Background background;
+    SpatialGraph2d pathfinder;
     const sf::Vector2f topleft;
     const float scale;
 
@@ -44,7 +44,6 @@ struct Area {
     std::vector<LuaScript> scripts;
 
     sf::RectangleShape motionguide_square;
-    PartialLine motionguide_line;
     float motionguide_await = 11.f;
     std::optional<ContextAction> queued;
 
@@ -75,6 +74,8 @@ struct Area {
     void set_mode(GameMode mode, bool dramatic);
 
     Entity& get_player();
+    const Entity& get_player() const;
+
     void update_motionguide();
     void handle_trigger(const Trigger& trigger);
     void begin_dialogue(const SpeechGraph& graph);

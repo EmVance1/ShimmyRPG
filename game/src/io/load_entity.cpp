@@ -2,7 +2,7 @@
 #include "world/area.h"
 #include "world/region.h"
 #include "util/json.h"
-#include "uuid.h"
+#include "util/uuid.h"
 
 
 void Area::load_prefab(const rapidjson::Value& prefabs, const rapidjson::Value& value, const std::string& name) {
@@ -54,10 +54,12 @@ void Area::load_prefab(const rapidjson::Value& prefabs, const rapidjson::Value& 
         const auto ids = prefab.GetObject()["ids"].GetObject();
         script_name_LUT[ids["script"].GetString()] = e_id;
         dialogue_name_LUT[ids["script"].GetString()] = ids["dialogue"].GetString();
+        entity.set_script_id(ids["script"].GetString());
     } else if (value.GetObject().HasMember("ids")) {
         const auto ids = value.GetObject()["ids"].GetObject();
         script_name_LUT[ids["script"].GetString()] = e_id;
         dialogue_name_LUT[ids["script"].GetString()] = ids["dialogue"].GetString();
+        entity.set_script_id(ids["script"].GetString());
     }
 
     // DIALOGUE
@@ -78,32 +80,32 @@ void Area::load_prefab(const rapidjson::Value& prefabs, const rapidjson::Value& 
     }
 
     // TAGS
-    auto taglist = std::unordered_set<std::string>();
     if (prefab.GetObject().HasMember("tags")) {
         for (const auto& tag : prefab.GetObject()["tags"].GetArray()) {
-            taglist.emplace(tag.GetString());
+            entity.get_tags().emplace(tag.GetString());
         }
     }
     if (value.GetObject().HasMember("tags")) {
         for (const auto& tag : value.GetObject()["tags"].GetArray()) {
-            taglist.emplace(tag.GetString());
+            entity.get_tags().emplace(tag.GetString());
         }
     }
 
-    if (taglist.contains("player")) {
+    if (entity.get_tags().contains("player")) {
         if (player_id == "") {
             player_id = e_id;
         } else {
-            std::cout << "CANNOT HAVE 2 PLAYER CONTROLLERS\n";
+            std::cout << "error parsing entities: cannot have 2 player controllers\n";
+            throw std::exception();
         }
     } else {
         entity.get_actions().emplace_back(MoveToAction{});
         entity.get_actions().emplace_back(AttackAction{});
-        if (taglist.contains("npc"))         { entity.get_actions().emplace_back(SpeakAction{}); }
-        if (taglist.contains("door"))        { entity.get_actions().emplace_back(OpenDoorAction{}); }
-        if (taglist.contains("chest"))       { entity.get_actions().emplace_back(OpenInvAction{}); }
-        if (taglist.contains("simple_lock")) { entity.get_actions().emplace_back(LockpickAction{}); }
-        if (taglist.contains("carryable"))   { entity.get_actions().emplace_back(PickUpAction{}); }
+        if (entity.get_tags().contains("npc"))         { entity.get_actions().emplace_back(SpeakAction{}); }
+        if (entity.get_tags().contains("door"))        { entity.get_actions().emplace_back(OpenDoorAction{}); }
+        if (entity.get_tags().contains("chest"))       { entity.get_actions().emplace_back(OpenInvAction{}); }
+        if (entity.get_tags().contains("simple_lock")) { entity.get_actions().emplace_back(LockpickAction{}); }
+        if (entity.get_tags().contains("carryable"))   { entity.get_actions().emplace_back(PickUpAction{}); }
     }
 }
 
@@ -153,6 +155,7 @@ void Area::load_entity(const rapidjson::Value& prefabs, const rapidjson::Value& 
         const auto ids = value.GetObject()["ids"].GetObject();
         script_name_LUT[ids["script"].GetString()] = e_id;
         dialogue_name_LUT[ids["script"].GetString()] = ids["dialogue"].GetString();
+        entity.set_script_id(ids["script"].GetString());
     }
 
     // DIALOGUE
@@ -175,7 +178,8 @@ void Area::load_entity(const rapidjson::Value& prefabs, const rapidjson::Value& 
         if (player_id == "") {
             player_id = e_id;
         } else {
-            std::cout << "CANNOT HAVE 2 PLAYER CONTROLLERS\n";
+            std::cout << "error parsing entities: cannot have 2 player controllers\n";
+            throw std::exception();
         }
     } else {
         entity.get_actions().emplace_back(MoveToAction{});

@@ -11,6 +11,15 @@ const auto H = Chebyshev;
 #define ROOT_2 1.414f
 
 
+void PathTracker::prune() {
+    if (path.empty()) { return; }
+    for (int i = (int)path.size() - 1; i >= 0; i--) {
+        if (std::abs(grid->get_vertex(path[i]) - PathTracker::MAX_PENALTY) < 1.f) {
+            path.resize(i);
+        }
+    }
+}
+
 void PathTracker::trim_path_radial() {
     if (path_trim == 0.f || path.empty()) { return; }
     const auto last = path.back();
@@ -149,17 +158,24 @@ void PathTracker::clamp_path_walked_world(float max) {
     path_clamp = max / scale;
 }
 
+
+void PathTracker::init_path() {
+    path_index = 0;
+    path_prog = 0;
+    path_queue = {};
+    prune();
+    trim_path_radial();
+    clamp_path_radial();
+}
+
+
 void PathTracker::progress() {
     if (override_stop) { return; }
 
     if (!is_moving()) {
         if (path_queue.has_value()) {
             path = grid->a_star(into_gridspace(position), *path_queue, H);
-            path_index = 0;
-            path_prog = 0;
-            path_queue = {};
-            trim_path_radial();
-            clamp_path_radial();
+            init_path();
         } else if (!path.empty()) {
             position = into_worldspace(path.back());
         }
@@ -181,10 +197,6 @@ void PathTracker::progress() {
             path_prog -= thresh;
             path_index++;
             if (path_index < path.size() - 1) {
-                if (grid->get_vertex(path[path_index + 1]) >= MAX_PENALTY) {
-                    path.clear();
-                    return;
-                }
                 diff = path[path_index + 1] - path[path_index];
                 diag = std::abs(diff.x) > 0 && std::abs(diff.y) > 0;
                 thresh = diag ? ROOT_2 : 1.f;
@@ -194,13 +206,9 @@ void PathTracker::progress() {
 
         if (path_queue.has_value() && didit) {
             const auto temp = path[path_index];
-            path = grid->a_star(temp, *path_queue, H);
             position = into_worldspace(temp);
-            path_index = 0;
-            path_prog = 0;
-            path_queue = {};
-            trim_path_radial();
-            clamp_path_radial();
+            path = grid->a_star(temp, *path_queue, H);
+            init_path();
         }
 
         if (path_index < path.size() - 1) {
@@ -215,11 +223,7 @@ void PathTracker::progress() {
         }
     } else if (path_queue.has_value()) {
         path = grid->a_star(into_gridspace(position), *path_queue, H);
-        path_index = 0;
-        path_prog = 0;
-        path_queue = {};
-        trim_path_radial();
-        clamp_path_radial();
+        init_path();
     }
 }
 

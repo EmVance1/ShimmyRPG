@@ -1,5 +1,7 @@
 #pragma once
 #include <SFML/Graphics.hpp>
+#include <unordered_map>
+#include <unordered_set>
 #include <limits>
 #include <vector>
 #include <queue>

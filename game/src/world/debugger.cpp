@@ -47,21 +47,26 @@ void AreaDebugView::init(const Area* area) {
     }
 }
 
+
 void AreaDebugView::update() {
     m_pathfinder.setTexture(m_pathfinder_texture);
     size_t i = 0;
     size_t j = 0;
-    size_t k = 0;
     for (const auto& [_, e] : p_area->entities) {
         if (e.is_character()) {
             m_colliders[j].setPosition(e.get_trigger_collider().position);
             j++;
-        } else {
-            // m_boundaries[k].setPosition(e.get_trigger_collider().position);
-            // k++;
         }
         m_outlines[i].setPosition(e.get_sprite().getPosition() - e.get_sprite().getOrigin());
         i++;
+    }
+
+    const auto& player = p_area->get_player();
+    m_motionguide_line.set_count(player.get_tracker().get_inverse_index() - 1);
+    if (p_area->motionguide_await > 0.05f && p_area->motionguide_await < 10.f) {
+        m_motionguide_line = PartialLine::from_path(player.get_tracker().get_active_path());
+        m_motionguide_line.setScale({ p_area->scale, p_area->scale });
+        m_motionguide_line.set_start(1);
     }
 }
 
@@ -70,6 +75,9 @@ void AreaDebugView::handle_event(const sf::Event& event) {
 
 void AreaDebugView::render_map(sf::RenderTarget& target) const {
     target.draw(m_pathfinder, p_area->cart_to_iso);
+    if (p_area->motionguide_await > 0.05f && p_area->get_player().get_tracker().is_moving()) {
+        target.draw(m_motionguide_line, p_area->cart_to_iso);
+    }
 }
 
 void AreaDebugView::render(sf::RenderTarget& target) const {
@@ -77,7 +85,7 @@ void AreaDebugView::render(sf::RenderTarget& target) const {
         target.draw(t, p_area->cart_to_iso);
     }
     for (const auto& b : m_boundaries) {
-        target.draw(b); //, p_area->cart_to_iso);
+        target.draw(b);
     }
     for (const auto& c : m_colliders) {
         target.draw(c, p_area->cart_to_iso);

@@ -18,8 +18,8 @@ enum class FlagExprType {
 };
 
 struct FlagExpr {
-    std::shared_ptr<FlagExpr> left;
-    std::shared_ptr<FlagExpr> right;
+    std::unique_ptr<FlagExpr> left;
+    std::unique_ptr<FlagExpr> right;
     FlagExprType op;
     std::string name;
     uint32_t value;
@@ -28,7 +28,9 @@ struct FlagExpr {
         : left(nullptr), right(nullptr), op(FlagExprType::Value), name(""), value(1)
     {}
     FlagExpr(const FlagExpr& other)
-        : left(other.left), right(other.right), op(other.op), name(other.name), value(other.value)
+        : left(other.left ? std::make_unique<FlagExpr>(*other.left) : nullptr),
+        right(other.right ? std::make_unique<FlagExpr>(*other.left) : nullptr),
+        op(other.op), name(other.name), value(other.value)
     {}
     FlagExpr(FlagExpr&& other)
         : left(std::move(other.left)), right(std::move(other.right)), op(other.op), name(std::move(other.name)), value(other.value)
@@ -47,9 +49,10 @@ struct FlagExpr {
     {}
 
     FlagExpr& operator=(const FlagExpr& other) {
-        left = other.left;
-        right = other.right;
+        left = other.left ? std::make_unique<FlagExpr>(*other.left) : nullptr;
+        right = other.right ? std::make_unique<FlagExpr>(*other.right) : nullptr;
         op = other.op;
+        name = other.name;
         value = other.value;
         return *this;
     }
@@ -57,6 +60,7 @@ struct FlagExpr {
         left = std::move(other.left);
         right = std::move(other.right);
         op = other.op;
+        name = std::move(other.name);
         value = other.value;
         return *this;
     }

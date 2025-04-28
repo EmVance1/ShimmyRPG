@@ -10,16 +10,17 @@
 
 
 Entity& Area::get_player() {
-    return entities[player_id];
+    return entities.at(player_id);
 }
+
+const Entity& Area::get_player() const {
+    return entities.at(player_id);
+}
+
 
 void Area::update_motionguide() {
     const auto& player = get_player();
-    motionguide_line.set_count(player.get_tracker().get_inverse_index() - 1);
     if (motionguide_await > 0.05f && motionguide_await < 10.f) {
-        motionguide_line = PartialLine::from_path(player.get_tracker().get_active_path());
-        motionguide_line.set_start(1);
-        motionguide_line.setScale({ scale, scale });
         motionguide_square.setPosition(player.get_tracker().get_target_position_world());
         motionguide_await = 11.f;
     } else if (motionguide_await < 0.05f) {
@@ -62,23 +63,18 @@ void Area::begin_dialogue(const SpeechGraph& graph) {
     std::dynamic_pointer_cast<gui::TextWidget>(line_gui)->set_label(line.line);
 }
 
-
 void Area::set_mode(GameMode mode, bool dramatic) {
     if (mode == GameMode::Cinematic && gamemode != GameMode::Cinematic) {
-        if (dramatic) {
-            cinematic_timer = 1.5f;
-        }
+        if (dramatic) { cinematic_timer = 1.5f; }
         get_player().get_tracker().stop();
-        get_player().get_tracker().pause();
         queued = {};
     } else if (mode != GameMode::Cinematic && gamemode == GameMode::Cinematic) {
-        if (dramatic) {
-            cinematic_timer = 1.5f;
-        }
+        if (dramatic) { cinematic_timer = 1.5f; }
         get_player().get_tracker().start();
     }
     gamemode = mode;
 }
+
 
 
 void Area::handle_event(const sf::Event& event) {
@@ -123,7 +119,7 @@ void Area::update() {
     }
 
     update_motionguide();
-
+    background.update(camera.getFrustum());
     sorted_entities = sprites_topo_sort(entities);
 
     if (cinematic_timer > 0.f) {
@@ -153,9 +149,6 @@ void Area::render(sf::RenderTarget& target) {
 #endif
 
     if (motionguide_await > 0.05f && get_player().get_tracker().is_moving()) {
-#ifdef DEBUG
-        target.draw(motionguide_line, cart_to_iso);
-#endif
         target.draw(motionguide_square, cart_to_iso);
     }
 
