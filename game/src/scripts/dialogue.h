@@ -23,6 +23,7 @@ public:
     using Element = std::variant<Line, Selection>;
 
 private:
+    std::string m_id;
     SpeechGraph m_graph;
     std::string m_vertex = "entry";
     size_t m_vertex_index = 0;
@@ -41,7 +42,7 @@ public:
     State get_state() const { return m_state; }
     GameMode get_init_mode() const { return m_init_mode; }
 
-    void begin(const SpeechGraph& graph, GameMode init_mode);
+    void begin(const SpeechGraph& graph, GameMode init_mode, const std::string& id);
     void advance(size_t index = 0);
     bool apply_advance();
     Element get_current_element() const;

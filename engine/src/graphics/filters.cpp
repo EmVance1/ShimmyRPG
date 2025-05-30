@@ -27,7 +27,7 @@ static void fill_outline(sf::Image& result, const sf::Image& tex, const sf::Vect
                 if (diff.lengthSquared() <= (float)(width * width) && tex.getPixel({(uint32_t)x, (uint32_t)y}).a <= TRANSPARENT_THRESHOLD) {
                     const auto l = 1.f - (diff.length() / (float)width);
                     const auto temp = result.getPixel({(uint32_t)x, (uint32_t)y});
-                    result.setPixel({(uint32_t)x, (uint32_t)y}, sf::Color(255, 0, 0, std::max(temp.a, (uint8_t)(l * 255.f))));
+                    result.setPixel({(uint32_t)x, (uint32_t)y}, sf::Color(255, 255, 255, std::max(temp.a, (uint8_t)(l * 255.f))));
                 }
             }
         }
@@ -40,7 +40,7 @@ sf::Image gen_outline(const sf::Image& tex, int width) {
     for (uint32_t y = 0; y < tex.getSize().y; y++) {
         for (uint32_t x = 0; x < tex.getSize().x; x++) {
             if (tex.getPixel({x, y}).a > TRANSPARENT_THRESHOLD) {
-                result.setPixel({x, y}, tex.getPixel({x, y}));
+                // result.setPixel({x, y}, tex.getPixel({x, y}));
                 if (is_border(tex, {(int)x, (int)y})) {
                     fill_outline(result, tex, {x, y}, width);
                 }
@@ -60,7 +60,7 @@ sf::Image gen_outline_threaded(const sf::Image& tex, int width) {
             for (uint32_t y = i; y < i + 20 && y < tex.getSize().y; y++) {
                 for (uint32_t x = 0; x < tex.getSize().x; x++) {
                     if (tex.getPixel({x, y}).a > TRANSPARENT_THRESHOLD) {
-                        result.setPixel({x, y}, tex.getPixel({x, y}));
+                        // result.setPixel({x, y}, tex.getPixel({x, y}));
                         if (is_border(tex, {(int)x, (int)y})) {
                             fill_outline(result, tex, {x, y}, width);
                         }

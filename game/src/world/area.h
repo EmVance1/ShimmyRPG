@@ -4,14 +4,14 @@
 #include <rapidjson/document.h>
 #include <sfutil/camera.h>
 #include "algo/graph2d.h"
-#include "entity.h"
-#include "action.h"
-#include "trigger.h"
-#include "debugger.h"
+#include "objects/entity.h"
+#include "objects/trigger.h"
 #include "scripts/lua_script.h"
 #include "scripts/dialogue.h"
+#include "action.h"
 #include "gui/panel.h"
 #include "background.h"
+#include "debugger.h"
 
 #include "game/game_mode.h"
 
@@ -24,6 +24,7 @@ struct Area {
     Region* p_region;
     const std::string id;
     std::string area_label;
+    sf::Shader posterize;
 
     Background background;
     SpatialGraph2d pathfinder;
@@ -35,7 +36,7 @@ struct Area {
 
     std::unordered_map<std::string, Entity> entities;
     std::unordered_map<std::string, std::string> script_name_LUT;
-    std::unordered_map<std::string, std::string> dialogue_name_LUT;
+    std::unordered_map<std::string, std::string> story_name_LUT;
     std::vector<Entity*> sorted_entities;
     std::string player_id = "";
 
@@ -69,6 +70,7 @@ struct Area {
 
     void load_prefab(const rapidjson::Value& prefabs, const rapidjson::Value& value, const std::string& name);
     void load_entity(const rapidjson::Value& prefabs, const rapidjson::Value& value);
+    void load_gui();
 
     void init(const rapidjson::Value& prefabs, const rapidjson::Document& doc);
     void set_mode(GameMode mode, bool dramatic);
@@ -78,7 +80,7 @@ struct Area {
 
     void update_motionguide();
     void handle_trigger(const Trigger& trigger);
-    void begin_dialogue(const SpeechGraph& graph);
+    void begin_dialogue(const SpeechGraph& graph, const std::string& id);
 
     void handle_event(const sf::Event& event);
     void update();

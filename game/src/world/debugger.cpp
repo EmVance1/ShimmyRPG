@@ -1,8 +1,8 @@
-#include "SFML/Graphics/PrimitiveType.hpp"
 #include "pch.h"
 #include "debugger.h"
 #include "world/area.h"
-#include "trigger.h"
+#include "objects/trigger.h"
+#include "flags.h"
 
 
 AreaDebugView::AreaDebugView(const std::string& id, float scale)
@@ -18,7 +18,10 @@ void AreaDebugView::init(const Area* area) {
 
     for (const auto& t : area->triggers) {
         auto& shape = m_triggers.emplace_back();
-        shape.setPosition(t.bounds.position);
+        shape.setOrigin(t.bounds.size * 0.5f);
+        shape.setPosition(t.bounds.position + t.bounds.size * 0.5f);
+        shape.setRotation(t.bounds.angle);
+
         shape.setSize(t.bounds.size);
         shape.setFillColor(sf::Color::Transparent);
         shape.setOutlineThickness(1);
@@ -58,6 +61,18 @@ void AreaDebugView::update() {
             j++;
         }
         m_outlines[i].setPosition(e.get_sprite().getPosition() - e.get_sprite().getOrigin());
+        i++;
+    }
+
+    i = 0;
+    for (const auto& t : p_area->triggers) {
+        const auto once_id = "once_trig_" + p_area->id + t.id;
+        FlagTable::Once = FlagTable::has_flag(once_id);
+        if (!t.condition.evaluate() || t.cooldown) {
+            m_triggers[i].setOutlineColor(sf::Color(255, 0, 255, 100));
+        } else {
+            m_triggers[i].setOutlineColor(sf::Color::Magenta);
+        }
         i++;
     }
 

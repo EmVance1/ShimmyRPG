@@ -26,16 +26,19 @@ public:
         apply_text_alignment();
     }
 
-    void set_character_size(uint32_t character_size) { m_character_size = character_size; }
+    void set_character_size(uint32_t character_size);
     uint32_t get_character_size() const { return m_character_size; }
 
-    void set_text_alignment(Alignment alignment) { m_text_alignment = alignment; apply_text_alignment(); }
+    void set_text_alignment(Alignment alignment);
     Alignment get_text_alignment() const { return m_text_alignment; }
 
-    void set_text_padding(float padding) { m_text_padding = padding; apply_text_alignment(); }
+    void set_text_padding(float padding);
     float get_text_padding() const { return m_text_padding; }
 
-    void set_label(const std::string& label) { m_label_value = label; m_label.setString(label); apply_text_alignment(); }
+    void set_text_color(const sf::Color& color);
+    sf::Color get_text_color() { return m_label.getFillColor(); }
+
+    void set_label(const std::string& label);
     const std::string& get_label() const { return m_label_value; }
 
     virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const {

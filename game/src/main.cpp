@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "sfutil/sfutil.h"
 #include "time/deltatime.h"
 #include "world/region.h"
 #include "world/area.h"
@@ -17,10 +18,16 @@
 
 int main() {
     auto window = sf::RenderWindow(VIDEO_MODE, "Shimmy", SCREEN_MODE);
-    // window.setVerticalSyncEnabled(true);
-    window.setFramerateLimit(120);
+    window.setVerticalSyncEnabled(true);
     window.setPosition({0, 0});
     Area::window = &window;
+    gui::Widget::WIN_SIZE = window.getSize();
+    srand((uint32_t)time(nullptr));
+
+    auto target = sfu::PostFx();
+    auto _ = target.resize(window.getSize());
+    // auto& retro = target.addShader();
+    // _ = retro.loadFromFile("res/shaders/pixelate.frag", sf::Shader::Type::Fragment);
 
     load_flags();
     auto region = Region();
@@ -54,17 +61,16 @@ int main() {
             region.get_active_area().handle_event(*event);
         }
 
-        // region.get_active_area().update();
         region.update_all();
 
+        target.clear(sf::Color::Black);
+        region.get_active_area().render(target);
+        target.setView(target.getDefaultView());
+        target.draw(fps_draw);
+        target.postFxDisplay();
+
         window.clear(sf::Color::Black);
-
-        region.get_active_area().render(window);
-
-        window.setView(window.getDefaultView());
-
-        window.draw(fps_draw);
-
+        window.draw(sf::Sprite(target.getTexture()));
         window.display();
     }
 }

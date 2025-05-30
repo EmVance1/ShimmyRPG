@@ -13,8 +13,13 @@ enum class FlagExprType {
     Le,
     Ge,
     Not,
+
     Value,
     Identifier,
+
+    Default,
+    Once,
+    Random,
 };
 
 struct FlagExpr {
@@ -29,7 +34,7 @@ struct FlagExpr {
     {}
     FlagExpr(const FlagExpr& other)
         : left(other.left ? std::make_unique<FlagExpr>(*other.left) : nullptr),
-        right(other.right ? std::make_unique<FlagExpr>(*other.left) : nullptr),
+        right(other.right ? std::make_unique<FlagExpr>(*other.right) : nullptr),
         op(other.op), name(other.name), value(other.value)
     {}
     FlagExpr(FlagExpr&& other)
@@ -46,6 +51,9 @@ struct FlagExpr {
     {}
     FlagExpr(uint32_t _val, FlagExprType _op)
         : left(nullptr), right(nullptr), op(_op), name(""), value(_val)
+    {}
+    FlagExpr(std::string&& _id, uint32_t _mod, FlagExprType _op)
+        : left(nullptr), right(nullptr), op(_op), name(std::move(_id)), value(_mod)
     {}
 
     FlagExpr& operator=(const FlagExpr& other) {
@@ -98,6 +106,19 @@ struct FlagExpr {
     static FlagExpr Identifier(std::string&& val) {
         return FlagExpr{ std::move(val), FlagExprType::Identifier };
     }
+
+    static FlagExpr Default() {
+        return FlagExpr{ "", FlagExprType::Default };
+    }
+    static FlagExpr Once() {
+        return FlagExpr{ "", FlagExprType::Once };
+    }
+    static FlagExpr Random(std::string&& id, uint32_t mod) {
+        return FlagExpr{ std::move(id), mod, FlagExprType::Random };
+    }
+
+    static FlagExpr True()  { return FlagExpr::Value(1); }
+    static FlagExpr False() { return FlagExpr::Value(0); }
 
     int evaluate() const;
 };

@@ -4,7 +4,7 @@
         "boundary": [ [0, 20], [20, 20] ],
     },
     "shimmy_brew_barrel": {
-        "texture": "shimmy_brew_barrell",
+        "texture": "shimmy_brew_barrel",
         "boundary": [ [0, 60], [40, 60] ],
     }
 }

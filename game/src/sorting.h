@@ -1,7 +1,7 @@
 #pragma once
 #include <unordered_map>
 #include <vector>
-#include "entity.h"
+#include "objects/entity.h"
 
 
 std::vector<Entity*> sprites_topo_sort(std::unordered_map<std::string, Entity>& entities);

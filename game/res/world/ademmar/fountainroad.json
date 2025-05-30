@@ -12,9 +12,7 @@
         {
             "id": "ShimmyFrontDoor",
             "bounds": [ 200, 0, 120, 30 ],
-            "active_if": "1",
-            "action": { "GotoArea": { "index": 0, "spawnpos": [ 365, 555 ], "suppress_triggers": true } },
-            "single_use": false
+            "action": { "GotoArea": { "index": 0, "spawnpos": [ 365, 555 ], "suppress_triggers": true } }
         }
     ],
     "entities": [
@@ -22,12 +20,12 @@
             "texture": "player_placeholder",
             "position": { "grid": [ 70, 90 ] },
             "controller": { "speed": 5 },
-            "ids": { "script": "player", "dialogue": "-" },
+            "ids": { "script": "player", "story": "-" },
             "tags": [ "player" ]
         },
         {
             "texture": "table_simple_wooden_long",
-            "position": { "world_iso": [ 500, 413 ] },
+            "position": { "world_iso": [ 700, 283 ] },
             "boundary": [ [0, 249], [370, 90] ],
             "tags": [ "furniture", "wood" ]
         },

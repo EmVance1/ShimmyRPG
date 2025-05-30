@@ -4,8 +4,9 @@
         "npc_neutral_placeholder":   { "file": "res/textures/npc_neutral_placeholder.png",  "outlined": true, "smooth": true, "dims": [1, 1] },
         "npc_friendly_placeholder":  { "file": "res/textures/npc_friendly_placeholder.png", "outlined": true, "smooth": true, "dims": [1, 1] },
         "table_simple_wooden_long":  { "file": "res/textures/table_long.png",               "outlined": true, "smooth": true, "dims": [1, 1] },
-        "table_simple_wooden_round": { "file": "res/textures/table_round_1.png",            "outlined": true, "smooth": true, "dims": [1, 1] },
-        "door_simple_wooden_single": { "file": "res/textures/door.png",                     "outlined": true, "smooth": true, "dims": [1, 1] }
+        "table_simple_wooden_round": { "file": "res/textures/table_round.png",              "outlined": true, "smooth": true, "dims": [1, 1] },
+        "door_simple_wooden_single": { "file": "res/textures/door.png",                     "outlined": true, "smooth": true, "dims": [1, 1] },
+        "gold": { "file": "res/textures/gold.png",                     "outlined": false, "smooth": true, "dims": [1, 1] }
     },
     "areas": [
         {

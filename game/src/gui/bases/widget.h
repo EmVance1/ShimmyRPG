@@ -1,12 +1,16 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 #include <memory>
+#include "sfutil/atlas.h"
 #include "../style.h"
 
 
 namespace gui {
 
 class Widget : public sf::Drawable, public std::enable_shared_from_this<Widget> {
+public:
+    static sf::Vector2u WIN_SIZE;
+
 private:
     sf::RectangleShape m_background;
     sf::Transform m_transform;
@@ -19,6 +23,8 @@ private:
     int32_t m_sortinglayer = 0;
     Position m_position;
     sf::FloatRect m_bounds;
+
+    const sfu::TextureAtlas* m_texture = nullptr;
     const Style* m_style;
 
 protected:
@@ -26,14 +32,14 @@ protected:
         if (p_container) {
             return m_position.get_absolute_topleft(p_container->get_bounds(), m_bounds.size);
         } else {
-            return m_position.get_absolute_topleft(sf::FloatRect({0, 0}, {1920, 1080}), m_bounds.size);
+            return m_position.get_absolute_topleft(sf::FloatRect({0, 0}, sf::Vector2f(WIN_SIZE)), m_bounds.size);
         }
     }
     sf::Vector2f compute_relative_position() {
         if (p_container) {
             return m_position.get_relative_topleft(p_container->get_bounds(), m_bounds.size);
         } else {
-            return m_position.get_relative_topleft(sf::FloatRect({0, 0}, {1920, 1080}), m_bounds.size);
+            return m_position.get_relative_topleft(sf::FloatRect({0, 0}, sf::Vector2f(WIN_SIZE)), m_bounds.size);
         }
     }
     void update_position() {
@@ -51,7 +57,7 @@ public:
         m_background.setOutlineColor(style.outline_color_1);
         m_background.setOutlineThickness(style.outline_width);
         if (style.textured) {
-            set_background_texture(style.background_texture);
+            set_background_texture(style.background_texture, TextureFillMode::Stretch);
         }
     }
 
@@ -74,9 +80,14 @@ public:
     bool is_style_inherited() const { return m_inherit_style; }
 
     void set_background_color(const sf::Color& color) { m_background.setFillColor(color); }
-    void set_background_texture(const sf::Texture& texture) {
-        m_background.setTexture(&texture);
-        m_background.setTextureRect(sf::IntRect(m_background.getLocalBounds()));
+    void set_background_texture(const sfu::TextureAtlas& texture, TextureFillMode mode) {
+        if (mode == TextureFillMode::Repeat) {
+            m_background.setTexture(&texture.getTexture());
+            m_background.setTextureRect(sf::IntRect(m_background.getLocalBounds()));
+        } else {
+            m_background.setTexture(&texture.getTexture());
+            m_background.setTextureRect(texture.getTextureRect({0, 0}));
+        }
     }
 
     void destroy() { m_destroy = true; }
@@ -103,8 +114,12 @@ public:
 
     virtual void update() {}
     virtual bool handle_event(const sf::Event& event) {
-        if (auto mv = event.getIf<sf::Event::MouseMoved>()) {
-            m_hovered = m_bounds.contains(sf::Vector2f(mv->position));
+        if (auto mmv = event.getIf<sf::Event::MouseMoved>()) {
+            m_hovered = m_bounds.contains(sf::Vector2f(mmv->position));
+        } else if (auto mbp = event.getIf<sf::Event::MouseButtonPressed>()) {
+            m_hovered = m_bounds.contains(sf::Vector2f(mbp->position));
+        } if (auto mbr = event.getIf<sf::Event::MouseMoved>()) {
+            m_hovered = m_bounds.contains(sf::Vector2f(mbr->position));
         }
         return m_hovered;
     }

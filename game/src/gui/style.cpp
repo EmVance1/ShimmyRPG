@@ -31,9 +31,11 @@ bool Style::load_from_file(const std::string& filename) {
     text_color_3 = json_to_color(doc["text_color_3"].GetArray());
     outline_width = doc["outline_width"].GetFloat();
     if (!doc["background_texture"].IsNull()) {
-        const auto b = background_texture.loadFromFile(doc["background_texture"].GetString());
+        const auto b = background_texture.loadFromFile(
+                doc["background_texture"].GetObject()["file"].GetString(),
+                json_to_vector2u(doc["background_texture"].GetObject()["dims"]));
         background_texture.setSmooth(true);
-        background_texture.setRepeated(true);
+        // background_texture.setRepeated(true);
         textured = true;
         return b && font.openFromFile(doc["fontfile"].GetString());
     }

@@ -1,3 +1,4 @@
+#include "SFML/Graphics/Color.hpp"
 #include "pch.h"
 #include "textwidget.h"
 
@@ -23,7 +24,7 @@ static std::string wrapped(const std::string& src, const sf::Font& font, uint32_
         if (last != '\0') {
             diff += font.getKerning(last, c, character_size);
         }
-        if (line_width + word_width + diff <= width * 1.125f) {
+        if (line_width + word_width + diff <= width) {
             word.push_back(c);
             word_width += diff;
             if (c == ' ' || c == '\t' || c == '\n' || c == '\r') {
@@ -32,7 +33,7 @@ static std::string wrapped(const std::string& src, const sf::Font& font, uint32_
                 line_width += word_width;
                 word_width = 0.f;
             }
-        } else if (word_width + diff <= width * 1.125f) {
+        } else if (word_width + diff <= width) {
             result.push_back('\n');
             line_width = 0.f;
             word.push_back(c);
@@ -91,6 +92,34 @@ void TextWidget::apply_text_alignment() {
     }
     m_label.move(sf::Vector2f(0.f, -5.f));
 }
+
+
+void TextWidget::set_character_size(uint32_t character_size) {
+    m_character_size = character_size;
+    m_label.setCharacterSize(character_size);
+    apply_text_alignment();
+}
+
+void TextWidget::set_text_alignment(Alignment alignment) {
+    m_text_alignment = alignment;
+    apply_text_alignment();
+}
+
+void TextWidget::set_text_padding(float padding) {
+    m_text_padding = padding;
+    apply_text_alignment();
+}
+
+void TextWidget::set_text_color(const sf::Color& color) {
+    m_label.setFillColor(color);
+}
+
+void TextWidget::set_label(const std::string& label) {
+    m_label_value = label;
+    m_label.setString(label);
+    apply_text_alignment();
+}
+
 
 }
 

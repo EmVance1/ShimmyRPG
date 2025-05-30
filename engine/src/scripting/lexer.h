@@ -13,8 +13,8 @@ public:
 };
 
 
-enum class TokenType {
-    Identifier    = 1 << 0,
+enum class TokenType : uint32_t {
+    Identifier    = 1,
     FloatLiteral  = 1 << 1,
     IntLiteral    = 1 << 2,
     StringLiteral = 1 << 3,
@@ -38,11 +38,14 @@ enum class TokenType {
     LessEq        = 1 << 21,
     GreaterEq     = 1 << 22,
     EqualTo       = 1 << 23,
+    Pragma        = 1 << 24,
 };
 
 struct Token {
-    enum TokenType type;
-    std::string value;
+    TokenType type;
+    std::string val;
+    size_t row = 0;
+    size_t col = 0;
 };
 
 
@@ -52,19 +55,17 @@ private:
         Void,
         Identifier,
         Number,
-        NumberDecimal,
-        NumberDecimalNumber,
         String,
         StringEscape,
-        Equals,
-        Comparator,
+        Compound,
         Comment,
     };
 
-    const std::string* src;
+    const char* src;
     State state = State::Void;
     size_t index = 0;
-    std::optional<char> last = {};
+    size_t row = 1;
+    size_t col = 0;
 
 public:
     Lexer(const std::string& src);

@@ -23,6 +23,14 @@ public:
     void add_widget(const std::shared_ptr<Widget>& widget, bool inherit_style = true);
     std::shared_ptr<Widget> get_widget(const std::string& id);
     std::shared_ptr<const Widget> get_widget(const std::string& id) const;
+    template<typename T>
+    std::shared_ptr<T> get_widget(const std::string& id) {
+        return std::dynamic_pointer_cast<T>(get_widget(id));
+    }
+    template<typename T>
+    std::shared_ptr<const T> get_widget(const std::string& id) const {
+        return std::dynamic_pointer_cast<const T>(get_widget(id));
+    }
     bool has_widget(const std::string& id) const;
     std::shared_ptr<Widget> remove_widget(const std::string& id);
 

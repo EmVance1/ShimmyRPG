@@ -2,7 +2,7 @@
     "project": "engine",
     "cpp": "c++20",
     "pch": "pch.h",
-    "dependencies": [ "../../_Libs/SFML-3.static", "../../sfutil", "rapidjson", "thread_pool" ],
+    "dependencies": [ "../../_Libs/SFML-3:static", "../../sfutil", "rapidjson", "thread_pool" ],
 
     "include-public": "src/"
 }

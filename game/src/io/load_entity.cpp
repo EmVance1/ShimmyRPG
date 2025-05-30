@@ -53,12 +53,12 @@ void Area::load_prefab(const rapidjson::Value& prefabs, const rapidjson::Value& 
     if (prefab.GetObject().HasMember("ids")) {
         const auto ids = prefab.GetObject()["ids"].GetObject();
         script_name_LUT[ids["script"].GetString()] = e_id;
-        dialogue_name_LUT[ids["script"].GetString()] = ids["dialogue"].GetString();
+        story_name_LUT[ids["script"].GetString()] = ids["story"].GetString();
         entity.set_script_id(ids["script"].GetString());
     } else if (value.GetObject().HasMember("ids")) {
         const auto ids = value.GetObject()["ids"].GetObject();
         script_name_LUT[ids["script"].GetString()] = e_id;
-        dialogue_name_LUT[ids["script"].GetString()] = ids["dialogue"].GetString();
+        story_name_LUT[ids["script"].GetString()] = ids["story"].GetString();
         entity.set_script_id(ids["script"].GetString());
     }
 
@@ -154,7 +154,7 @@ void Area::load_entity(const rapidjson::Value& prefabs, const rapidjson::Value& 
     if (value.GetObject().HasMember("ids")) {
         const auto ids = value.GetObject()["ids"].GetObject();
         script_name_LUT[ids["script"].GetString()] = e_id;
-        dialogue_name_LUT[ids["script"].GetString()] = ids["dialogue"].GetString();
+        story_name_LUT[ids["script"].GetString()] = ids["story"].GetString();
         entity.set_script_id(ids["script"].GetString());
     }
 

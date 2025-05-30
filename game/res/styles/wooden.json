@@ -9,6 +9,6 @@
     "text_color_2": [ 255, 255, 255 ],
     "text_color_3": [ 0, 0, 0 ],
     "outline_width": 1,
-    "background_texture": "res/textures/wood.png",
+    "background_texture": { "file": "res/textures/wood.png", "dims": [1, 1] },
     "fontfile": "res/fonts/baskerville.ttf"
 }

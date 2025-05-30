@@ -5,7 +5,7 @@
 #include "util/json.h"
 #include "algo/iso_map.h"
 #include "algo/graph2d.h"
-#include "trigger.h"
+#include "objects/trigger.h"
 #include "scripts/lua_script.h"
 #include "gui/gui.h"
 
@@ -40,6 +40,9 @@ Area::Area(const std::string& _id, Region* parent_region, const sf::Vector2f& _t
     cinemabar_bot.setPosition({0, (float)winsize.y});
     cinemabar_bot.setSize({(float)winsize.x, 150});
     cinemabar_bot.setFillColor(sf::Color::Black);
+
+    auto _ = posterize.loadFromFile("res/shaders/pixelate.frag", sf::Shader::Type::Fragment);
+    posterize.setUniform("u_texture", sf::Shader::CurrentTexture);
 }
 
 
@@ -59,11 +62,16 @@ void Area::init(const rapidjson::Value& prefabs, const rapidjson::Document& doc)
     for (const auto& e : doc["triggers"].GetArray()) {
         auto& t = triggers.emplace_back();
         t.id = e.GetObject()["id"].GetString();
-        t.bounds = json_to_floatrect(e.GetObject()["bounds"]);
-        t.single_use = e.GetObject()["single_use"].IsTrue();
+        t.once_id = "once_trig_" + id + t.id;
+        t.bounds = (sfu::RotatedFloatRect)json_to_floatrect(e.GetObject()["bounds"]);
+        if (e.GetObject().HasMember("angle")) {
+            t.bounds.angle = sf::degrees(e.GetObject()["angle"].GetFloat());
+        }
         const auto action = e.GetObject()["action"].GetObject();
         if (action.HasMember("BeginScript")) {
             t.action = BeginScript{ action["BeginScript"].GetString() };
+        } else if (action.HasMember("BeginDialogue")) {
+            t.action = BeginDialogue{ action["BeginDialogue"].GetString() };
         } else if (action.HasMember("Popup")) {
             t.action = Popup{ action["Popup"].GetString() };
         } else if (action.HasMember("GotoRegion")) {
@@ -75,14 +83,13 @@ void Area::init(const rapidjson::Value& prefabs, const rapidjson::Document& doc)
                 action["GotoArea"].GetObject()["suppress_triggers"].IsTrue(),
             };
         }
-        if (e.GetObject().HasMember("active_if")) {
-            const auto cond = std::string(e.GetObject()["active_if"].GetString());
+        if (e.GetObject().HasMember("condition")) {
+            const auto cond = std::string(e.GetObject()["condition"].GetString());
             try {
-                const auto expr = flagexpr_from_string(cond);
+                t.condition = flagexpr_from_string(cond);
             } catch (const std::exception& e) {
-                std::cout << "error parsing 'active_if': " << e.what() << "\n";
+                std::cout << "error parsing 'condition': " << e.what() << "\n";
             }
-            t.condition = cond;
         }
     }
 
@@ -91,49 +98,7 @@ void Area::init(const rapidjson::Value& prefabs, const rapidjson::Document& doc)
     camera.setCenter(get_player().get_sprite().getPosition(), true);
     camera.setTrackingMode(sfu::Camera::ControlMode::TrackBehind);
 
-    gui.set_style(p_region->get_style());
-    gui.set_size(sf::Vector2f(window->getSize()));
-    gui.set_background_color(sf::Color::Transparent);
-    {
-        auto label = gui::Text::create(gui::Position::topcenter({0.f, 50.f}), sf::Vector2f(300, 35), p_region->get_style(), area_label);
-        label->set_text_alignment(gui::Alignment::Center);
-        label->set_text_padding(0.f);
-        gui.add_widget("area_label", label);
-    }
-    {
-        auto speaker = gui::Text::create(
-                gui::Position::bottomcenter({350.f, -350.f}),
-                sf::Vector2f(300.f, 50.f),
-                p_region->get_style(),
-                "");
-        speaker->set_visible(false);
-        speaker->set_character_size(28);
-        speaker->set_sorting_layer(-1);
-        speaker->set_text_alignment(gui::Alignment::Center);
-        gui.add_widget("dialogue_speaker", speaker);
-    }
-    {
-        auto line = gui::Text::create(
-                gui::Position::bottomcenter({0.f, -250.f}),
-                sf::Vector2f((float)window->getSize().x - 800.f, 100.f),
-                p_region->get_style(),
-                "");
-        line->set_enabled(false);
-        line->set_visible(false);
-        line->set_text_padding(10.f);
-        line->set_character_size(28);
-        gui.add_widget("dialogue_lines", line);
-    }
-    {
-        auto choice = gui::ButtonList::create(
-                gui::Position::bottomcenter({0.f, -250.f}),
-                sf::Vector2f((float)window->getSize().x - 800.f, 50.f),
-                p_region->get_style()
-            );
-        choice->set_enabled(false);
-        choice->set_visible(false);
-        gui.add_widget("dialogue_choices", choice);
-    }
+    load_gui();
 
     normal_mode.init(this);
     cinematic_mode.init(this);

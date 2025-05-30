@@ -24,10 +24,6 @@ bool operator==(const SpeechVertex& a, const SpeechVertex& b) {
 }
 
 
-std::ostream& operator<<(std::ostream& stream, const FlagExpr& p) {
-    return stream;
-}
-
 std::ostream& operator<<(std::ostream& stream, const SpeechResponse& p) {
     return stream << "{ conditions: " << p.conditions << ", text: \"" << p.text << "\", edge: \"" << p.edge << "\", flags: " << p.flags << " }";
 }

@@ -1,17 +1,17 @@
 {
     "door_simple_wooden_single": {
         "texture": "door_simple_wooden_single",
-        "boundary": [ [0, 155], [99, 204] ],
+        "boundary": [ [0, 145], [80, 195] ],
         "tags": [ "wood", "door", "simple_lock" ]
     },
     "door_simple_wooden_double": {
         "texture": "door_simple_wooden_double",
-        "boundary": [ [0, 155], [99, 204] ],
+        "boundary": [ [0, 150], [80, 200] ],
         "tags": [ "wood", "door", "simple_lock" ]
     },
     "table_simple_wooden_round": {
         "texture": "table_simple_wooden_round",
-        "boundary": [ [-10, 99], [142, 99] ],
+        "boundary": [ [-10, 99], [146, 99] ],
         "tags": [ "wood", "furniture" ]
     },
     "crate_simple_wooden_small": {

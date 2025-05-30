@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "lua_script.h"
 #include "lua_init.h"
-#include "entity.h"
+#include "objects/entity.h"
 #include "time/deltatime.h"
 #include "world/area.h"
 

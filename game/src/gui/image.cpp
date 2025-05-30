@@ -4,10 +4,11 @@
 
 namespace gui {
 
-Image::Image(const Position& position, const sf::Vector2f& size, const Style& style, const sf::Texture& texture)
+Image::Image(const Position& position, const sf::Vector2f& size, const Style& style, const sfu::TextureAtlas& texture)
     : Widget(position, size, style)
 {
-    set_background_texture(texture);
+    set_background_texture(texture, TextureFillMode::Stretch);
+    set_background_color(sf::Color::White);
 }
 
 }

@@ -23,9 +23,22 @@ int FlagExpr::evaluate() const {
         return (int)(left->evaluate() >= right->evaluate());
     case FlagExprType::Not:
         return (int)(!((bool)left->evaluate()));
+    case FlagExprType::Default:
+        return 1;
     case FlagExprType::Value:
         return value;
     case FlagExprType::Identifier:
+        return FlagTable::get_flag(name);
+    case FlagExprType::Once:
+        if (!FlagTable::Once) {
+            FlagTable::Once = true;
+            return 1;
+        }
+        return 0;
+    case FlagExprType::Random:
+        if (value != 0) {
+            FlagTable::set_flag(name, rand() % value);
+        }
         return FlagTable::get_flag(name);
     }
     return 0;
@@ -55,6 +68,16 @@ std::ostream& operator<<(std::ostream& stream, const FlagExpr& value) {
         return stream << value.value;
     case FlagExprType::Identifier:
         return stream << value.name;
+    case FlagExprType::Default:
+        return stream << "default";
+    case FlagExprType::Once:
+        return stream << "once";
+    case FlagExprType::Random:
+        if (value.value == 0) {
+            return stream << value.name;
+        } else {
+            return stream << value.name << "(" << value.value << ")";
+        }
     }
     return stream;
 }

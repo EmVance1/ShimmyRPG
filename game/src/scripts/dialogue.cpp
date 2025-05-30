@@ -11,13 +11,19 @@ static void set_response_flags(const std::unordered_map<std::string, FlagModifie
 }
 
 
-void Dialogue::begin(const SpeechGraph& graph, GameMode init_mode) {
+void Dialogue::begin(const SpeechGraph& graph, GameMode init_mode, const std::string& id) {
+    m_id = id;
     m_graph = graph;
     m_vertex = "entry0";
     for (size_t i = 0; graph.contains("entry" + std::to_string(i)); i++) {
         const auto name = "entry" + std::to_string(i);
+        const auto once_id = "once_dia_" + id + "_" + name;
+        FlagTable::Once = FlagTable::has_flag(once_id);
         if (graph.at(name).conditions.evaluate()) {
             m_vertex = "entry" + std::to_string(i);
+        }
+        if (FlagTable::Once) {
+            FlagTable::set_flag(once_id, 1);
         }
     }
     m_vertex_index = 0;

@@ -27,7 +27,7 @@ void Background::update(const sf::FloatRect& frustum) {
             if (!tile.texture) {
                 tile.texture = ALLOC.alloc();
                 auto _ = tile.texture->loadFromFile(tile.filename);
-                tile.texture->setSmooth(true);
+                // tile.texture->setSmooth(true);
             }
         } else {
             if (tile.texture) {

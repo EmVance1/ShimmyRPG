@@ -6,29 +6,31 @@
         "scale": 5.35
     },
     "background": [
-        { "file": "res/textures/shimmyshack.png", "bounds": [ 390, 0, 1115, 1080 ] }
+        { "file": "res/textures/shimmyshack.png", "bounds": [ -68, -70, 2054, 1156 ] }
     ],
     "triggers": [
         {
-            "id": "SpeakToShimmy",
-            "bounds": [ 170, 0, 364, 350 ],
-            "active_if": "!ShimmyIntroScene_HasPlayed",
-            "action": { "BeginScript": "res/scripts/ShimmyIntroScene.lua" },
-            "single_use": true
-        },
-        {
-            "id": "ShimmyCurfewBlocker",
-            "bounds": [ 315, 535, 115, 40 ],
-            "active_if": "Ademmar_CurfewInPlace",
-            "action": { "Popup": "There is a curfew in place. It is unwise to go outside." },
-            "single_use": false
+            "id": "ShimmyBehindBar",
+            "bounds": [ 192, 0, 342, 100 ],
+            "action": { "BeginDialogue": "res/scripts/ShimmyBehindBar.shmy" }
         },
         {
             "id": "ShimmyFrontDoor",
             "bounds": [ 315, 535, 115, 40 ],
-            "active_if": "!Ademmar_CurfewInPlace",
             "action": { "GotoArea": { "index": 1, "spawnpos": [ 260, 20 ], "suppress_triggers": true } },
-            "single_use": false
+            "condition": "!Ademmar_CurfewInPlace"
+        },
+        {
+            "id": "ShimmyCurfewBlocker",
+            "bounds": [ 315, 535, 115, 40 ],
+            "action": { "Popup": "There is a curfew in place. It is unwise to go outside." },
+            "condition": "Ademmar_CurfewInPlace"
+        },
+        {
+            "id": "SpeakToShimmy",
+            "bounds": [ 140, 0, 394, 380 ],
+            "action": { "BeginScript": "res/scripts/ShimmyIntroScene.lua" },
+            "condition": "once"
         }
     ],
     "entities": [
@@ -36,30 +38,30 @@
             "texture": "player_placeholder",
             "position": { "grid": [ 60, 90 ] },
             "controller": { "speed": 5 },
-            "ids": { "script": "player", "dialogue": "-" },
+            "ids": { "script": "player", "story": "Stanza" },
             "tags": [ "player" ]
         },
         {
             "texture": "npc_friendly_placeholder",
             "position": { "grid": [ 60, 10 ] },
             "controller": { "speed": 4 },
-            "ids": { "script": "ShimmyPrime", "dialogue": "Shimmy" },
+            "ids": { "script": "ShimmyPrime", "story": "Shimmy" },
             "tags": [ "npc", "trader", "shimmy_staff" ],
-            "dialogue": { "file": "res/scripts/ShimmyDialogue.dia" }
+            "dialogue": { "file": "res/scripts/ShimmyDialogue.shmy" }
         },
         {
             "texture": "npc_friendly_placeholder",
             "position": { "grid": [ 90, 55 ] },
             "controller": { "speed": 4 },
-            "ids": { "script": "BrianPrime", "dialogue": "Brian" },
+            "ids": { "script": "BrianPrime", "story": "Brian" },
             "tags": [ "npc", "shimmy_customer" ],
-            "dialogue": { "file": "res/scripts/BrianDialogue.dia" }
+            "dialogue": { "file": "res/scripts/BrianDialogue.shmy" }
         },
         {
             "texture": "npc_neutral_placeholder",
             "position": { "grid": [ 90, 25 ] },
             "controller": { "speed": 4 },
-            "ids": { "script": "Sally", "dialogue": "Sally" },
+            "ids": { "script": "Sally", "story": "Sally" },
             "tags": [ "npc" ],
             "dialogue": { "line": "This curfew nonsense is a bad fucking joke..." }
         },
@@ -67,35 +69,35 @@
             "texture": "npc_neutral_placeholder",
             "position": { "grid": [ 80, 25 ] },
             "controller": { "speed": 4 },
-            "ids": { "script": "Bill", "dialogue": "Bill" },
+            "ids": { "script": "Bill", "story": "Bill" },
             "tags": [ "npc" ],
             "dialogue": { "line": "Shimmy really knows how to brew a strong drink." }
         },
         {
             "texture": "table_simple_wooden_long",
-            "position": { "world_iso": [ 500, 413 ] },
-            "boundary": [ [0, 260], [370, 105] ],
+            "position": { "world_iso": [ 490, 408 ] },
+            "boundary": [ [0, 265], [378, 110] ],
             "tags": [ "furniture", "wood" ]
         },
         {
             "prefab": "table_simple_wooden_round",
-            "position": { "world_iso": [ 675, 679 ] }
+            "position": { "world_iso": [ 670, 679 ] }
         },
         {
             "prefab": "table_simple_wooden_round",
-            "position": { "world_iso": [ 893, 579 ] }
+            "position": { "world_iso": [ 890, 579 ] }
         },
         {
             "prefab": "table_simple_wooden_round",
-            "position": { "world_iso": [ 844, 796 ] }
+            "position": { "world_iso": [ 842, 800 ] }
         },
         {
             "prefab": "table_simple_wooden_round",
-            "position": { "world_iso": [ 1045, 718 ] }
+            "position": { "world_iso": [ 1047, 720 ] }
         },
         {
             "prefab": "door_simple_wooden_single",
-            "position": { "world_iso": [ 992, 191 ] },
+            "position": { "world_iso": [ 993, 203 ] },
             "tags": [ "locked", "-y" ]
         }
     ]

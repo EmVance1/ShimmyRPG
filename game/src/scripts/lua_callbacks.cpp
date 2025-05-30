@@ -2,7 +2,7 @@
 #include "lua_callbacks.h"
 #include "lua_script.h"
 #include "lua_convert.h"
-#include "entity.h"
+#include "objects/entity.h"
 #include "flags.h"
 #include "scripting/speech_graph.h"
 #include "world/area.h"
@@ -121,7 +121,7 @@ int l_start_dialogue(lua_State* L) {
         lua_pushstring(L, "script");
         lua_gettable(L, LUA_REGISTRYINDEX);
         const auto script = static_cast<LuaScript*>(lua_touserdata(L, -1));
-        script->parent_area().begin_dialogue(graph);
+        script->parent_area().begin_dialogue(graph, filename);
     } catch (const std::exception& e) {
         std::cout << e.what() << "\n";
     }
@@ -135,7 +135,7 @@ int l_start_dialogue(lua_State* L) {
     lua_pushstring(L, "script");
     lua_gettable(L, LUA_REGISTRYINDEX);
     const auto script = static_cast<LuaScript*>(lua_touserdata(L, -1));
-    script->parent_area().begin_dialogue(graph);
+    script->parent_area().begin_dialogue(graph, filename);
 
     return 0;
 }

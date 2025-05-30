@@ -17,6 +17,14 @@ static void load_file(const std::string& filename, const std::string& prefix) {
             std::cerr << "'" << f << "' is a reserved value and cannot be overriden\n";
             continue;
         }
+        if (f.starts_with("rng")) {
+            std::cerr << "'rng' prefix is reserved for temporary internal flags\n";
+            continue;
+        }
+        if (f.starts_with("once")) {
+            std::cerr << "'once' prefix is reserved for temporary internal flags\n";
+            continue;
+        }
         if (prefix != "Global") {
             f = prefix + "_" + f;
         }

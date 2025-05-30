@@ -8,6 +8,7 @@ FlagExpr parse_and(Lexer& lexer, Token& next);
 FlagExpr parse_eq(Lexer& lexer, Token& next);
 FlagExpr parse_cmp(Lexer& lexer, Token& next);
 FlagExpr parse_unit(Lexer& lexer, Token& next);
+FlagExpr parse_random(const std::string& id);
 
 
 FlagExpr parse_or(Lexer& lexer, Token& next) {
@@ -111,11 +112,20 @@ FlagExpr parse_cmp(Lexer& lexer, Token& next) {
 FlagExpr parse_unit(Lexer& lexer, Token& next) {
     switch (next.type) {
     case TokenType::Identifier: {
-        auto id = next.value;
+        auto id = next.val;
         next = *lexer.next();
-        return FlagExpr::Identifier(std::move(id)); }
+        if (id == "default") {
+            return FlagExpr::Default();
+        } else if (id == "once") {
+            return FlagExpr::Once();
+        } else if (id.starts_with("rng_")) {
+            return parse_random(id);
+        } else {
+            return FlagExpr::Identifier(std::move(id));
+        }
+        break; }
     case TokenType::IntLiteral: {
-        auto i = next.value;
+        auto i = next.val;
         next = *lexer.next();
         return FlagExpr::Value(std::atoi(i.c_str())); }
     case TokenType::Bang: {
@@ -146,5 +156,23 @@ FlagExpr flagexpr_from_string(const std::string& expr) {
     const auto temp = expr + ")";
     auto lexer = Lexer(temp);
     return parse_flag_expr(lexer);
+}
+
+
+
+FlagExpr parse_random(const std::string& id) {
+    auto num = std::string("");
+    auto i = 0;
+    while (isdigit(id[id.size() - 1 - i])) {
+        num.insert(num.begin() + i, id[id.size() - 1 - i]);
+        i++;
+    }
+    if (i == 0) {
+        auto val = id;
+        return FlagExpr::Random(std::move(val), 0);
+    } else {
+        auto val = id.substr(0, id.size() - i);
+        return FlagExpr::Random(std::move(val), std::atoi(num.c_str()));
+    }
 }
 

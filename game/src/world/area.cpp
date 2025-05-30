@@ -4,7 +4,7 @@
 #include "sorting.h"
 #include "time/deltatime.h"
 #include "region.h"
-#include "trigger.h"
+#include "objects/trigger.h"
 #include "scripts/lua_script.h"
 #include "gui/gui.h"
 
@@ -29,7 +29,9 @@ void Area::update_motionguide() {
 }
 
 void Area::handle_trigger(const Trigger& trigger) {
-    if (!flagexpr_from_string(trigger.condition).evaluate()) { return; }
+    FlagTable::Once = FlagTable::has_flag(trigger.once_id);
+    if (!trigger.condition.evaluate()) { return; }
+    if (FlagTable::Once) { FlagTable::set_flag(trigger.once_id, 1); }
 
     switch (trigger.action.index()) {
     case 0: {
@@ -38,12 +40,18 @@ void Area::handle_trigger(const Trigger& trigger) {
         s.load_from_file(loadscript.filename);
         break; }
     case 1: {
+        const auto loaddia = std::get<BeginDialogue>(trigger.action);
+        const auto graph = dialogue_from_file(loaddia.filename);
+        begin_dialogue(graph, loaddia.filename);
+        set_mode(GameMode::Cinematic, false);
+        break; }
+    case 2: {
         const auto popup = std::get<Popup>(trigger.action);
         auto popup_ui = gui::Popup::create(gui::Position::center({0, 0}), sf::Vector2f(700, 150), p_region->get_style(), popup.message);
         popup_ui->set_position(gui::Position::center({0, 0}));
         gui.add_widget("popup", popup_ui);
         break; }
-    case 3: {
+    case 4: {
         const auto gotoarea = std::get<GotoArea>(trigger.action);
         p_region->set_active_area(gotoarea.index);
         p_region->get_active_area().get_player().set_position(gotoarea.spawnpos, cart_to_iso);
@@ -52,15 +60,19 @@ void Area::handle_trigger(const Trigger& trigger) {
     }
 }
 
-void Area::begin_dialogue(const SpeechGraph& graph) {
-    dialogue.begin(graph, gamemode);
+void Area::begin_dialogue(const SpeechGraph& graph, const std::string& dia_id) {
+    dialogue.begin(graph, gamemode, dia_id);
     const auto line = std::get<Dialogue::Line>(dialogue.get_current_element());
-    auto speaker_gui = gui.get_widget("dialogue_speaker");
+    auto speaker_gui = gui.get_widget<gui::TextWidget>("dialogue_speaker");
     speaker_gui->set_visible(true);
-    std::dynamic_pointer_cast<gui::TextWidget>(speaker_gui)->set_label(dialogue_name_LUT[line.speaker]);
-    auto line_gui = gui.get_widget("dialogue_lines");
+    if (line.speaker == "Narrator") {
+        speaker_gui->set_label("Narrator");
+    } else {
+        speaker_gui->set_label(story_name_LUT[line.speaker]);
+    }
+    auto line_gui = gui.get_widget<gui::TextWidget>("dialogue_lines");
     line_gui->set_visible(true);
-    std::dynamic_pointer_cast<gui::TextWidget>(line_gui)->set_label(line.line);
+    line_gui->set_label(line.line);
 }
 
 void Area::set_mode(GameMode mode, bool dramatic) {
@@ -71,6 +83,9 @@ void Area::set_mode(GameMode mode, bool dramatic) {
     } else if (mode != GameMode::Cinematic && gamemode == GameMode::Cinematic) {
         if (dramatic) { cinematic_timer = 1.5f; }
         get_player().get_tracker().start();
+    }
+    if (mode == GameMode::Cinematic) {
+        gui.get_widget("tooltip")->set_visible(false);
     }
     gamemode = mode;
 }
@@ -122,6 +137,9 @@ void Area::update() {
     background.update(camera.getFrustum());
     sorted_entities = sprites_topo_sort(entities);
 
+    const auto g = FlagTable::get_flag("Player_Coin");
+    gui.get_widget<gui::Panel>("gold_counter")->get_widget<gui::Text>("goldtxt")->set_label(std::to_string(g) + "sp");
+
     if (cinematic_timer > 0.f) {
         cinematic_timer -= Time::deltatime();
         if (gamemode == GameMode::Cinematic) {
@@ -154,6 +172,9 @@ void Area::render(sf::RenderTarget& target) {
 
     for (const auto& e : sorted_entities) {
         target.draw(e->get_sprite());
+        if (e->is_hovered()) {
+            target.draw(e->get_outline_sprite());
+        }
     }
 
 #ifdef DEBUG

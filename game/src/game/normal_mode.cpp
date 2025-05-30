@@ -1,3 +1,4 @@
+#include "gui/bases/textwidget.h"
 #include "pch.h"
 #include "normal_mode.h"
 #include "scripting/speech_graph.h"
@@ -29,11 +30,11 @@ void NormalMode::speak_action(const std::string& target, const std::string& spee
                          - t.get_tracker().get_position_grid()).lengthSquared() < (thresh * thresh * 1.2f)) {
         if (speech.ends_with(".dia")) {
             const auto graph = dialogue_from_file(speech);
-            p_area->begin_dialogue(graph);
+            p_area->begin_dialogue(graph, speech);
             p_area->set_mode(GameMode::Cinematic, false);
         } else {
             const auto graph = dialogue_from_line(t.get_script_id(), speech);
-            p_area->begin_dialogue(graph);
+            p_area->begin_dialogue(graph, t.get_script_id());
             p_area->set_mode(GameMode::Cinematic, false);
         }
     } else {
@@ -99,8 +100,19 @@ void NormalMode::handle_event(const sf::Event& event) {
         for (Entity* e : p_area->sorted_entities) {
             e->set_hovered(false);
         }
+        auto tt = std::dynamic_pointer_cast<gui::TextWidget>(p_area->gui.get_widget("tooltip"));
+        tt->set_visible(false);
         if (auto top = top_contains(p_area->sorted_entities, mapped)) {
             top->set_hovered(true);
+            if (top->is_character()) {
+                tt->set_position(gui::Position::topleft(sf::Vector2f(mmv->position) - sf::Vector2f(0.f, tt->get_size().y)));
+                tt->set_label(p_area->story_name_LUT.at(top->get_script_id()));
+                tt->set_visible(true);
+            }
+        }
+
+        if (p_area->gui.has_widget("context_menu")) {
+            p_area->gui.remove_widget("context_menu");
         }
     } else if (auto scrl = event.getIf<sf::Event::MouseWheelScrolled>()) {
         const auto zoom = (scrl->delta > 0) ? 0.98f : 1.02f;
@@ -128,7 +140,6 @@ void NormalMode::update() {
 
     p_area->camera.update(Time::deltatime());
     p_area->camera.setTrackingPos(p_area->get_player().get_sprite().getPosition());
-    // std::cout << "(" << p_area->camera.getCenter().x << ", " << p_area->camera.getCenter().y << ") " << p_area->id << "\n";
 
     for (auto& t : p_area->triggers) {
         if (p_area->get_player().get_trigger_collider().intersects(t.bounds)) {

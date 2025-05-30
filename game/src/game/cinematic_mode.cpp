@@ -11,11 +11,11 @@ void CinematicMode::handle_event(const sf::Event& event) {
         p_area->gui.handle_event(event);
     } else {
         if (auto kyp = event.getIf<sf::Event::KeyPressed>()) {
-            if (kyp->code == sf::Keyboard::Key::Space) {
+            if (kyp->code == sf::Keyboard::Key::Space && p_area->dialogue.is_playing()) {
                 p_area->dialogue.advance();
             }
         } else if (auto mbp = event.getIf<sf::Event::MouseButtonPressed>()) {
-            if (mbp->button == sf::Mouse::Button::Left) {
+            if (mbp->button == sf::Mouse::Button::Left && p_area->dialogue.is_playing()) {
                 p_area->dialogue.advance();
             }
         }
@@ -29,12 +29,15 @@ void CinematicMode::handle_event(const sf::Event& event) {
                 choice_gui->set_enabled(false);
                 choice_gui->set_visible(false);
                 auto speaker_gui = p_area->gui.get_widget("dialogue_speaker");
-                std::dynamic_pointer_cast<gui::TextWidget>(speaker_gui)->set_label(p_area->dialogue_name_LUT[line->speaker]);
+                if (line->speaker == "Narrator") {
+                    std::dynamic_pointer_cast<gui::TextWidget>(speaker_gui)->set_label("Narrator");
+                } else {
+                    std::dynamic_pointer_cast<gui::TextWidget>(speaker_gui)->set_label(p_area->story_name_LUT[line->speaker]);
+                }
                 auto line_gui = p_area->gui.get_widget("dialogue_lines");
                 line_gui->set_visible(true);
                 std::dynamic_pointer_cast<gui::TextWidget>(line_gui)->set_label(line->line);
             } else if (auto choice = std::get_if<Dialogue::Selection>(&elem)) {
-                // auto speaker_gui = p_area->gui.get_widget("dialogue_speaker");
                 auto line_gui = p_area->gui.get_widget("dialogue_lines");
                 auto choice_gui = std::dynamic_pointer_cast<gui::ButtonList>(p_area->gui.get_widget("dialogue_choices"));
                 choice_gui->clear();
@@ -43,7 +46,7 @@ void CinematicMode::handle_event(const sf::Event& event) {
                 for (const auto& c : *choice) {
                     size_t i = c.index;
                     auto b = choice_gui->add_button(c.line, [&, i](){ p_area->dialogue.advance(i); });
-                    b->set_character_size(28);
+                    // b->set_character_size(28);
                     b->set_text_padding(10.f);
                 }
             }
