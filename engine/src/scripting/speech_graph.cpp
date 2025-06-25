@@ -23,22 +23,3 @@ bool operator==(const SpeechVertex& a, const SpeechVertex& b) {
            a.outcome == b.outcome;
 }
 
-
-std::ostream& operator<<(std::ostream& stream, const SpeechResponse& p) {
-    return stream << "{ conditions: " << p.conditions << ", text: \"" << p.text << "\", edge: \"" << p.edge << "\", flags: " << p.flags << " }";
-}
-
-std::ostream& operator<<(std::ostream& stream, const SpeechOutcome& p) {
-    if (const auto resps = std::get_if<std::vector<SpeechResponse>>(&p)) {
-        return stream << *resps;
-    } else if (const auto go = std::get_if<SpeechGoto>(&p)) {
-        return stream << go->vertex;
-    } else {
-        return stream << "exit";
-    }
-}
-
-std::ostream& operator<<(std::ostream& stream, const SpeechVertex& p) {
-    return stream << "{ speaker: \"" << p.speaker << "\", lines: " << p.lines << ", outcome: " << p.outcome << " }";
-}
-

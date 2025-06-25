@@ -29,8 +29,9 @@ get_flag = get_flag
 
 Modes = {
     NORMAL = 0,
-    CINEMATIC = 1,
-    COMBAT = 2,
+    DIALOGUE = 1,
+    CINEMATIC = 2,
+    COMBAT = 3,
 }
 
 
@@ -47,11 +48,12 @@ function OnStartAsync()
 
     set_flag("ShimmyIntroScene_HasPlayed", 1)
 
-    if get_flag("ShimmyHostility") > 2 then
-        -- set_mode(Modes.COMBAT, { "shimmy_staff", "shimmy_customer" }, {})
-    else
-        set_path("ShimmyPrime", { x=400, y=50 })
-    end
+    -- if get_flag("Shimmy_Hostility") > 2 then
+        set_combat({}, { "shimmy_staff", "shimmy_customer" })
+        set_mode(Modes.COMBAT)
+    -- else
+    --     set_path("ShimmyPrime", { x=400, y=50 })
+    -- end
 
     coroutine.yield(0.7)
 

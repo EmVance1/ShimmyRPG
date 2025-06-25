@@ -1,6 +1,5 @@
 #pragma once
 #include <SFML/Graphics.hpp>
-#include <iostream>
 
 
 class PartialLine : public sf::Drawable, public sf::Transformable {

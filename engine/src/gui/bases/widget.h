@@ -1,7 +1,6 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 #include <memory>
-#include "sfutil/atlas.h"
 #include "../style.h"
 
 
@@ -24,7 +23,6 @@ private:
     Position m_position;
     sf::FloatRect m_bounds;
 
-    const sfu::TextureAtlas* m_texture = nullptr;
     const Style* m_style;
 
 protected:
@@ -57,7 +55,8 @@ public:
         m_background.setOutlineColor(style.outline_color_1);
         m_background.setOutlineThickness(style.outline_width);
         if (style.textured) {
-            set_background_texture(style.background_texture, TextureFillMode::Stretch);
+            m_background.setTexture(&style.background_texture);
+            m_background.setTextureRect(style.default_cell);
         }
     }
 
@@ -80,14 +79,11 @@ public:
     bool is_style_inherited() const { return m_inherit_style; }
 
     void set_background_color(const sf::Color& color) { m_background.setFillColor(color); }
-    void set_background_texture(const sfu::TextureAtlas& texture, TextureFillMode mode) {
-        if (mode == TextureFillMode::Repeat) {
-            m_background.setTexture(&texture.getTexture());
-            m_background.setTextureRect(sf::IntRect(m_background.getLocalBounds()));
-        } else {
-            m_background.setTexture(&texture.getTexture());
-            m_background.setTextureRect(texture.getTextureRect({0, 0}));
-        }
+    void set_background_texture(const sf::Vector2i& cell) {
+        m_background.setTextureRect(sf::IntRect{ cell, (sf::Vector2i)m_bounds.size });
+    }
+    void set_background_texture(const sf::IntRect& rect) {
+        m_background.setTextureRect(rect);
     }
 
     void destroy() { m_destroy = true; }

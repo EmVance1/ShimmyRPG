@@ -1,7 +1,6 @@
 {
     "world": {
         "area_label": "Shimmy's Shack",
-        "pathing": "res/textures/shimmyshack_map.png",
         "topleft": [948, 315],
         "scale": 5.35
     },
@@ -17,7 +16,7 @@
         {
             "id": "ShimmyFrontDoor",
             "bounds": [ 315, 535, 115, 40 ],
-            "action": { "GotoArea": { "index": 1, "spawnpos": [ 260, 20 ], "suppress_triggers": true } },
+            "action": { "GotoArea": { "index": 1, "spawnpos": [ 810, 360 ], "suppress_triggers": true } },
             "condition": "!Ademmar_CurfewInPlace"
         },
         {
@@ -30,74 +29,74 @@
             "id": "SpeakToShimmy",
             "bounds": [ 140, 0, 394, 380 ],
             "action": { "BeginScript": "res/scripts/ShimmyIntroScene.lua" },
-            "condition": "once"
+            "condition": "ShimmyIntroScene_IsActive & once"
         }
     ],
     "entities": [
         {
             "texture": "player_placeholder",
-            "position": { "grid": [ 60, 90 ] },
-            "controller": { "speed": 5 },
+            "position": { "world": [ 320, 480 ] },
+            "controller": { "speed": 2.5 },
             "ids": { "script": "player", "story": "Stanza" },
             "tags": [ "player" ]
         },
         {
             "texture": "npc_friendly_placeholder",
-            "position": { "grid": [ 60, 10 ] },
-            "controller": { "speed": 4 },
+            "position": { "world": [ 330, 50 ] },
+            "controller": { "speed": 2 },
             "ids": { "script": "ShimmyPrime", "story": "Shimmy" },
             "tags": [ "npc", "trader", "shimmy_staff" ],
             "dialogue": { "file": "res/scripts/ShimmyDialogue.shmy" }
         },
         {
             "texture": "npc_friendly_placeholder",
-            "position": { "grid": [ 90, 55 ] },
-            "controller": { "speed": 4 },
+            "position": { "world": [ 500, 290 ] },
+            "controller": { "speed": 2 },
             "ids": { "script": "BrianPrime", "story": "Brian" },
             "tags": [ "npc", "shimmy_customer" ],
             "dialogue": { "file": "res/scripts/BrianDialogue.shmy" }
         },
         {
             "texture": "npc_neutral_placeholder",
-            "position": { "grid": [ 90, 25 ] },
-            "controller": { "speed": 4 },
+            "position": { "world": [ 460, 130 ] },
+            "controller": { "speed": 2 },
             "ids": { "script": "Sally", "story": "Sally" },
-            "tags": [ "npc" ],
+            "tags": [ "npc", "shimmy_customer" ],
             "dialogue": { "line": "This curfew nonsense is a bad fucking joke..." }
         },
         {
             "texture": "npc_neutral_placeholder",
-            "position": { "grid": [ 80, 25 ] },
-            "controller": { "speed": 4 },
+            "position": { "world": [ 400, 130 ] },
+            "controller": { "speed": 2 },
             "ids": { "script": "Bill", "story": "Bill" },
-            "tags": [ "npc" ],
+            "tags": [ "npc", "shimmy_customer" ],
             "dialogue": { "line": "Shimmy really knows how to brew a strong drink." }
         },
         {
             "texture": "table_simple_wooden_long",
-            "position": { "world_iso": [ 490, 408 ] },
+            "position": { "iso": [ 490, 408 ] },
             "boundary": [ [0, 265], [378, 110] ],
             "tags": [ "furniture", "wood" ]
         },
         {
             "prefab": "table_simple_wooden_round",
-            "position": { "world_iso": [ 670, 679 ] }
+            "position": { "iso": [ 670, 679 ] }
         },
         {
             "prefab": "table_simple_wooden_round",
-            "position": { "world_iso": [ 890, 579 ] }
+            "position": { "iso": [ 890, 579 ] }
         },
         {
             "prefab": "table_simple_wooden_round",
-            "position": { "world_iso": [ 842, 800 ] }
+            "position": { "iso": [ 842, 800 ] }
         },
         {
             "prefab": "table_simple_wooden_round",
-            "position": { "world_iso": [ 1047, 720 ] }
+            "position": { "iso": [ 1047, 720 ] }
         },
         {
             "prefab": "door_simple_wooden_single",
-            "position": { "world_iso": [ 993, 203 ] },
+            "position": { "iso": [ 993, 203 ] },
             "tags": [ "locked", "-y" ]
         }
     ]

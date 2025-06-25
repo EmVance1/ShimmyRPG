@@ -22,12 +22,9 @@ int main() {
     window.setPosition({0, 0});
     Area::window = &window;
     gui::Widget::WIN_SIZE = window.getSize();
-    srand((uint32_t)time(nullptr));
 
     auto target = sfu::PostFx();
     auto _ = target.resize(window.getSize());
-    // auto& retro = target.addShader();
-    // _ = retro.loadFromFile("res/shaders/pixelate.frag", sf::Shader::Type::Fragment);
 
     load_flags();
     auto region = Region();
@@ -38,6 +35,12 @@ int main() {
     auto fps_draw = sf::Text(font, "0", 25);
     fps_draw.setPosition({ 10, 10 });
     fps_draw.setFillColor(sf::Color::White);
+
+    const auto cursor_tex = sf::Texture("res/textures/cursor.png");
+    auto cursor = sf::Sprite(cursor_tex);
+    cursor.setOrigin({ 4, 3 });
+
+    window.setMouseCursorVisible(false);
 
     Time::reset();
 
@@ -51,6 +54,7 @@ int main() {
                 window.close();
             } else if (const auto kyp = event->getIf<sf::Event::KeyPressed>()) {
                 if (kyp->code == sf::Keyboard::Key::R && kyp->control) {
+                    FlagTable::clear();
                     load_flags();
                     const auto temp = region.get_active_area_index();
                     region.load_from_folder("res/world/ademmar/");
@@ -66,6 +70,9 @@ int main() {
         target.clear(sf::Color::Black);
         region.get_active_area().render(target);
         target.setView(target.getDefaultView());
+        const auto mouse = sf::Mouse::getPosition(window);
+        cursor.setPosition(sf::Vector2f(mouse));
+        target.draw(cursor);
         target.draw(fps_draw);
         target.postFxDisplay();
 

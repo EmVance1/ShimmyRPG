@@ -15,18 +15,16 @@ void Area::load_prefab(const rapidjson::Value& prefabs, const rapidjson::Value& 
         p_region->m_atlases.at(tex),
         p_region->m_atlases.at(tex + std::string("_outline")),
         p_region->m_alphamaps.at(tex + std::string("_map")),
-        &pathfinder, scale, value.GetObject().HasMember("controller") || prefab.GetObject().HasMember("controller")
+        &pathfinder, value.GetObject().HasMember("controller") || prefab.GetObject().HasMember("controller")
     );
     auto& entity = entities[e_id];
 
     // POSITION
     const auto pos = value.GetObject()["position"].GetObject();
-    if (pos.HasMember("grid")) {
-        entity.set_position(json_to_vector2f(pos["grid"]) * scale, cart_to_iso);
-    } else if (pos.HasMember("world")) {
+    if (pos.HasMember("world")) {
         entity.set_position(json_to_vector2f(pos["world"]), cart_to_iso);
-    } else if (pos.HasMember("world_iso")) {
-        entity.set_sprite_position(json_to_vector2f(pos["world_iso"]));
+    } else if (pos.HasMember("iso")) {
+        entity.set_sprite_position(json_to_vector2f(pos["iso"]));
     }
 
     // CONTROLLER
@@ -122,18 +120,16 @@ void Area::load_entity(const rapidjson::Value& prefabs, const rapidjson::Value& 
         p_region->m_atlases.at(tex),
         p_region->m_atlases.at(tex + std::string("_outline")),
         p_region->m_alphamaps.at(tex + std::string("_map")),
-        &pathfinder, scale, value.GetObject().HasMember("controller")
+        &pathfinder, value.GetObject().HasMember("controller")
     );
     auto& entity = entities[e_id];
 
     // POSITION
     const auto pos = value.GetObject()["position"].GetObject();
-    if (pos.HasMember("grid")) {
-        entity.set_position(json_to_vector2f(pos["grid"]) * scale, cart_to_iso);
-    } else if (pos.HasMember("world")) {
+    if (pos.HasMember("world")) {
         entity.set_position(json_to_vector2f(pos["world"]), cart_to_iso);
-    } else if (pos.HasMember("world_iso")) {
-        entity.set_sprite_position(json_to_vector2f(pos["world_iso"]));
+    } else if (pos.HasMember("iso")) {
+        entity.set_sprite_position(json_to_vector2f(pos["iso"]));
     }
 
     // CONTROLLER
@@ -169,12 +165,11 @@ void Area::load_entity(const rapidjson::Value& prefabs, const rapidjson::Value& 
     }
 
     // TAGS
-    auto taglist = std::unordered_set<std::string>();
     for (const auto& tag : value.GetObject()["tags"].GetArray()) {
-        taglist.emplace(tag.GetString());
+        entity.get_tags().emplace(tag.GetString());
     }
 
-    if (taglist.contains("player")) {
+    if (entity.get_tags().contains("player")) {
         if (player_id == "") {
             player_id = e_id;
         } else {
@@ -184,11 +179,11 @@ void Area::load_entity(const rapidjson::Value& prefabs, const rapidjson::Value& 
     } else {
         entity.get_actions().emplace_back(MoveToAction{});
         entity.get_actions().emplace_back(AttackAction{});
-        if (taglist.contains("npc"))         { entity.get_actions().emplace_back(SpeakAction{}); }
-        if (taglist.contains("door"))        { entity.get_actions().emplace_back(OpenDoorAction{}); }
-        if (taglist.contains("chest"))       { entity.get_actions().emplace_back(OpenInvAction{}); }
-        if (taglist.contains("simple_lock")) { entity.get_actions().emplace_back(LockpickAction{}); }
-        if (taglist.contains("carryable"))   { entity.get_actions().emplace_back(PickUpAction{}); }
+        if (entity.get_tags().contains("npc"))         { entity.get_actions().emplace_back(SpeakAction{}); }
+        if (entity.get_tags().contains("door"))        { entity.get_actions().emplace_back(OpenDoorAction{}); }
+        if (entity.get_tags().contains("chest"))       { entity.get_actions().emplace_back(OpenInvAction{}); }
+        if (entity.get_tags().contains("simple_lock")) { entity.get_actions().emplace_back(LockpickAction{}); }
+        if (entity.get_tags().contains("carryable"))   { entity.get_actions().emplace_back(PickUpAction{}); }
     }
 }
 

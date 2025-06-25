@@ -3,7 +3,7 @@
 #include <unordered_map>
 #include <rapidjson/document.h>
 #include <sfutil/camera.h>
-#include "algo/graph2d.h"
+#include <navmesh/lib.h>
 #include "objects/entity.h"
 #include "objects/trigger.h"
 #include "scripts/lua_script.h"
@@ -24,10 +24,9 @@ struct Area {
     Region* p_region;
     const std::string id;
     std::string area_label;
-    sf::Shader posterize;
 
     Background background;
-    SpatialGraph2d pathfinder;
+    nav::NavMesh pathfinder;
     const sf::Vector2f topleft;
     const float scale;
 
@@ -45,7 +44,6 @@ struct Area {
     std::vector<LuaScript> scripts;
 
     sf::RectangleShape motionguide_square;
-    float motionguide_await = 11.f;
     std::optional<ContextAction> queued;
 
     sfu::Camera camera;
@@ -73,14 +71,21 @@ struct Area {
     void load_gui();
 
     void init(const rapidjson::Value& prefabs, const rapidjson::Document& doc);
-    void set_mode(GameMode mode, bool dramatic);
+    void set_mode(GameMode mode);
 
     Entity& get_player();
     const Entity& get_player() const;
 
     void update_motionguide();
     void handle_trigger(const Trigger& trigger);
-    void begin_dialogue(const SpeechGraph& graph, const std::string& id);
+
+    void begin_dialogue(SpeechGraph&& graph, const std::string& id);
+    void begin_combat(
+            const std::unordered_set<std::string>& ally_tags,
+            const std::unordered_set<std::string>& enemy_tags,
+            const std::unordered_set<std::string>& enemysenemy_tags,
+            const std::unordered_set<std::string>& unaligned_tags
+        );
 
     void handle_event(const sf::Event& event);
     void update();

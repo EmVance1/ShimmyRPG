@@ -2,8 +2,11 @@
 #include <SFML/Graphics.hpp>
 #include <sfutil/sfutil.h>
 #include "motion/tracker.h"
+#include "navmesh/types.h"
 #include "sfutil/animation.h"
+#include "util/vechash.h"
 #include "action.h"
+#include "stats.h"
 #include "item.h"
 
 
@@ -50,33 +53,34 @@ private:
     std::string m_dialogue_file;
 
     std::unordered_map<sf::Vector2u, ItemEntry> m_inventory;
+    EntityStats m_stats;
     uint32_t m_coin = 0;
 
-public:
+private:
     static const sfu::TextureAtlas& default_texture() { static sfu::TextureAtlas tex(sf::Image({1, 1}, sf::Color::White), {1, 1}); return tex; }
 
 public:
-    Entity() : m_sprite(Entity::default_texture()), m_outline_sprite(Entity::default_texture()), m_tracker(nullptr, 1.f) {}
+    Entity() : m_sprite(Entity::default_texture()), m_outline_sprite(Entity::default_texture()), m_tracker(nullptr) {}
     Entity(const std::string& id,
            const sfu::TextureAtlas& texture,
            const sfu::TextureAtlas& outline,
            const sfu::AlphaMap& bitmap,
-           const SpatialGraph2d* pathfinder,
-           float pathscale, bool character);
+           const nav::NavMesh* pathfinder,
+           bool character);
 
     const std::string& get_id() const;
     const sfu::AnimatedSprite& get_sprite() const;
     const sfu::AnimatedSprite& get_outline_sprite() const;
-    SortBoundary get_boundary() const;
     sf::FloatRect get_AABB() const;
     sfu::FloatCircle get_trigger_collider() const;
 
-    void set_sprite_position(const sf::Vector2f& position);
     void set_animation(size_t index);
     void set_position(const sf::Vector2f& position, const sf::Transform& cart_to_iso);
+    void set_sprite_position(const sf::Vector2f& position);
 
     void set_sorting_boundary(const sf::Vector2f& pos);
     void set_sorting_boundary(const sf::Vector2f& left, const sf::Vector2f& right);
+    SortBoundary get_sorting_boundary() const;
 
     void set_script_id(const std::string& id) { m_script_id = id; }
     const std::string& get_script_id() const { return m_script_id; }
@@ -92,6 +96,9 @@ public:
 
     const std::unordered_set<std::string>& get_tags() const { return m_tags; }
     std::unordered_set<std::string>& get_tags() { return m_tags; }
+
+    const EntityStats& get_stats() const { return m_stats; }
+    EntityStats& get_stats() { return m_stats; }
 
     bool is_character() const { return m_is_character; }
 

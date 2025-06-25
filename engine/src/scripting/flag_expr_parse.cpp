@@ -152,7 +152,7 @@ FlagExpr parse_flag_expr(Lexer& lexer) {
     return parse_or(lexer, next);
 }
 
-FlagExpr flagexpr_from_string(const std::string& expr) {
+FlagExpr FlagExpr::from_string(const std::string& expr) {
     const auto temp = expr + ")";
     auto lexer = Lexer(temp);
     return parse_flag_expr(lexer);

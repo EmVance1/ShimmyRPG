@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <optional>
+#include <string_view>
 
 
 class LexerError : public std::exception {

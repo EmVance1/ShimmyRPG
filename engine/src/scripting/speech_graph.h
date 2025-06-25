@@ -3,7 +3,6 @@
 #include <variant>
 #include <string>
 #include "flags.h"
-#include "util/io.h"
 #include "flag_expr.h"
 
 
@@ -37,8 +36,4 @@ bool operator==(const SpeechResponse& a, const SpeechResponse& b);
 bool operator==(const SpeechExit& a, const SpeechExit& b);
 bool operator==(const SpeechGoto& a, const SpeechGoto& b);
 bool operator==(const SpeechVertex& a, const SpeechVertex& b);
-
-std::ostream& operator<<(std::ostream& stream, const SpeechResponse& p);
-std::ostream& operator<<(std::ostream& stream, const SpeechOutcome& p);
-std::ostream& operator<<(std::ostream& stream, const SpeechVertex& p);
 

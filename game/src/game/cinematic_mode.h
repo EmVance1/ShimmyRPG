@@ -1,5 +1,6 @@
 #pragma once
 #include <SFML/Graphics.hpp>
+#include "gui/gui.h"
 
 
 struct Area;
@@ -7,6 +8,9 @@ struct Area;
 class CinematicMode {
 private:
     Area* p_area = nullptr;
+
+public:
+    std::shared_ptr<gui::Panel> dia_gui;
 
 public:
     CinematicMode() = default;

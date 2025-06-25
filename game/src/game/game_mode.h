@@ -6,9 +6,10 @@
 
 
 enum class GameMode {
-    Normal = 0,
-    Cinematic = 1,
-    Combat = 2,
-    Sleep = 3,
+    Normal    = 0,
+    Dialogue  = 1,
+    Cinematic = 2,
+    Combat    = 3,
+    Sleep     = 4,
 };
 

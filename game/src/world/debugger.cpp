@@ -1,20 +1,21 @@
+#include "SFML/Graphics/RenderStates.hpp"
 #include "pch.h"
 #include "debugger.h"
 #include "world/area.h"
 #include "objects/trigger.h"
 #include "flags.h"
-
-
-AreaDebugView::AreaDebugView(const std::string& id, float scale)
-    : m_pathfinder_texture("res/textures/" + id + "_map.png"), m_pathfinder(m_pathfinder_texture)
-{
-    m_pathfinder.setScale({scale, scale});
-    m_pathfinder.setColor(sf::Color(255, 255, 255, 50));
-}
+#include "region.h"
 
 
 void AreaDebugView::init(const Area* area) {
     p_area = area;
+
+    for (const auto tri : area->pathfinder.triangles) {
+        const auto color = sf::Color((uint8_t)(rand() % 200) + 55, (uint8_t)(rand() % 200) + 55, (uint8_t)(rand() % 200) + 55, 100);
+        m_pathfinder.push_back(sf::Vertex{ sf::Vector2f(area->pathfinder.vertices[tri.A].x, area->pathfinder.vertices[tri.A].y), color });
+        m_pathfinder.push_back(sf::Vertex{ sf::Vector2f(area->pathfinder.vertices[tri.B].x, area->pathfinder.vertices[tri.B].y), color });
+        m_pathfinder.push_back(sf::Vertex{ sf::Vector2f(area->pathfinder.vertices[tri.C].x, area->pathfinder.vertices[tri.C].y), color });
+    }
 
     for (const auto& t : area->triggers) {
         auto& shape = m_triggers.emplace_back();
@@ -38,8 +39,8 @@ void AreaDebugView::init(const Area* area) {
             shape.setOutlineColor(sf::Color::Magenta);
         } else {
             auto& shape = m_boundaries.emplace_back(sf::PrimitiveType::Lines);
-            shape.append(sf::Vertex(e.get_boundary().left, sf::Color::Magenta));
-            shape.append(sf::Vertex(e.get_boundary().right, sf::Color::Magenta));
+            shape.append(sf::Vertex(e.get_sorting_boundary().left, sf::Color::Magenta));
+            shape.append(sf::Vertex(e.get_sorting_boundary().right, sf::Color::Magenta));
         }
         auto& shape = m_outlines.emplace_back();
         shape.setPosition(e.get_sprite().getPosition() - e.get_sprite().getOrigin());
@@ -52,7 +53,6 @@ void AreaDebugView::init(const Area* area) {
 
 
 void AreaDebugView::update() {
-    m_pathfinder.setTexture(m_pathfinder_texture);
     size_t i = 0;
     size_t j = 0;
     for (const auto& [_, e] : p_area->entities) {
@@ -76,21 +76,29 @@ void AreaDebugView::update() {
         i++;
     }
 
-    const auto& player = p_area->get_player();
-    m_motionguide_line.set_count(player.get_tracker().get_inverse_index() - 1);
-    if (p_area->motionguide_await > 0.05f && p_area->motionguide_await < 10.f) {
-        m_motionguide_line = PartialLine::from_path(player.get_tracker().get_active_path());
-        m_motionguide_line.setScale({ p_area->scale, p_area->scale });
-        m_motionguide_line.set_start(1);
-    }
+    m_motionguide_line.set_count(p_area->get_player().get_tracker().get_inverse_index() + 1);
 }
 
 void AreaDebugView::handle_event(const sf::Event& event) {
+    if (event.is<sf::Event::MouseMoved>()) {
+        auto path = std::vector<sf::Vector2f>();
+        for (const auto& p : p_area->get_player().get_tracker().get_active_path()) { path.push_back({ p.x, p.y }); }
+        m_motionguide_line = PartialLine::from_path(path);
+        m_motionguide_line.set_start(0);
+    } else if (event.is<sf::Event::MouseButtonPressed>()) {
+        auto path = std::vector<sf::Vector2f>();
+        for (const auto& p : p_area->get_player().get_tracker().get_active_path()) { path.push_back({ p.x, p.y }); }
+        m_motionguide_line = PartialLine::from_path(path);
+        m_motionguide_line.set_start(0);
+    }
 }
 
 void AreaDebugView::render_map(sf::RenderTarget& target) const {
-    target.draw(m_pathfinder, p_area->cart_to_iso);
-    if (p_area->motionguide_await > 0.05f && p_area->get_player().get_tracker().is_moving()) {
+    auto states = sf::RenderStates();
+    states.transform = p_area->cart_to_iso;
+    target.draw(m_pathfinder.data(), m_pathfinder.size(), sf::PrimitiveType::Triangles, states);
+    // if (p_area->get_player().get_tracker().is_moving() || p_area->gamemode == GameMode::Combat) {
+    if (p_area->gamemode == GameMode::Normal || p_area->gamemode == GameMode::Combat) {
         target.draw(m_motionguide_line, p_area->cart_to_iso);
     }
 }

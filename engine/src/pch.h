@@ -9,6 +9,7 @@
 #include <string>
 #include <queue>
 #include <memory>
+#include <string_view>
 
 #include <iostream>
 #include <fstream>
@@ -20,6 +21,7 @@
 #include <future>
 #include <functional>
 #include <stdexcept>
+#include <random>
 
 #include <rapidjson/rapidjson.h>
 #include <rapidjson/filereadstream.h>

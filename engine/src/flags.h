@@ -21,6 +21,10 @@ private:
 public:
     inline static bool Once = false;
 
+    static void clear() {
+        cache.clear();
+    }
+
     static void change_flag(const std::string& key, const FlagModifier& mod) {
         if (const auto add = std::get_if<FlagAdd>(&mod)) {
             if (add->strict) {

@@ -21,7 +21,8 @@ FlagExpr parse_flag_expr(Lexer& lexer);
 void set_pragma(const std::string& pragma);
 
 
-bool p_set_strict = true;
+static bool p_set_strict = true;
+static size_t p_pool_size = 16;
 
 SpeechGraph parse_speechgraph(Lexer lexer) {
     auto result = SpeechGraph();
@@ -29,8 +30,9 @@ SpeechGraph parse_speechgraph(Lexer lexer) {
     p_set_strict = true;
 
     while (auto pair = parse_vertex(lexer, entrycount)) {
-        const auto [key, val] = *pair;
-        result[key] = val;
+        // const auto [key, val] = *pair;
+        // result[pair->first] = std::move(pair->second);
+        result.emplace(pair->first, std::move(pair->second));
     }
 
     return result;
@@ -48,7 +50,7 @@ static std::string unwrap_token(const std::optional<Token>& value, TokenType exp
 }
 
 static std::string unwrap_token(const std::optional<Token>& value, int expect) {
-    return (value.has_value() && (int)value->type & expect) ? value->val :
+    return (value.has_value() && (uint32_t)value->type & expect) ? value->val :
         throw ParseSpeechError(std::string("token unwrapped to wrong type - ") + span_to_str(value->row, value->col));
 }
 
@@ -56,7 +58,7 @@ std::optional<SpeechVertexTuple> parse_vertex(Lexer& lexer, size_t& entrycount) 
     auto next = lexer.next();
     if (!next.has_value()) { return {}; }
     while (next->type == TokenType::Pragma) { set_pragma(next->val); next = lexer.next(); if (!next.has_value()) { return {}; } }
-    auto key =  unwrap_token(next, (int)TokenType::Identifier|(int)TokenType::IntLiteral);
+    auto key =  unwrap_token(next, (uint32_t)TokenType::Identifier|(uint32_t)TokenType::IntLiteral);
     auto conditions = FlagExpr::True();
     if (key == "entry") {
         key = key + std::to_string(entrycount++);
@@ -74,19 +76,18 @@ std::optional<SpeechVertexTuple> parse_vertex(Lexer& lexer, size_t& entrycount) 
         switch (next->type) {
         case TokenType::StringLiteral: lines.push_back(next->val); break;
         case TokenType::CloseBracket:  goto after_loop1;
-        default: throw std::exception();
+        default: throw ParseSpeechError("");
         };
         next = lexer.next();
         switch (next->type) {
         case TokenType::CloseBracket: goto after_loop1;
         case TokenType::Comma: break;
-        default: throw std::exception();
+        default: throw ParseSpeechError("");
         }
     }
 after_loop1:
     unwrap_token(lexer.next(), TokenType::Arrow);
-    const auto outcome = parse_outcome(lexer);
-    return { { key, SpeechVertex{ conditions, speaker, lines, outcome } } };
+    return { { key, SpeechVertex{ std::move(conditions), speaker, lines, parse_outcome(lexer) } } };
 }
 
 SpeechOutcome parse_outcome(Lexer& lexer) {
@@ -99,7 +100,7 @@ SpeechOutcome parse_outcome(Lexer& lexer) {
             return SpeechGoto(next->val);
         }
     case TokenType::OpenBrace: break;
-    default: throw std::exception();
+    default: throw ParseSpeechError("");
     }
 
     auto responses = std::vector<SpeechResponse>();
@@ -115,17 +116,17 @@ SpeechOutcome parse_outcome(Lexer& lexer) {
             break;
         case TokenType::StringLiteral: text = next->val; break;
         case TokenType::CloseBrace: goto after_loop2;
-        default: std::exception();
+        default: throw ParseSpeechError("");
         };
 
                           unwrap_token(lexer.next(), TokenType::Arrow);
-        const auto edge = unwrap_token(lexer.next(), (int)TokenType::Identifier|(int)TokenType::IntLiteral);
+        const auto edge = unwrap_token(lexer.next(), (uint32_t)TokenType::Identifier|(uint32_t)TokenType::IntLiteral);
         auto flags = std::unordered_map<std::string, FlagModifier>();
         next = lexer.next();
         switch (next->type) {
         case TokenType::Comma: goto this_one;
         case TokenType::OpenBrace: break;
-        default: throw std::exception();
+        default: throw ParseSpeechError("");
         }
         while (true) {
             auto key = std::string("");
@@ -133,7 +134,7 @@ SpeechOutcome parse_outcome(Lexer& lexer) {
             switch (next->type) {
             case TokenType::Identifier: key = next->val; break;
             case TokenType::CloseBrace: goto after_loop3;
-            default: throw std::exception();
+            default: throw ParseSpeechError("");
             }
                              unwrap_token(lexer.next(), TokenType::Colon);
             const auto flg = unwrap_token(lexer.next(), TokenType::Identifier);
@@ -148,14 +149,14 @@ SpeechOutcome parse_outcome(Lexer& lexer) {
             } else if (flg == "Sub") {
                 modifier = FlagSub{ std::atoi(val.c_str()), p_set_strict };
             } else {
-                throw std::exception();
+                throw ParseSpeechError("");
             };
             flags[key] = modifier;
             next = lexer.next();
             switch (next->type) {
             case TokenType::CloseBrace: goto after_loop3;
             case TokenType::Comma: break;
-            default: throw std::exception();
+            default: throw ParseSpeechError("");
             }
         }
 after_loop3:
@@ -164,15 +165,15 @@ after_loop3:
         switch (next->type) {
         case TokenType::CloseBrace: goto after_loop2;
         case TokenType::Comma: break;
-        default: throw std::exception();
+        default: throw ParseSpeechError("");
         }
 
 this_one:
-        responses.push_back(SpeechResponse{
+        responses.emplace_back(SpeechResponse{
             std::move(conditions),
             text,
             edge,
-            flags,
+            flags
         });
     }
 after_loop2:
@@ -186,6 +187,12 @@ void set_pragma(const std::string& pragma) {
         p_set_strict = false;
     } else if (pragma == "!SET_STRICT") {
         p_set_strict = true;
+    } else if (pragma == "!POOL_SIZE_HUGE") {
+        p_pool_size = 32;
+    } else if (pragma == "!POOL_SIZE_DOUBLE") {
+        p_pool_size = 32;
+    } else if (pragma == "!POOL_SIZE_SINGLE") {
+        p_pool_size = 16;
     }
 }
 

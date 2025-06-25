@@ -20,6 +20,7 @@
 #include <stdexcept>
 #include <chrono>
 #include <filesystem>
+#include <random>
 
 #include <SFML/Graphics.hpp>
 #include <SFML/Window.hpp>

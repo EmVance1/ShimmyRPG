@@ -12,16 +12,14 @@
         {
             "file": "shimmyshack",
             "area_label": "Shimmy's Shack",
-            "pathing": "res/textures/shimmyshack_map.png",
             "topleft": [948, 315],
             "scale": 5.35
         },
         {
             "file": "fountainroad",
             "area_label": "Fountain Road",
-            "pathing": "res/textures/fountainroad_map.png",
-            "topleft": [960, 250],
-            "scale": 5.35
+            "topleft": [750, -400],
+            "scale": 5.05
         }
     ]
 }

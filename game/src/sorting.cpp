@@ -12,7 +12,7 @@ std::vector<Entity*> sprites_topo_sort(std::unordered_map<std::string, Entity>& 
 
     for (const auto& [k, v] : entities) {
         for (const auto& [l, w] : entities) {
-            if (k != l && v.get_AABB().findIntersection(w.get_AABB()).has_value() && v.get_boundary() < w.get_boundary()) {
+            if (k != l && v.get_AABB().findIntersection(w.get_AABB()).has_value() && v.get_sorting_boundary() < w.get_sorting_boundary()) {
                 overlap_graph_out[k].insert(l);
                 overlap_graph_in[l].insert(k);
             }

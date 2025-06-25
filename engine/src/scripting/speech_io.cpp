@@ -18,15 +18,18 @@ SpeechGraph dialogue_from_file(const std::string& filename) {
 }
 
 SpeechGraph dialogue_from_line(const std::string& speaker, const std::string& line) {
-    return { { "entry0", SpeechVertex{
-        FlagExpr::Value(1),
+    auto res = SpeechGraph();
+    res.emplace("entry0", SpeechVertex{
+        FlagExpr::True(),
         speaker,
         { line },
         SpeechExit{}
-    } } };
+    });
+    return res;
 }
 
 
+/*
 void write(std::ostream& stream, const std::string& str) {
     const size_t str_size = str.size();
     stream.write((char*)&str_size, sizeof(size_t));
@@ -68,8 +71,8 @@ void write(std::ostream& stream, const SpeechResponse& response) {
     write(stream, response.conditions);
     write(stream, response.text);
     write(stream, response.edge);
-    // write(stream, response.set_flags);
-    // std::unordered_map<std::string, FlagMod> set_flags;
+    write(stream, response.set_flags);
+    std::unordered_map<std::string, FlagMod> set_flags;
 }
 
 void write(std::ostream& stream, const SpeechOutcome& outcome) {
@@ -98,4 +101,5 @@ void write(std::ostream& stream, const SpeechGraph& graph) {
         write(stream, v);
     }
 }
+*/
 

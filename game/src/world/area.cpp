@@ -9,6 +9,10 @@
 #include "gui/gui.h"
 
 
+static std::random_device RD;
+static std::mt19937 RNG(RD());
+
+
 Entity& Area::get_player() {
     return entities.at(player_id);
 }
@@ -19,13 +23,7 @@ const Entity& Area::get_player() const {
 
 
 void Area::update_motionguide() {
-    const auto& player = get_player();
-    if (motionguide_await > 0.05f && motionguide_await < 10.f) {
-        motionguide_square.setPosition(player.get_tracker().get_target_position_world());
-        motionguide_await = 11.f;
-    } else if (motionguide_await < 0.05f) {
-        motionguide_await += Time::deltatime();
-    }
+    motionguide_square.setPosition(get_player().get_tracker().get_target_position());
 }
 
 void Area::handle_trigger(const Trigger& trigger) {
@@ -41,14 +39,14 @@ void Area::handle_trigger(const Trigger& trigger) {
         break; }
     case 1: {
         const auto loaddia = std::get<BeginDialogue>(trigger.action);
-        const auto graph = dialogue_from_file(loaddia.filename);
-        begin_dialogue(graph, loaddia.filename);
-        set_mode(GameMode::Cinematic, false);
+        begin_dialogue(dialogue_from_file(loaddia.filename), loaddia.filename);
+        set_mode(GameMode::Dialogue);
         break; }
     case 2: {
         const auto popup = std::get<Popup>(trigger.action);
         auto popup_ui = gui::Popup::create(gui::Position::center({0, 0}), sf::Vector2f(700, 150), p_region->get_style(), popup.message);
         popup_ui->set_position(gui::Position::center({0, 0}));
+        get_player().get_tracker().stop();
         gui.add_widget("popup", popup_ui);
         break; }
     case 4: {
@@ -60,31 +58,89 @@ void Area::handle_trigger(const Trigger& trigger) {
     }
 }
 
-void Area::begin_dialogue(const SpeechGraph& graph, const std::string& dia_id) {
-    dialogue.begin(graph, gamemode, dia_id);
+void Area::begin_dialogue(SpeechGraph&& graph, const std::string& dia_id) {
+    dialogue.begin(std::move(graph), gamemode, dia_id);
     const auto line = std::get<Dialogue::Line>(dialogue.get_current_element());
-    auto speaker_gui = gui.get_widget<gui::TextWidget>("dialogue_speaker");
-    speaker_gui->set_visible(true);
+    auto dia_gui = gui.get_widget<gui::Panel>("dialogue");
+    dia_gui->set_enabled(true);
+    dia_gui->set_visible(true);
+    auto speaker_gui = dia_gui->get_widget<gui::TextWidget>("speaker");
     if (line.speaker == "Narrator") {
         speaker_gui->set_label("Narrator");
     } else {
         speaker_gui->set_label(story_name_LUT[line.speaker]);
     }
-    auto line_gui = gui.get_widget<gui::TextWidget>("dialogue_lines");
-    line_gui->set_visible(true);
+    auto line_gui = dia_gui->get_widget<gui::TextWidget>("lines");
     line_gui->set_label(line.line);
 }
 
-void Area::set_mode(GameMode mode, bool dramatic) {
+void Area::begin_combat(
+        const std::unordered_set<std::string>& ally_tags,
+        const std::unordered_set<std::string>& enemy_tags,
+        const std::unordered_set<std::string>& enemysenemy_tags,
+        const std::unordered_set<std::string>& unaligned_tags
+    )
+{
+    auto dist = std::uniform_int_distribution<uint32_t>(1, 20);
+
+    combat_mode.participants.clear();
+    combat_mode.participants.push_back(CombatParticipant{ player_id, dist(RNG), CombatFaction::Ally });
+    get_player().get_tracker().stop();
+
+    for (auto& [name, e] : entities) {
+        for (const auto& t : ally_tags) {
+            if (e.get_tags().contains(t)) {
+                combat_mode.participants.push_back(CombatParticipant{ name, dist(RNG), CombatFaction::Ally });
+                e.get_tracker().stop();
+                goto end_loop;
+            }
+        }
+        for (const auto& t : enemy_tags) {
+            if (e.get_tags().contains(t)) {
+                combat_mode.participants.push_back(CombatParticipant{ name, dist(RNG), CombatFaction::Enemy });
+                e.get_tracker().stop();
+                goto end_loop;
+            }
+        }
+        for (const auto& t : enemysenemy_tags) {
+            if (e.get_tags().contains(t)) {
+                combat_mode.participants.push_back(CombatParticipant{ name, dist(RNG), CombatFaction::EnemysEnemy });
+                e.get_tracker().stop();
+                goto end_loop;
+            }
+        }
+        for (const auto& t : unaligned_tags) {
+            if (e.get_tags().contains(t)) {
+                combat_mode.participants.push_back(CombatParticipant{ name, dist(RNG), CombatFaction::UnalignedHostile });
+                e.get_tracker().stop();
+                goto end_loop;
+            }
+        }
+end_loop: ;
+    }
+
+    std::sort(combat_mode.participants.begin(), combat_mode.participants.end(),
+            [](const auto& lhs, const auto& rhs){ return lhs.initiative < rhs.initiative; });
+
+    combat_mode.active_turn = combat_mode.participants.size() - 1;
+    combat_mode.advance_turn = true;
+}
+
+
+void Area::set_mode(GameMode mode) {
     if (mode == GameMode::Cinematic && gamemode != GameMode::Cinematic) {
-        if (dramatic) { cinematic_timer = 1.5f; }
+        cinematic_timer = 1.5f;
         get_player().get_tracker().stop();
         queued = {};
     } else if (mode != GameMode::Cinematic && gamemode == GameMode::Cinematic) {
-        if (dramatic) { cinematic_timer = 1.5f; }
+        cinematic_timer = 1.5f;
+        get_player().get_tracker().start();
+    } else if (mode == GameMode::Dialogue && gamemode != GameMode::Dialogue) {
+        get_player().get_tracker().stop();
+    } else if (mode != GameMode::Dialogue && gamemode == GameMode::Dialogue) {
         get_player().get_tracker().start();
     }
-    if (mode == GameMode::Cinematic) {
+    if (mode == GameMode::Cinematic || mode == GameMode::Dialogue) {
         gui.get_widget("tooltip")->set_visible(false);
     }
     gamemode = mode;
@@ -97,7 +153,7 @@ void Area::handle_event(const sf::Event& event) {
     case GameMode::Normal:
         normal_mode.handle_event(event);
         break;
-    case GameMode::Cinematic:
+    case GameMode::Cinematic: case GameMode::Dialogue:
         cinematic_mode.handle_event(event);
         break;
     case GameMode::Combat:
@@ -120,7 +176,7 @@ void Area::update() {
     case GameMode::Normal:
         normal_mode.update();
         break;
-    case GameMode::Cinematic:
+    case GameMode::Cinematic: case GameMode::Dialogue:
         cinematic_mode.update();
         break;
     case GameMode::Combat:
@@ -133,7 +189,6 @@ void Area::update() {
         break;
     }
 
-    update_motionguide();
     background.update(camera.getFrustum());
     sorted_entities = sprites_topo_sort(entities);
 
@@ -159,14 +214,15 @@ void Area::update() {
 void Area::render(sf::RenderTarget& target) {
     target.setView(camera);
 
-    target.clear(sf::Color(50, 50, 50));
+    target.clear(sf::Color(20, 20, 20));
     target.draw(background);
 
 #ifdef DEBUG
     debugger.render_map(target);
 #endif
 
-    if (motionguide_await > 0.05f && get_player().get_tracker().is_moving()) {
+    // if (get_player().get_tracker().is_moving() || gamemode == GameMode::Combat) {
+    if (gamemode == GameMode::Combat || gamemode == GameMode::Normal) {
         target.draw(motionguide_square, cart_to_iso);
     }
 

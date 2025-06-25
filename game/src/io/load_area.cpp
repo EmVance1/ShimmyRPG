@@ -4,7 +4,6 @@
 #include "util/str.h"
 #include "util/json.h"
 #include "algo/iso_map.h"
-#include "algo/graph2d.h"
 #include "objects/trigger.h"
 #include "scripts/lua_script.h"
 #include "gui/gui.h"
@@ -22,10 +21,6 @@ Area::Area(const std::string& _id, Region* parent_region, const sf::Vector2f& _t
     iso_to_cart(isometric_to_cartesian(topleft)),
     camera(sf::FloatRect({0, 0}, sf::Vector2f(window->getSize()))),
     gui(gui::Position::topleft({0, 0}), sf::Vector2f(window->getSize()), parent_region->get_style())
-
-#ifdef DEBUG
-    , debugger(id, scale)
-#endif
 {
     motionguide_square.setFillColor(sf::Color::Transparent);
     motionguide_square.setOutlineColor(sf::Color::Cyan);
@@ -40,9 +35,6 @@ Area::Area(const std::string& _id, Region* parent_region, const sf::Vector2f& _t
     cinemabar_bot.setPosition({0, (float)winsize.y});
     cinemabar_bot.setSize({(float)winsize.x, 150});
     cinemabar_bot.setFillColor(sf::Color::Black);
-
-    auto _ = posterize.loadFromFile("res/shaders/pixelate.frag", sf::Shader::Type::Fragment);
-    posterize.setUniform("u_texture", sf::Shader::CurrentTexture);
 }
 
 
@@ -51,7 +43,7 @@ void Area::init(const rapidjson::Value& prefabs, const rapidjson::Document& doc)
 
     background.load_from_json(doc["background"]);
 
-    pathfinder = load_grid_from_image(p_region->m_pathmaps.at(id + "_pathmap"));
+    pathfinder = nav::NavMesh::read_file("res/maps/" + id + ".nav", scale);
 
     for (const auto& e : doc["entities"].GetArray()) {
         load_entity(prefabs, e);
@@ -86,7 +78,7 @@ void Area::init(const rapidjson::Value& prefabs, const rapidjson::Document& doc)
         if (e.GetObject().HasMember("condition")) {
             const auto cond = std::string(e.GetObject()["condition"].GetString());
             try {
-                t.condition = flagexpr_from_string(cond);
+                t.condition = FlagExpr::from_string(cond);
             } catch (const std::exception& e) {
                 std::cout << "error parsing 'condition': " << e.what() << "\n";
             }

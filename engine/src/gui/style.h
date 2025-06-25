@@ -20,7 +20,8 @@ struct Style {
     sf::Color text_color_1 = sf::Color(0, 0, 0);
     sf::Color text_color_2 = sf::Color(120, 120, 120);
     sf::Color text_color_3 = sf::Color(255, 255, 255);
-    sfu::TextureAtlas background_texture;
+    sf::Texture background_texture;
+    sf::IntRect default_cell = sf::IntRect({ 0, 0 },{ 1, 1 });
     bool textured = false;
     float outline_width = 0.f;
     sf::Font font;

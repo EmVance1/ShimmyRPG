@@ -34,6 +34,7 @@ void lua_register_engine_funcs(lua_State* L) {
     lua_register(L, "set_voicebank",  &l_set_voicebank);
     lua_register(L, "start_dialogue", &l_start_dialogue);
     lua_register(L, "set_camera",     &l_set_camera);
+    lua_register(L, "set_combat",     &l_set_combat);
 }
 
 void lua_set_overriden_funcs(lua_State* L, uint32_t& funcs) {

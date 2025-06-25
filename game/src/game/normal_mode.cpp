@@ -1,9 +1,8 @@
-#include "gui/bases/textwidget.h"
 #include "pch.h"
 #include "normal_mode.h"
 #include "scripting/speech_graph.h"
-#include "world/area.h"
 #include "world/region.h"
+#include "world/area.h"
 #include "time/deltatime.h"
 #include "sorting.h"
 #include "gui/gui.h"
@@ -11,31 +10,29 @@
 
 void NormalMode::move_to_action(const std::string& target) {
     const auto& t = p_area->entities.at(target);
-    const auto thresh = 15.f;
+    const auto thresh = 70.f;
     if (t.is_character()) {
-        p_area->get_player().get_tracker().set_path_world(t.get_tracker().get_position_world());
-        p_area->get_player().get_tracker().trim_path_radial_grid(thresh);
+        p_area->get_player().get_tracker().set_target_position(t.get_tracker().get_position());
+        p_area->get_player().get_tracker().trim_path_radial(thresh);
     } else {
-        const auto abs = t.get_boundary().get_center_of_mass();
+        const auto abs = t.get_sorting_boundary().get_center_of_mass();
         const auto pos = p_area->iso_to_cart.transformPoint(abs);
-        p_area->get_player().get_tracker().set_path_world(pos);
+        p_area->get_player().get_tracker().set_target_position(pos);
     }
-    p_area->motionguide_await = 0.f;
+    p_area->update_motionguide();
 }
 
 void NormalMode::speak_action(const std::string& target, const std::string& speech) {
     const auto& t = p_area->entities.at(target);
-    const float thresh = 15.f;
-    if (sf::Vector2f(p_area->get_player().get_tracker().get_position_grid()
-                         - t.get_tracker().get_position_grid()).lengthSquared() < (thresh * thresh * 1.2f)) {
-        if (speech.ends_with(".dia")) {
-            const auto graph = dialogue_from_file(speech);
-            p_area->begin_dialogue(graph, speech);
-            p_area->set_mode(GameMode::Cinematic, false);
+    const float thresh = 70.f;
+    if (sf::Vector2f(p_area->get_player().get_tracker().get_position()
+                         - t.get_tracker().get_position()).lengthSquared() < (thresh * thresh * 1.1f)) {
+        if (speech.ends_with(".shmy")) {
+            p_area->begin_dialogue(dialogue_from_file(speech), speech);
+            p_area->set_mode(GameMode::Dialogue);
         } else {
-            const auto graph = dialogue_from_line(t.get_script_id(), speech);
-            p_area->begin_dialogue(graph, t.get_script_id());
-            p_area->set_mode(GameMode::Cinematic, false);
+            p_area->begin_dialogue(dialogue_from_line(t.get_script_id(), speech), t.get_script_id());
+            p_area->set_mode(GameMode::Dialogue);
         }
     } else {
         move_to_action(target);
@@ -61,9 +58,11 @@ void NormalMode::handle_event(const sf::Event& event) {
         if (mbp->button == sf::Mouse::Button::Left) {
             const auto mapped = Area::window->mapPixelToCoords(mbp->position, p_area->camera);
             const auto iso = p_area->iso_to_cart.transformPoint(mapped);
-            if (!p_area->get_player().is_hovered()) {
-                if (p_area->get_player().get_tracker().set_path_world(iso)) {
-                    p_area->motionguide_await = 0.f;
+            auto& player = p_area->get_player();
+            player.get_tracker().start();
+            if (!player.is_hovered()) {
+                if (player.get_tracker().set_target_position(iso)) {
+                    p_area->update_motionguide();
                 }
             }
             if (p_area->gui.has_widget("context_menu")) {
@@ -109,6 +108,17 @@ void NormalMode::handle_event(const sf::Event& event) {
                 tt->set_label(p_area->story_name_LUT.at(top->get_script_id()));
                 tt->set_visible(true);
             }
+        }
+
+        auto& player = p_area->get_player();
+        if (!player.is_hovered() && !player.get_tracker().is_moving()) {
+            const auto iso = p_area->iso_to_cart.transformPoint(mapped);
+
+            player.get_tracker().start();
+            if (player.get_tracker().set_target_position(iso)) {
+                p_area->update_motionguide();
+            }
+            player.get_tracker().pause();
         }
 
         if (p_area->gui.has_widget("context_menu")) {

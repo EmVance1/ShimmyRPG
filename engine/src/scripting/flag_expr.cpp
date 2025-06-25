@@ -3,41 +3,46 @@
 #include "flags.h"
 
 
+static std::random_device RD;
+static std::mt19937 RNG(RD());
+
+
 int FlagExpr::evaluate() const {
     switch (op){
-    case FlagExprType::Or:
+    case FlagExpr::Type::Or:
         return (int)((bool)left->evaluate() || (bool)right->evaluate());
-    case FlagExprType::And:
+    case FlagExpr::Type::And:
         return (int)((bool)left->evaluate() && (bool)right->evaluate());
-    case FlagExprType::Eq:
+    case FlagExpr::Type::Eq:
         return (int)(left->evaluate() == right->evaluate());
-    case FlagExprType::Ne:
+    case FlagExpr::Type::Ne:
         return (int)(left->evaluate() != right->evaluate());
-    case FlagExprType::Lt:
+    case FlagExpr::Type::Lt:
         return (int)(left->evaluate() <  right->evaluate());
-    case FlagExprType::Gt:
+    case FlagExpr::Type::Gt:
         return (int)(left->evaluate() >  right->evaluate());
-    case FlagExprType::Le:
+    case FlagExpr::Type::Le:
         return (int)(left->evaluate() <= right->evaluate());
-    case FlagExprType::Ge:
+    case FlagExpr::Type::Ge:
         return (int)(left->evaluate() >= right->evaluate());
-    case FlagExprType::Not:
+    case FlagExpr::Type::Not:
         return (int)(!((bool)left->evaluate()));
-    case FlagExprType::Default:
+    case FlagExpr::Type::Default:
         return 1;
-    case FlagExprType::Value:
+    case FlagExpr::Type::Value:
         return value;
-    case FlagExprType::Identifier:
+    case FlagExpr::Type::Identifier:
         return FlagTable::get_flag(name);
-    case FlagExprType::Once:
+    case FlagExpr::Type::Once:
         if (!FlagTable::Once) {
             FlagTable::Once = true;
             return 1;
         }
         return 0;
-    case FlagExprType::Random:
+    case FlagExpr::Type::Random:
         if (value != 0) {
-            FlagTable::set_flag(name, rand() % value);
+            auto dist = std::uniform_int_distribution<uint32_t>(1, value);
+            FlagTable::set_flag(name, dist(RNG));
         }
         return FlagTable::get_flag(name);
     }
@@ -46,33 +51,33 @@ int FlagExpr::evaluate() const {
 
 std::ostream& operator<<(std::ostream& stream, const FlagExpr& value) {
     switch (value.op){
-    case FlagExprType::Or:
+    case FlagExpr::Type::Or:
         return stream << "(" << *value.left << "||" << *value.right << ")";
-    case FlagExprType::And:
+    case FlagExpr::Type::And:
         return stream << "(" << *value.left << "&&" << *value.right << ")";
-    case FlagExprType::Eq:
+    case FlagExpr::Type::Eq:
         return stream << "(" << *value.left << "==" << *value.right << ")";
-    case FlagExprType::Ne:
+    case FlagExpr::Type::Ne:
         return stream << "(" << *value.left << "!=" << *value.right << ")";
-    case FlagExprType::Lt:
+    case FlagExpr::Type::Lt:
         return stream << "(" << *value.left << "<"  << *value.right << ")";
-    case FlagExprType::Gt:
+    case FlagExpr::Type::Gt:
         return stream << "(" << *value.left << ">"  << *value.right << ")";
-    case FlagExprType::Le:
+    case FlagExpr::Type::Le:
         return stream << "(" << *value.left << "<=" << *value.right << ")";
-    case FlagExprType::Ge:
+    case FlagExpr::Type::Ge:
         return stream << "(" << *value.left << ">=" << *value.right << ")";
-    case FlagExprType::Not:
+    case FlagExpr::Type::Not:
         return stream << "!(" << *value.left << ")";
-    case FlagExprType::Value:
+    case FlagExpr::Type::Value:
         return stream << value.value;
-    case FlagExprType::Identifier:
+    case FlagExpr::Type::Identifier:
         return stream << value.name;
-    case FlagExprType::Default:
+    case FlagExpr::Type::Default:
         return stream << "default";
-    case FlagExprType::Once:
+    case FlagExpr::Type::Once:
         return stream << "once";
-    case FlagExprType::Random:
+    case FlagExpr::Type::Random:
         if (value.value == 0) {
             return stream << value.name;
         } else {
