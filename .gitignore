@@ -1,15 +1,15 @@
 safecode.txt
 game/todo.txt
+mechanics/
+.vs/
+
+archive/
+imgui/
 
 editor/bin/
 editor/compile_flags.txt
 engine/bin/
-engine/lib/
 engine/compile_flags.txt
 game/bin/
-game/lib/
 game/compile_flags.txt
-imgui/
-mechanics/
-.vs/
 

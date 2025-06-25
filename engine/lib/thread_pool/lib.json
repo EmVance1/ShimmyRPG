@@ -1,0 +1,10 @@
+{
+    "library": "thread_pool",
+    "minstd" : "c++20",
+    "include": "include/",
+    "all": {
+        "links": [],
+        "binary.debug": "",
+        "binary.release": ""
+    }
+}

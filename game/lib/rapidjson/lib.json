@@ -1,0 +1,10 @@
+{
+    "library": "rapidjson",
+    "minstd" : "c++11",
+    "include": "include/",
+    "all": {
+        "links": [],
+        "binary.debug": "",
+        "binary.release": ""
+    }
+}
