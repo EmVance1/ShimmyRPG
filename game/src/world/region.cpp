@@ -13,15 +13,14 @@ void Region::load_from_folder(const std::string& folder) {
     m_alphamaps.clear();
     m_areas.clear();
 
-    m_guistyle.load_from_file("res/styles/wooden.json");
     const auto doc = load_json_from_file(folder + "region.json");
 
-    for (const auto& [k, v] : doc.GetObject()["textures"].GetObject()) {
+    for (const auto& [k, v] : doc["textures"].GetObject()) {
         const auto name = std::string(k.GetString());
-        const auto texfile = v.GetObject()["file"].GetString();
-        const auto outline = v.GetObject()["outlined"].IsTrue();
-        const auto smooth  = v.GetObject()["smooth"].IsTrue();
-        const auto dims    = json_to_vector2u(v.GetObject()["dims"]);
+        const auto texfile = v["file"].GetString();
+        const auto outline = v["outlined"].IsTrue();
+        const auto smooth  = v["smooth"].IsTrue();
+        const auto dims    = json_to_vector2u(v["dims"]);
 
         const auto img = sf::Image(texfile);
         m_alphamaps[name + "_map"].loadFromImage(
@@ -36,16 +35,28 @@ void Region::load_from_folder(const std::string& folder) {
         m_atlases[name + "_outline"].setSmooth(smooth);
     }
 
+    m_guistyle.load_from_file(std::string("res/styles/") + doc["gui_style"].GetString() + ".json");
+
     const auto prefabs = load_json_from_file("res/prefabs.json");
-    for (const auto& area : doc.GetObject()["areas"].GetArray()) {
-        const auto area_file = std::string(area.GetObject()["file"].GetString());
-        m_areas.emplace_back(area_file, this, json_to_vector2f(area.GetObject()["topleft"]), area.GetObject()["scale"].GetFloat());
+    for (const auto& area : doc["areas"].GetArray()) {
+        const auto area_file = std::string(area["file"].GetString());
+        m_areas.emplace_back(area_file, this);
     }
     size_t i = 0;
-    for (const auto& area : doc.GetObject()["areas"].GetArray()) {
-        const auto area_file = std::string(area.GetObject()["file"].GetString());
+    for (const auto& area : doc["areas"].GetArray()) {
+        const auto area_file = std::string(area["file"].GetString());
+#ifdef DEBUG
+        try {
+            const auto area_doc = load_json_from_file(folder + area_file + ".json");;
+            m_areas[i].init(prefabs, area_doc);
+        } catch (const std::exception& e) {
+            std::cerr << "error loading area '" << m_areas[i].id << "': " << e.what() << "\n";
+            exit(1);
+        }
+#else
         const auto area_doc = load_json_from_file(folder + area_file + ".json");;
         m_areas[i].init(prefabs, area_doc);
+#endif
         m_areas[i].set_mode(GameMode::Sleep);
         i++;
     }

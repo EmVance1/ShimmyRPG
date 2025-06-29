@@ -1,8 +1,9 @@
 {
     "world": {
         "area_label": "Fountain Road",
-        "topleft": [750, -750],
-        "scale": 5.0
+        "topleft": [745, -405],
+        "scale": 5.09,
+        "map": "fountainroad.nav"
     },
     "background": [
         { "file": "res/textures/fountainroad.png", "bounds": [ 0, 0, 1920, 1080 ] }

@@ -27,11 +27,14 @@ struct Area {
 
     Background background;
     nav::NavMesh pathfinder;
-    const sf::Vector2f topleft;
-    const float scale;
+    sf::Vector2f topleft;
+    float scale;
+    float zoom = 1.f;
+    float zoom_target = 1.f;
+    sf::Color overlaycolor;
 
-    const sf::Transform cart_to_iso;
-    const sf::Transform iso_to_cart;
+    sf::Transform cart_to_iso;
+    sf::Transform iso_to_cart;
 
     std::unordered_map<std::string, Entity> entities;
     std::unordered_map<std::string, std::string> script_name_LUT;
@@ -41,6 +44,7 @@ struct Area {
 
     std::vector<Trigger> triggers;
     bool suppress_triggers = false;
+    bool suppress_portals = false;
     std::vector<LuaScript> scripts;
 
     sf::RectangleShape motionguide_square;
@@ -64,7 +68,7 @@ struct Area {
     AreaDebugView debugger;
 #endif
 
-    Area(const std::string& id, Region* parent_region, const sf::Vector2f& topleft, float scale);
+    Area(const std::string& id, Region* parent_region);
 
     void load_prefab(const rapidjson::Value& prefabs, const rapidjson::Value& value, const std::string& name);
     void load_entity(const rapidjson::Value& prefabs, const rapidjson::Value& value);

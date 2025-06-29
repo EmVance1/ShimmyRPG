@@ -1,2 +1,2 @@
-CurfewInPlace true
+CurfewInPlace false
 

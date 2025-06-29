@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "rapidjson/document.h"
 #include "world/area.h"
 #include "world/region.h"
 #include "util/str.h"
@@ -7,26 +8,20 @@
 #include "objects/trigger.h"
 #include "scripts/lua_script.h"
 #include "gui/gui.h"
+#include "json_debug.h"
 
 
 const sf::RenderWindow* Area::window = nullptr;
 
 
-Area::Area(const std::string& _id, Region* parent_region, const sf::Vector2f& _topleft, float _scale)
-    : p_region(parent_region),
-    id(_id),
-    topleft(_topleft),
-    scale(_scale),
-    cart_to_iso(cartesian_to_isometric(topleft)),
-    iso_to_cart(isometric_to_cartesian(topleft)),
-    camera(sf::FloatRect({0, 0}, sf::Vector2f(window->getSize()))),
+Area::Area(const std::string& _id, Region* parent_region)
+    : p_region(parent_region), id(_id), overlaycolor(sf::Color::White),
+    camera(sf::FloatRect({0, 0}, (sf::Vector2f)window->getSize())),
     gui(gui::Position::topleft({0, 0}), sf::Vector2f(window->getSize()), parent_region->get_style())
 {
     motionguide_square.setFillColor(sf::Color::Transparent);
     motionguide_square.setOutlineColor(sf::Color::Cyan);
     motionguide_square.setOutlineThickness(1);
-    motionguide_square.setSize({ scale * 2, scale * 2 });
-    motionguide_square.setOrigin({ scale, scale });
 
     const auto winsize = window->getSize();
     cinemabar_top.setPosition({0, -150.f});
@@ -39,44 +34,70 @@ Area::Area(const std::string& _id, Region* parent_region, const sf::Vector2f& _t
 
 
 void Area::init(const rapidjson::Value& prefabs, const rapidjson::Document& doc) {
-    area_label = std::string(doc["world"].GetObject()["area_label"].GetString());
+    const auto& meta = JSON_GET(doc, "world");
 
-    background.load_from_json(doc["background"]);
+    area_label = std::string(JSON_GET_STR(meta, "area_label"));
+    topleft = json_to_vector2f(JSON_GET_ARRAY(meta, "topleft"));
+    scale = JSON_GET_FLOAT(meta, "scale");
+    pathfinder = nav::NavMesh::read_file(std::string("res/maps/") + JSON_GET_STR(meta, "map"), scale);
 
-    pathfinder = nav::NavMesh::read_file("res/maps/" + id + ".nav", scale);
+    cart_to_iso = cartesian_to_isometric(topleft);
+    iso_to_cart = isometric_to_cartesian(topleft);
 
-    for (const auto& e : doc["entities"].GetArray()) {
+    motionguide_square.setSize({ scale * 2, scale * 2 });
+    motionguide_square.setOrigin({ scale, scale });
+
+    if (meta.HasMember("zoom")) {
+        camera.setSize(meta["zoom"].GetFloat() * (sf::Vector2f)window->getSize());
+    }
+
+    background.prep_from_json(JSON_GET(doc, "background"));
+
+    for (const auto& e : JSON_GET_ARRAY(doc, "entities")) {
         load_entity(prefabs, e);
     }
 
-    if (player_id == "") { std::cout << "error parsing entities: must have player controller\n"; throw std::exception(); }
+    if (player_id == "") { throw std::invalid_argument("exactly one entity MUST be designated 'player'\n"); }
 
-    for (const auto& e : doc["triggers"].GetArray()) {
+    for (const auto& e : JSON_GET_ARRAY(doc, "triggers")) {
         auto& t = triggers.emplace_back();
-        t.id = e.GetObject()["id"].GetString();
+        t.id = JSON_GET_STR(e, "id");
         t.once_id = "once_trig_" + id + t.id;
-        t.bounds = (sfu::RotatedFloatRect)json_to_floatrect(e.GetObject()["bounds"]);
-        if (e.GetObject().HasMember("angle")) {
-            t.bounds.angle = sf::degrees(e.GetObject()["angle"].GetFloat());
+        t.bounds = (sfu::RotatedFloatRect)json_to_floatrect(JSON_GET(e, "bounds"));
+        if (e.HasMember("angle")) {
+            t.bounds.angle = sf::degrees(JSON_GET_FLOAT(e, "angle"));
         }
-        const auto action = e.GetObject()["action"].GetObject();
+        const auto& action = JSON_GET(e, "action");
         if (action.HasMember("BeginScript")) {
-            t.action = BeginScript{ action["BeginScript"].GetString() };
+            t.action = BeginScript{ JSON_GET_STR(action, "BeginScript") };
         } else if (action.HasMember("BeginDialogue")) {
-            t.action = BeginDialogue{ action["BeginDialogue"].GetString() };
+            t.action = BeginDialogue{ JSON_GET_STR(action, "BeginDialogue") };
         } else if (action.HasMember("Popup")) {
-            t.action = Popup{ action["Popup"].GetString() };
+            t.action = Popup{ JSON_GET_STR(action, "Popup") };
         } else if (action.HasMember("GotoRegion")) {
-            t.action = GotoRegion{ action["GotoRegion"].GetString() };
+            t.action = GotoRegion{ JSON_GET_STR(action, "GotoRegion") };
         } else if (action.HasMember("GotoArea")) {
+            const auto& act = action["GotoArea"];
             t.action = GotoArea{
-                action["GotoArea"].GetObject()["index"].GetUint64(),
-                json_to_vector2f(action["GotoArea"].GetObject()["spawnpos"]),
-                action["GotoArea"].GetObject()["suppress_triggers"].IsTrue(),
+                JSON_GET_UINT64(act, "index"),
+                json_to_vector2f(JSON_GET(act, "spawnpos")),
+                JSON_IS_TRUE(act, "suppress_triggers"),
+                act.HasMember("lock_id") ? JSON_GET_STR(act, "lock_id") : "unlocked"
             };
+        } else if (action.HasMember("CameraZoom")) {
+            t.action = CameraZoom{ JSON_GET_FLOAT(action, "CameraZoom") };
+        } else if (action.HasMember("CameraZoom")) {
+            const auto& act = action["ChangeFlag"];
+            if (act.HasMember("Add")) {
+                t.action = ChangeFlag{ JSON_GET_STR(act, "name"), FlagAdd{ JSON_GET_INT(act, "Add"), true } };
+            } else if (action.HasMember("Sub")) {
+                t.action = ChangeFlag{ JSON_GET_STR(act, "name"), FlagSub{ JSON_GET_INT(act, "Sub"), true } };
+            } else if (action.HasMember("Set")) {
+                t.action = ChangeFlag{ JSON_GET_STR(act, "name"), FlagSet{ JSON_GET_INT(act, "Set"), true } };
+            }
         }
-        if (e.GetObject().HasMember("condition")) {
-            const auto cond = std::string(e.GetObject()["condition"].GetString());
+        if (e.HasMember("condition")) {
+            const auto cond = std::string(JSON_GET_STR(e, "condition"));
             try {
                 t.condition = FlagExpr::from_string(cond);
             } catch (const std::exception& e) {

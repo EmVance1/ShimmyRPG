@@ -1,8 +1,9 @@
 {
     "world": {
         "area_label": "Shimmy's Shack",
-        "topleft": [948, 315],
-        "scale": 5.35
+        "topleft": [ 948, 315 ],
+        "scale": 5.35,
+        "map": "shimmyshack.nav"
     },
     "background": [
         { "file": "res/textures/shimmyshack.png", "bounds": [ -68, -70, 2054, 1156 ] }
@@ -29,7 +30,7 @@
             "id": "SpeakToShimmy",
             "bounds": [ 140, 0, 394, 380 ],
             "action": { "BeginScript": "res/scripts/ShimmyIntroScene.lua" },
-            "condition": "ShimmyIntroScene_IsActive & once"
+            "condition": "ShimmyIntroScene_IsActive & once & false"
         }
     ],
     "entities": [

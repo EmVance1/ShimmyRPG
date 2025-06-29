@@ -8,6 +8,7 @@ class Dialogue {
 public:
     enum class State {
         Empty,
+        EmptyWithFollowup,
         Player,
         Lines,
     };
@@ -30,6 +31,7 @@ private:
     State m_state = State::Empty;
     GameMode m_init_mode;
     bool m_unapplied = false;
+    std::string m_followup = "";
 
 private:
     SpeechVertex& current_vertex() { return m_graph.at(m_vertex); }
@@ -38,9 +40,10 @@ private:
 public:
     Dialogue() = default;
 
-    bool is_playing() const { return m_state != State::Empty; }
+    bool is_playing() const { return m_state != State::Empty && m_state != State::EmptyWithFollowup; }
     State get_state() const { return m_state; }
     GameMode get_init_mode() const { return m_init_mode; }
+    std::optional<std::string> get_followup() const { if (m_state != State::EmptyWithFollowup) { return {}; } return m_followup; }
 
     void begin(SpeechGraph&& graph, GameMode init_mode, const std::string& id);
     void advance(size_t index = 0);

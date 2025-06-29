@@ -14,6 +14,9 @@ int l_get_position(lua_State* L);
 int l_set_animation(lua_State* L);
 int l_set_voicebank(lua_State* L);
 int l_start_dialogue(lua_State* L);
-int l_set_camera(lua_State* L);
+int l_camera_set_pos(lua_State* L);
+int l_camera_zoom(lua_State* L);
+int l_set_overlay(lua_State* L);
+int l_goto_area(lua_State* L);
 int l_set_combat(lua_State* L);
 

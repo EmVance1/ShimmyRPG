@@ -13,7 +13,7 @@ static void load_file(const std::string& filename, const std::string& prefix) {
         auto f = std::string("");
         auto v = std::string("");
         stream >> f >> v;
-        if (f == "true" || f == "false" || f == "inf" || f == "default") {
+        if (f == "true" || f == "false" || f == "inf" || f == "default" || f == "unlocked") {
             std::cerr << "'" << f << "' is a reserved value and cannot be overriden\n";
             continue;
         }
@@ -40,10 +40,11 @@ static void load_file(const std::string& filename, const std::string& prefix) {
 
 
 void load_flags() {
-    FlagTable::set_flag("default", 1);
     FlagTable::set_flag("true", 1);
     FlagTable::set_flag("false", 0);
     FlagTable::set_flag("inf", UINT32_MAX);
+    FlagTable::set_flag("default", 1);
+    FlagTable::set_flag("unlocked", 0);
 
     for (const auto& f : std::fs::directory_iterator("res/flags/")) {
         load_file(f.path().generic_string(), f.path().stem().generic_string());

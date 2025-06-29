@@ -49,11 +49,32 @@ void Area::handle_trigger(const Trigger& trigger) {
         get_player().get_tracker().stop();
         gui.add_widget("popup", popup_ui);
         break; }
+    case 3: {
+        // UNIMPLEMENTED: GOTO REGION
+        break; }
     case 4: {
+        if (suppress_portals) { return; }
+
         const auto gotoarea = std::get<GotoArea>(trigger.action);
-        p_region->set_active_area(gotoarea.index);
-        p_region->get_active_area().get_player().set_position(gotoarea.spawnpos, cart_to_iso);
-        p_region->get_active_area().suppress_triggers = gotoarea.suppress_triggers;
+        if (FlagTable::get_flag(gotoarea.lock_id)) {
+            auto popup_ui = gui::Popup::create(gui::Position::center({0, 0}), sf::Vector2f(700, 150), p_region->get_style(), "This door is locked.");
+            popup_ui->set_position(gui::Position::center({0, 0}));
+            get_player().get_tracker().stop();
+            gui.add_widget("lock_popup", popup_ui);
+        } else {
+            p_region->set_active_area(gotoarea.index);
+            p_region->get_active_area().get_player().set_position(gotoarea.spawnpos, cart_to_iso);
+            p_region->get_active_area().suppress_triggers = gotoarea.suppress_triggers;
+            p_region->get_active_area().suppress_portals = true;
+        }
+        break; }
+    case 5: {
+        const auto camerazoom = std::get<CameraZoom>(trigger.action);
+        zoom_target = camerazoom.target;
+        break; }
+    case 6: {
+        const auto change = std::get<ChangeFlag>(trigger.action);
+        FlagTable::change_flag(change.name, change.mod);
         break; }
     }
 }
@@ -143,6 +164,14 @@ void Area::set_mode(GameMode mode) {
     if (mode == GameMode::Cinematic || mode == GameMode::Dialogue) {
         gui.get_widget("tooltip")->set_visible(false);
     }
+    if (mode == GameMode::Sleep) {
+        background.unload_textures();
+        for (auto& t : triggers) {
+            t.cooldown = false;
+        }
+    } else if (gamemode == GameMode::Sleep) {
+        background.load_textures();
+    }
     gamemode = mode;
 }
 
@@ -193,7 +222,7 @@ void Area::update() {
     sorted_entities = sprites_topo_sort(entities);
 
     const auto g = FlagTable::get_flag("Player_Coin");
-    gui.get_widget<gui::Panel>("gold_counter")->get_widget<gui::Text>("goldtxt")->set_label(std::to_string(g) + "sp");
+    gui.get_widget<gui::Panel>("gold_counter")->get_widget<gui::Text>("goldtxt")->set_label(std::to_string(g));
 
     if (cinematic_timer > 0.f) {
         cinematic_timer -= Time::deltatime();
@@ -206,6 +235,22 @@ void Area::update() {
         }
     }
 
+    if (zoom < zoom_target) {
+        zoom += Time::deltatime() * 0.5f;
+        camera.setSize(zoom * (sf::Vector2f)window->getSize());
+        if (zoom >= zoom_target) {
+            zoom = zoom_target;
+            camera.setSize(zoom * (sf::Vector2f)window->getSize());
+        }
+    } else if (zoom > zoom_target) {
+        zoom -= Time::deltatime() * 0.5f;
+        camera.setSize(zoom * (sf::Vector2f)window->getSize());
+        if (zoom <= zoom_target) {
+            zoom = zoom_target;
+            camera.setSize(zoom * (sf::Vector2f)window->getSize());
+        }
+    }
+
 #ifdef DEBUG
     debugger.update();
 #endif
@@ -214,7 +259,7 @@ void Area::update() {
 void Area::render(sf::RenderTarget& target) {
     target.setView(camera);
 
-    target.clear(sf::Color(20, 20, 20));
+    target.clear(sf::Color(10, 10, 10));
     target.draw(background);
 
 #ifdef DEBUG

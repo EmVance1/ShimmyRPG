@@ -6,6 +6,7 @@
 #include "flags.h"
 #include "scripting/speech_graph.h"
 #include "world/area.h"
+#include "world/region.h"
 #include <unordered_set>
 
 
@@ -122,9 +123,10 @@ int l_start_dialogue(lua_State* L) {
         lua_pushstring(L, "script");
         lua_gettable(L, LUA_REGISTRYINDEX);
         const auto script = static_cast<LuaScript*>(lua_touserdata(L, -1));
-        script->parent_area().begin_dialogue(dialogue_from_file(filename), filename);
+        auto dia = dialogue_from_file(filename);
+        script->parent_area().begin_dialogue(std::move(dia), filename);
     } catch (const std::exception& e) {
-        std::cout << e.what() << "\n";
+        std::cout << "DIALOGUE ERROR: " << e.what() << "\n";
     }
 
     return 0;
@@ -141,7 +143,7 @@ int l_start_dialogue(lua_State* L) {
 }
 #endif
 
-int l_set_camera(lua_State* L) {
+int l_camera_set_pos(lua_State* L) {
     const auto pos = lua_tovec2f(L, 1);
     lua_pushstring(L, "script");
     lua_gettable(L, LUA_REGISTRYINDEX);
@@ -150,6 +152,45 @@ int l_set_camera(lua_State* L) {
 
     return 0;
 }
+
+int l_camera_zoom(lua_State* L) {
+    const auto scale = (float)lua_tonumber(L, 1);
+    lua_pushstring(L, "script");
+    lua_gettable(L, LUA_REGISTRYINDEX);
+    const auto script = static_cast<LuaScript*>(lua_touserdata(L, -1));
+    script->parent_area().zoom_target = scale;
+
+    return 0;
+}
+
+
+int l_set_overlay(lua_State* L) {
+    const auto col = lua_tocolor(L, 1);
+    lua_pushstring(L, "script");
+    lua_gettable(L, LUA_REGISTRYINDEX);
+    const auto script = static_cast<LuaScript*>(lua_touserdata(L, -1));
+    script->parent_area().overlaycolor = col;
+
+    return 0;
+}
+
+
+int l_goto_area(lua_State* L) {
+    const auto idx = lua_tointeger(L, 1);
+    const auto spawnpos = lua_tovec2f(L, 2);
+    const auto sup = lua_toboolean(L, 3);
+    lua_pushstring(L, "script");
+    lua_gettable(L, LUA_REGISTRYINDEX);
+    const auto script = static_cast<LuaScript*>(lua_touserdata(L, -1));
+    const auto& cti = script->parent_area().cart_to_iso;
+    script->parent_area().p_region->set_active_area(idx);
+    script->parent_area().p_region->get_active_area().get_player().set_position(spawnpos, cti);
+    script->parent_area().p_region->get_active_area().suppress_triggers = sup;
+    script->parent_area().p_region->get_active_area().suppress_portals = true;
+
+    return 0;
+}
+
 
 int l_set_combat(lua_State* L) {
     const size_t a_len = lua_objlen(L, 1);

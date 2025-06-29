@@ -33,7 +33,10 @@ void lua_register_engine_funcs(lua_State* L) {
     lua_register(L, "set_animation",  &l_set_animation);
     lua_register(L, "set_voicebank",  &l_set_voicebank);
     lua_register(L, "start_dialogue", &l_start_dialogue);
-    lua_register(L, "set_camera",     &l_set_camera);
+    lua_register(L, "camera_set_pos", &l_camera_set_pos);
+    lua_register(L, "camera_zoom",    &l_camera_zoom);
+    lua_register(L, "set_overlay",    &l_set_overlay);
+    lua_register(L, "goto_area",      &l_goto_area);
     lua_register(L, "set_combat",     &l_set_combat);
 }
 

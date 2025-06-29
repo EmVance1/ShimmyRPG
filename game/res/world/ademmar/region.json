@@ -5,21 +5,11 @@
         "npc_friendly_placeholder":  { "file": "res/textures/npc_friendly_placeholder.png", "outlined": true, "smooth": true, "dims": [1, 1] },
         "table_simple_wooden_long":  { "file": "res/textures/table_long.png",               "outlined": true, "smooth": true, "dims": [1, 1] },
         "table_simple_wooden_round": { "file": "res/textures/table_round.png",              "outlined": true, "smooth": true, "dims": [1, 1] },
-        "door_simple_wooden_single": { "file": "res/textures/door.png",                     "outlined": true, "smooth": true, "dims": [1, 1] },
-        "gold": { "file": "res/textures/gold.png",                     "outlined": false, "smooth": true, "dims": [1, 1] }
+        "door_simple_wooden_single": { "file": "res/textures/door.png",                     "outlined": true, "smooth": true, "dims": [1, 1] }
     },
+    "gui_style": "wooden",
     "areas": [
-        {
-            "file": "shimmyshack",
-            "area_label": "Shimmy's Shack",
-            "topleft": [948, 315],
-            "scale": 5.35
-        },
-        {
-            "file": "fountainroad",
-            "area_label": "Fountain Road",
-            "topleft": [750, -400],
-            "scale": 5.05
-        }
+        { "file": "shimmyshack" },
+        { "file": "fountainroad" }
     ]
 }

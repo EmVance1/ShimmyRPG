@@ -4,7 +4,11 @@ set_mode = set_mode
 
 ---@diagnostic disable: lowercase-global
 ---@type fun(pos: table)
-set_camera = set_camera
+camera_set_pos = camera_set_pos
+
+---@diagnostic disable: lowercase-global
+---@type fun(pos: table)
+camera_zoom = camera_zoom
 
 ---@diagnostic disable: lowercase-global
 ---@type fun(entity: string): table
@@ -38,7 +42,7 @@ Modes = {
 function OnStartAsync()
     set_mode(Modes.CINEMATIC)
 
-    set_camera(get_position("ShimmyPrime"));
+    camera_set_pos(get_position("ShimmyPrime"));
 
     coroutine.yield(1.0)
 
@@ -48,12 +52,9 @@ function OnStartAsync()
 
     set_flag("ShimmyIntroScene_HasPlayed", 1)
 
-    -- if get_flag("Shimmy_Hostility") > 2 then
-        set_combat({}, { "shimmy_staff", "shimmy_customer" })
-        set_mode(Modes.COMBAT)
-    -- else
-    --     set_path("ShimmyPrime", { x=400, y=50 })
-    -- end
+    set_combat({}, { "shimmy_staff", "shimmy_customer" })
+    set_mode(Modes.COMBAT)
+    -- set_path("ShimmyPrime", { x=400, y=50 })
 
     coroutine.yield(0.7)
 

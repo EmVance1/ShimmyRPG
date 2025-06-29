@@ -10,7 +10,7 @@
     #define VIDEO_MODE sf::VideoMode({1920, 1080})
     #define SCREEN_MODE sf::Style::Default
 #else
-    #define VIDEO_MODE sf::VideoMode::getDesktopMode()
+    #define VIDEO_MODE sf::VideoMode({ 1920, 1080 }).isValid() ? sf::VideoMode({ 1920, 1080 }) : sf::VideoMode::getDesktopMode()
     // #define SCREEN_MODE sf::Style::Default
     #define SCREEN_MODE sf::State::Fullscreen
 #endif
@@ -28,8 +28,12 @@ int main() {
 
     load_flags();
     auto region = Region();
-    region.load_from_folder("res/world/ademmar/");
-    region.set_active_area(0);
+    auto startup_file = std::ifstream("res/startup.txt");
+    auto region_folder = std::string("");
+    auto region_area = 0;
+    startup_file >> region_folder >> region_area;
+    region.load_from_folder(region_folder);
+    region.set_active_area(region_area);
 
     const auto font = sf::Font("res/fonts/calibri.ttf");
     auto fps_draw = sf::Text(font, "0", 25);
@@ -57,7 +61,7 @@ int main() {
                     FlagTable::clear();
                     load_flags();
                     const auto temp = region.get_active_area_index();
-                    region.load_from_folder("res/world/ademmar/");
+                    region.load_from_folder(region_folder);
                     region.set_active_area(temp);
                 }
             }
@@ -77,7 +81,9 @@ int main() {
         target.postFxDisplay();
 
         window.clear(sf::Color::Black);
-        window.draw(sf::Sprite(target.getTexture()));
+        auto target_sp = sf::Sprite(target.getTexture());
+        target_sp.setColor(region.get_active_area().overlaycolor);
+        window.draw(target_sp);
         window.display();
     }
 }

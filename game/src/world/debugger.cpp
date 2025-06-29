@@ -11,7 +11,9 @@ void AreaDebugView::init(const Area* area) {
     p_area = area;
 
     for (const auto tri : area->pathfinder.triangles) {
-        const auto color = sf::Color((uint8_t)(rand() % 200) + 55, (uint8_t)(rand() % 200) + 55, (uint8_t)(rand() % 200) + 55, 100);
+        const auto b_color = sf::Color((uint8_t)(rand() % 50) + 20, (uint8_t)(rand() % 150) + 105, (uint8_t)(rand() % 150) + 105, 100);
+        const auto w_color = sf::Color((uint8_t)(rand() % 55) + 200, (uint8_t)(rand() % 100) + 55, (uint8_t)(rand() % 100) + 55, 100);
+        const auto color = tri.weight > 1.f ? w_color : b_color;
         m_pathfinder.push_back(sf::Vertex{ sf::Vector2f(area->pathfinder.vertices[tri.A].x, area->pathfinder.vertices[tri.A].y), color });
         m_pathfinder.push_back(sf::Vertex{ sf::Vector2f(area->pathfinder.vertices[tri.B].x, area->pathfinder.vertices[tri.B].y), color });
         m_pathfinder.push_back(sf::Vertex{ sf::Vector2f(area->pathfinder.vertices[tri.C].x, area->pathfinder.vertices[tri.C].y), color });

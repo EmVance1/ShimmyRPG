@@ -35,7 +35,7 @@ void Dialogue::advance(size_t index) {
     if (m_unapplied) { return; }
     m_unapplied = true;
     switch (m_state) {
-    case State::Empty:
+    case State::Empty: case State::EmptyWithFollowup:
         throw std::exception("no active dialogue");
     case State::Player: {
         const auto& options = std::get<std::vector<SpeechResponse>>(current_vertex().outcome);
@@ -54,6 +54,9 @@ void Dialogue::advance(size_t index) {
         if (m_vertex_index == current_vertex().lines.size()) {
             if (std::holds_alternative<SpeechExit>(current_vertex().outcome)) {
                 m_state = State::Empty;
+            } else if (const auto script = std::get_if<SpeechExitInto>(&current_vertex().outcome)) {
+                m_followup = script->script;
+                m_state = State::EmptyWithFollowup;
             } else if (auto vert = std::get_if<SpeechGoto>(&current_vertex().outcome)) {
                 m_vertex = vert->vertex;
                 m_vertex_index = 0;
@@ -76,7 +79,7 @@ bool Dialogue::apply_advance() {
 
 Dialogue::Element Dialogue::get_current_element() const {
     switch (m_state) {
-    case State::Empty:
+    case State::Empty: case State::EmptyWithFollowup:
         throw std::exception("no active dialogue");
     case State::Player: {
         const auto& options = std::get<std::vector<SpeechResponse>>(current_vertex().outcome);

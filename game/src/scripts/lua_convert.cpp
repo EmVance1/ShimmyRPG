@@ -117,27 +117,27 @@ sf::Vector2u lua_tovec2u(lua_State* L, int idx) {
 }
 
 sf::Color lua_tocolor(lua_State* L, int idx) {
-    lua_pushstring(L, "r");
+    lua_pushinteger(L, 1);
     lua_gettable(L, idx);
-    const uint32_t r = static_cast<uint32_t>(lua_tointeger(L, -1));
+    const uint8_t r = static_cast<uint8_t>(lua_tonumber(L, -1));
     lua_pop(L, 1);
 
-    lua_pushstring(L, "g");
+    lua_pushinteger(L, 2);
     lua_gettable(L, idx);
-    const uint32_t g = static_cast<uint32_t>(lua_tointeger(L, -1));
+    const uint8_t g = static_cast<uint8_t>(lua_tonumber(L, -1));
     lua_pop(L, 1);
 
-    lua_pushstring(L, "b");
+    lua_pushinteger(L, 3);
     lua_gettable(L, idx);
-    const uint32_t b = static_cast<uint32_t>(lua_tointeger(L, -1));
+    const uint8_t b = static_cast<uint8_t>(lua_tonumber(L, -1));
     lua_pop(L, 1);
 
-    lua_pushstring(L, "a");
-    lua_gettable(L, idx);
-    const uint32_t a = static_cast<uint32_t>(lua_tointeger(L, -1));
-    lua_pop(L, 1);
+    // lua_pushstring(L, "a");
+    // lua_gettable(L, idx);
+    // const uint32_t a = static_cast<uint32_t>(lua_tointeger(L, -1));
+    // lua_pop(L, 1);
 
-    return sf::Color(r, g, b, a);
+    return sf::Color(r, g, b);
 }
 
 sf::Vertex lua_tovertex(lua_State* L, int idx) {

@@ -14,6 +14,7 @@ void NormalMode::move_to_action(const std::string& target) {
     if (t.is_character()) {
         p_area->get_player().get_tracker().set_target_position(t.get_tracker().get_position());
         p_area->get_player().get_tracker().trim_path_radial(thresh);
+        p_area->get_player().get_tracker().start();
     } else {
         const auto abs = t.get_sorting_boundary().get_center_of_mass();
         const auto pos = p_area->iso_to_cart.transformPoint(abs);
@@ -160,11 +161,12 @@ void NormalMode::update() {
                 p_area->handle_trigger(t);
             }
             t.cooldown = true;
-        } else if (!t.single_use) {
+        } else {
             t.cooldown = false;
         }
     }
     p_area->suppress_triggers = false;
+    p_area->suppress_portals = false;
 
     p_area->gui.update();
 
