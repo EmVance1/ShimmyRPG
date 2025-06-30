@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "rapidjson/document.h"
+#include "util/uuid.h"
 #include "world/area.h"
 #include "world/region.h"
 #include "util/str.h"
@@ -36,10 +37,10 @@ Area::Area(const std::string& _id, Region* parent_region)
 void Area::init(const rapidjson::Value& prefabs, const rapidjson::Document& doc) {
     const auto& meta = JSON_GET(doc, "world");
 
-    area_label = std::string(JSON_GET_STR(meta, "area_label"));
+    area_label = std::string(JSON_GET_STR(meta, "label"));
     topleft = json_to_vector2f(JSON_GET_ARRAY(meta, "topleft"));
     scale = JSON_GET_FLOAT(meta, "scale");
-    pathfinder = nav::NavMesh::read_file(std::string("res/maps/") + JSON_GET_STR(meta, "map"), scale);
+    pathfinder = nav::NavMesh::read_file(p_region->m_id + id + ".nav", scale);
 
     cart_to_iso = cartesian_to_isometric(topleft);
     iso_to_cart = isometric_to_cartesian(topleft);
@@ -61,9 +62,8 @@ void Area::init(const rapidjson::Value& prefabs, const rapidjson::Document& doc)
 
     for (const auto& e : JSON_GET_ARRAY(doc, "triggers")) {
         auto& t = triggers.emplace_back();
-        t.id = JSON_GET_STR(e, "id");
-        t.once_id = "once_trig_" + id + t.id;
-        t.bounds = (sfu::RotatedFloatRect)json_to_floatrect(JSON_GET(e, "bounds"));
+        t.once_id = "once_trig_" + id + Uuid::generate_v4();
+        t.bounds = (sfu::RotatedFloatRect)json_to_floatrect(JSON_GET(e, "rect"));
         if (e.HasMember("angle")) {
             t.bounds.angle = sf::degrees(JSON_GET_FLOAT(e, "angle"));
         }
@@ -82,7 +82,7 @@ void Area::init(const rapidjson::Value& prefabs, const rapidjson::Document& doc)
                 JSON_GET_UINT64(act, "index"),
                 json_to_vector2f(JSON_GET(act, "spawnpos")),
                 JSON_IS_TRUE(act, "suppress_triggers"),
-                act.HasMember("lock_id") ? JSON_GET_STR(act, "lock_id") : "unlocked"
+                act.HasMember("lock_id") ? JSON_GET_STR(act, "lock_id") : "false"
             };
         } else if (action.HasMember("CameraZoom")) {
             t.action = CameraZoom{ JSON_GET_FLOAT(action, "CameraZoom") };

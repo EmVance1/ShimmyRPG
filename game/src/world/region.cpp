@@ -3,6 +3,7 @@
 #include "util/str.h"
 #include "util/json.h"
 #include "graphics/filters.h"
+#include "time/deltatime.h"
 
 
 #define OUTLINE_WIDTH 5
@@ -14,6 +15,8 @@ void Region::load_from_folder(const std::string& folder) {
     m_areas.clear();
 
     const auto doc = load_json_from_file(folder + "region.json");
+
+    m_id = folder;
 
     for (const auto& [k, v] : doc["textures"].GetObject()) {
         const auto name = std::string(k.GetString());
@@ -66,6 +69,7 @@ void Region::set_active_area(size_t index) {
     m_areas[m_active_area].set_mode(GameMode::Sleep);
     m_areas[index].set_mode(GameMode::Normal);
     m_active_area = index;
+    Time::set_frame();
 }
 
 void Region::update_all() {

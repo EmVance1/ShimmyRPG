@@ -17,10 +17,9 @@ struct ChangeFlag    { std::string name; FlagModifier mod; };
 using TriggerAction = std::variant<BeginScript, BeginDialogue, Popup, GotoRegion, GotoArea, CameraZoom, ChangeFlag>;
 
 struct Trigger {
-    std::string id;
-    std::string once_id;
     sfu::RotatedFloatRect bounds;
     TriggerAction action;
+    std::string once_id;
     FlagExpr condition = FlagExpr::True();
     bool cooldown = false;
 };

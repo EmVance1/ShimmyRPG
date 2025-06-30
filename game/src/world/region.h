@@ -7,6 +7,7 @@
 
 class Region {
 private:
+    std::string m_id;
     std::unordered_map<std::string, sfu::TextureAtlas> m_atlases;
     std::unordered_map<std::string, sf::Texture> m_textures;
     std::unordered_map<std::string, sfu::AlphaMap> m_alphamaps;

@@ -14,12 +14,11 @@ class Entity;
 class LuaScript {
 public:
     enum class Callback {
-        OnStart  = 1,
-        OnUpdate = 2,
+        OnStart  = 0,
+        OnUpdate = 1,
     };
 
     struct AsyncCallback {
-        bool callable = false;
         lua_State* thread = nullptr;
         bool resumable = false;
         float delay = 0;
@@ -28,7 +27,7 @@ public:
 private:
     lua_State* m_state = nullptr;
     uint32_t m_funcs = 0;
-    std::unordered_map<Callback, AsyncCallback> m_coroutines;
+    AsyncCallback m_coroutines[2];
 
     Area* p_parent_area = nullptr;
 

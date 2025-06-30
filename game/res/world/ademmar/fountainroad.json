@@ -1,26 +1,25 @@
 {
     "world": {
-        "area_label": "Fountain Road",
+        "label": "Fountain Road",
         "topleft": [745, -405],
-        "scale": 5.09,
-        "map": "fountainroad.nav"
+        "scale": 5.09
     },
     "background": [
         { "file": "res/textures/fountainroad.png", "bounds": [ 0, 0, 1920, 1080 ] }
     ],
     "triggers": [
         {
-            "id": "ShimmyFrontDoor",
-            "bounds": [ 750, 345, 120, 30 ],
+            "//": "shimmy front door",
+            "rect": [ 750, 345, 120, 30 ],
             "action": { "GotoArea": { "index": 0, "spawnpos": [ 365, 555 ], "suppress_triggers": true } }
         }
     ],
     "entities": [
         {
+            "ids": { "script": "player", "story": "-" },
             "texture": "player_placeholder",
             "position": { "world": [ 350, 450 ] },
             "controller": { "speed": 2.5 },
-            "ids": { "script": "player", "story": "-" },
             "tags": [ "player" ]
         },
         {

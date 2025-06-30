@@ -1,75 +1,74 @@
 {
     "world": {
-        "area_label": "Shimmy's Shack",
+        "label": "Shimmy's Shack",
         "topleft": [ 948, 315 ],
-        "scale": 5.35,
-        "map": "shimmyshack.nav"
+        "scale": 5.35
     },
     "background": [
         { "file": "res/textures/shimmyshack.png", "bounds": [ -68, -70, 2054, 1156 ] }
     ],
     "triggers": [
         {
-            "id": "ShimmyBehindBar",
-            "bounds": [ 192, 0, 342, 100 ],
-            "action": { "BeginDialogue": "res/scripts/ShimmyBehindBar.shmy" }
-        },
-        {
-            "id": "ShimmyFrontDoor",
-            "bounds": [ 315, 535, 115, 40 ],
+            "//": "front door",
+            "rect": [ 315, 535, 115, 40 ],
             "action": { "GotoArea": { "index": 1, "spawnpos": [ 810, 360 ], "suppress_triggers": true } },
             "condition": "!Ademmar_CurfewInPlace"
         },
         {
-            "id": "ShimmyCurfewBlocker",
-            "bounds": [ 315, 535, 115, 40 ],
-            "action": { "Popup": "There is a curfew in place. It is unwise to go outside." },
-            "condition": "Ademmar_CurfewInPlace"
-        },
-        {
-            "id": "SpeakToShimmy",
-            "bounds": [ 140, 0, 394, 380 ],
+            "//": "welcome cutscene",
+            "rect": [ 140, 0, 394, 380 ],
             "action": { "BeginScript": "res/scripts/ShimmyIntroScene.lua" },
             "condition": "ShimmyIntroScene_IsActive & once"
+        },
+        {
+            "//": "behind bar",
+            "rect": [ 192, 0, 342, 100 ],
+            "action": { "BeginDialogue": "res/scripts/ShimmyBehindBar.shmy" }
+        },
+        {
+            "//": "curfew blocker",
+            "rect": [ 315, 535, 115, 40 ],
+            "action": { "Popup": "There is a curfew in place. It is unwise to go outside." },
+            "condition": "Ademmar_CurfewInPlace"
         }
     ],
     "entities": [
         {
+            "ids": { "script": "player", "story": "Stanza" },
             "texture": "player_placeholder",
             "position": { "world": [ 320, 480 ] },
             "controller": { "speed": 2.5 },
-            "ids": { "script": "player", "story": "Stanza" },
             "tags": [ "player" ]
         },
         {
+            "ids": { "script": "ShimmyPrime", "story": "Shimmy" },
             "texture": "npc_friendly_placeholder",
             "position": { "world": [ 330, 50 ] },
             "controller": { "speed": 2 },
-            "ids": { "script": "ShimmyPrime", "story": "Shimmy" },
             "tags": [ "npc", "trader", "shimmy_staff" ],
             "dialogue": { "file": "res/scripts/ShimmyDialogue.shmy" }
         },
         {
+            "ids": { "script": "BrianPrime", "story": "Brian" },
             "texture": "npc_friendly_placeholder",
             "position": { "world": [ 500, 290 ] },
             "controller": { "speed": 2 },
-            "ids": { "script": "BrianPrime", "story": "Brian" },
             "tags": [ "npc", "shimmy_customer" ],
             "dialogue": { "file": "res/scripts/BrianDialogue.shmy" }
         },
         {
+            "ids": { "script": "Sally", "story": "Sally" },
             "texture": "npc_neutral_placeholder",
             "position": { "world": [ 460, 130 ] },
             "controller": { "speed": 2 },
-            "ids": { "script": "Sally", "story": "Sally" },
             "tags": [ "npc", "shimmy_customer" ],
             "dialogue": { "line": "This curfew nonsense is a bad fucking joke..." }
         },
         {
+            "ids": { "script": "Bill", "story": "Bill" },
             "texture": "npc_neutral_placeholder",
             "position": { "world": [ 400, 130 ] },
             "controller": { "speed": 2 },
-            "ids": { "script": "Bill", "story": "Bill" },
             "tags": [ "npc", "shimmy_customer" ],
             "dialogue": { "line": "Shimmy really knows how to brew a strong drink." }
         },

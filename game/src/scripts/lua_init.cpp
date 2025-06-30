@@ -30,8 +30,8 @@ void lua_register_engine_funcs(lua_State* L) {
     lua_registertable(L, "goto_area",      &l_goto_area,          -2);
 
     lua_registertable(L, "set_mode",          &l_set_mode,        -2);
-    lua_registertable(L, "set_combat",        &l_yield_combat,    -2);
-    // lua_registertable(L, "yield_to_combat",   &l_yield_combat,    -2);
+    // lua_registertable(L, "set_combat",        &l_yield_combat,    -2);
+    lua_registertable(L, "yield_to_combat",   &l_yield_combat,    -2);
     lua_registertable(L, "yield_to_dialogue", &l_yield_dialogue,  -2);
     lua_registertable(L, "yield_seconds",     &l_wait_seconds,    -2);
     lua_registertable(L, "yield",             &l_yield,           -2);
@@ -58,7 +58,7 @@ void lua_register_engine_funcs(lua_State* L) {
     lua_pushinteger(L, 0);
     lua_setfield(L, -2, "NORMAL");
     lua_pushinteger(L, 1);
-    lua_setfield(L, -2, "DIALOGUE");
+    lua_setfield(L, -2, "CUTSCENE");
     lua_pushinteger(L, 2);
     lua_setfield(L, -2, "CINEMATIC");
     lua_pushinteger(L, 3);
@@ -68,21 +68,32 @@ void lua_register_engine_funcs(lua_State* L) {
     lua_setglobal(L, "shmy");
 }
 
+
 void lua_set_overriden_funcs(lua_State* L, uint32_t& funcs) {
     if (lua_hasfunction(L, "OnStart")) {
-        funcs |= (uint32_t)LuaScript::Callback::OnStart;
+        funcs |= (1 << (uint32_t)LuaScript::Callback::OnStart);
     }
     if (lua_hasfunction(L, "OnUpdate")) {
-        funcs |= (uint32_t)LuaScript::Callback::OnUpdate;
+        funcs |= (1 << (uint32_t)LuaScript::Callback::OnUpdate);
     }
 }
 
-void lua_set_coroutines(lua_State* L, std::unordered_map<LuaScript::Callback, LuaScript::AsyncCallback>& coroutines) {
+void lua_set_coroutines(lua_State* L, LuaScript::AsyncCallback* coroutines) {
     if (lua_hasfunction(L, "OnStartAsync")) {
-        coroutines[LuaScript::Callback::OnStart].callable = true;
+        auto& cb = coroutines[(size_t)LuaScript::Callback::OnStart];
+        cb.thread = lua_newthread(L);
+        cb.resumable = true;
+        cb.delay = 0.f;
+        lua_getglobal(cb.thread, "OnStartAsync");
+        lua_pop(L, -1);
     }
     if (lua_hasfunction(L, "OnUpdateAsync")) {
-        coroutines[LuaScript::Callback::OnUpdate].callable = true;
+        auto& cb = coroutines[(size_t)LuaScript::Callback::OnUpdate];
+        cb.thread = lua_newthread(L);
+        cb.resumable = true;
+        cb.delay = 0.f;
+        lua_getglobal(cb.thread, "OnUpdateAsyncImpl");
+        lua_pop(L, -1);
     }
 }
 

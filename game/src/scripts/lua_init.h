@@ -9,5 +9,5 @@ extern "C" {
 
 void lua_register_engine_funcs(lua_State* L);
 void lua_set_overriden_funcs(lua_State* L, uint32_t& funcs);
-void lua_set_coroutines(lua_State* L, std::unordered_map<LuaScript::Callback, LuaScript::AsyncCallback>& coroutines);
+void lua_set_coroutines(lua_State* L, LuaScript::AsyncCallback* coroutines);
 

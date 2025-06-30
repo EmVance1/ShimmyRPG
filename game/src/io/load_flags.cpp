@@ -5,6 +5,8 @@
 static void load_file(const std::string& filename, const std::string& prefix) {
     auto file = std::ifstream(filename);
     auto line = std::string("");
+    bool err = false;
+
     while (std::getline(file, line)) {
         if (line.empty() || (line[0] == '/' && line[1] == '/')) {
             continue;
@@ -13,16 +15,19 @@ static void load_file(const std::string& filename, const std::string& prefix) {
         auto f = std::string("");
         auto v = std::string("");
         stream >> f >> v;
-        if (f == "true" || f == "false" || f == "inf" || f == "default" || f == "unlocked") {
-            std::cerr << "'" << f << "' is a reserved value and cannot be overriden\n";
+        if (f == "true" || f == "false" || f == "inf" || f == "default") {
+            std::cerr << "runtime error: flag init error - '" << f << "' is a reserved value and cannot be overriden\n";
+            err = true;
             continue;
         }
         if (f.starts_with("rng")) {
-            std::cerr << "'rng' prefix is reserved for temporary internal flags\n";
+            std::cerr << "runtime error: flag init error - 'rng' prefix is reserved for temporary internal flags\n";
+            err = true;
             continue;
         }
         if (f.starts_with("once")) {
-            std::cerr << "'once' prefix is reserved for temporary internal flags\n";
+            std::cerr << "runtime error: flag init error - 'once' prefix is reserved for temporary internal flags\n";
+            err = true;
             continue;
         }
         if (prefix != "Global") {
@@ -36,6 +41,8 @@ static void load_file(const std::string& filename, const std::string& prefix) {
             FlagTable::set_flag(f, std::atoi(v.c_str()), false);
         }
     }
+
+    if (err) { exit(1); }
 }
 
 
@@ -44,7 +51,6 @@ void load_flags() {
     FlagTable::set_flag("false", 0, false);
     FlagTable::set_flag("inf", UINT32_MAX, false);
     FlagTable::set_flag("default", 1, false);
-    FlagTable::set_flag("unlocked", 0, false);
 
     for (const auto& f : std::fs::directory_iterator("res/flags/")) {
         load_file(f.path().generic_string(), f.path().stem().generic_string());
