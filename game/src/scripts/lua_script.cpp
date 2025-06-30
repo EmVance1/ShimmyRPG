@@ -11,6 +11,7 @@ LuaScript::LuaScript(Area& parent_area) : p_parent_area(&parent_area) {}
 LuaScript::LuaScript(Area& parent_area, const std::string& filename, bool autoplay)
     : p_parent_area(&parent_area)
 {
+    std::cout << "creating script\n";
     load_from_file(filename, autoplay);
 }
 
@@ -32,7 +33,7 @@ void LuaScript::load_from_file(const std::string& filename, bool autoplay) {
             lua_getglobal(m_state, "OnStart");
 #ifdef DEBUG
             if (lua_pcall(m_state, 0, 0, 0) != 0) {
-                throw std::invalid_argument(std::string("lua pcall error - ") + lua_tostring(m_state, -1));
+                // throw std::invalid_argument(std::string("lua pcall error - ") + lua_tostring(m_state, -1));
             }
 #else
             lua_call(m_state, 0, 0);
@@ -40,20 +41,26 @@ void LuaScript::load_from_file(const std::string& filename, bool autoplay) {
         }
         auto& asfunc = m_coroutines[Callback::OnStart];
         if (autoplay && asfunc.thread) {
-            int retvalcount = 1;
-            if (lua_resume(asfunc.thread, 0) == LUA_YIELD) {
+            const auto resume_result = lua_resume(asfunc.thread, 0);
+            if (resume_result == LUA_YIELD) {
                 asfunc.resumable = true;
+                const int nresults = lua_gettop(asfunc.thread);
+                if (nresults == 1) {
+                    asfunc.delay = static_cast<float>(lua_tonumber(asfunc.thread, -1));
+                    lua_pop(asfunc.thread, nresults);
+                } else {
+                    std::cerr << "lua coroutine error - (internal) coroutine.yield nresults != 1\n";
+                    exit(1);
+                }
+            } else if (resume_result == LUA_ERRRUN) {
+                std::cerr << "lua coroutine error - " << lua_tostring(asfunc.thread, -1) << "\n";
+                exit(1);
             } else {
                 asfunc.resumable = false;
             }
-            if (retvalcount > 0) {
-                asfunc.delay = static_cast<float>(lua_tonumber(asfunc.thread, -1));
-            }
         }
     } else {
-#ifdef DEBUG
         throw std::invalid_argument(std::string("lua parse error - ") + lua_tostring(m_state, -1));
-#endif
     }
 }
 
@@ -75,7 +82,7 @@ void LuaScript::update() {
         lua_pushnumber(m_state, deltatime);
 #ifdef DEBUG
         if (lua_pcall(m_state, 1, 0, 0) != 0) {
-            throw std::invalid_argument(std::string("lua pcall error - ") + lua_tostring(m_state, -1));
+            // throw std::invalid_argument(std::string("lua pcall error - ") + lua_tostring(m_state, -1));
         }
 #else
         lua_call(m_state, 1, 0);
@@ -84,27 +91,33 @@ void LuaScript::update() {
     auto& asfunc = m_coroutines[Callback::OnUpdate];
     if (asfunc.thread && asfunc.delay <= 0) {
         lua_pushnumber(asfunc.thread, deltatime);
-        int retvalcount = 1;
-        if (lua_resume(asfunc.thread, 1) == LUA_YIELD) {
-            asfunc.resumable = true;
-        } else {
-            asfunc.resumable = false;
-        }
-        if (retvalcount > 0) {
+        asfunc.resumable = lua_resume(asfunc.thread, 1) == LUA_YIELD;
+        const int nresults = lua_gettop(asfunc.thread);
+        if (nresults > 0) {
             asfunc.delay = static_cast<float>(lua_tonumber(asfunc.thread, -1));
+            lua_pop(asfunc.thread, nresults);
         }
     }
-    for (auto& [_, co] : m_coroutines) {
+    for (auto& [id, co] : m_coroutines) {
+        // if (id == Callback::OnUpdate) { continue; }
         co.delay -= deltatime;
         if (co.delay <= 0 && co.resumable) {
-            int retvalcount = 1;
-            if (lua_resume(co.thread, 0) == LUA_YIELD) {
+            const auto resume_result = lua_resume(co.thread, 0);
+            if (resume_result == LUA_YIELD) {
                 co.resumable = true;
+                const int nresults = lua_gettop(co.thread);
+                if (nresults == 1) {
+                    co.delay = static_cast<float>(lua_tonumber(co.thread, -1));
+                    lua_pop(co.thread, nresults);
+                } else {
+                    std::cerr << "lua coroutine error - (internal) coroutine.yield nresults != 1\n";
+                    exit(1);
+                }
+            } else if (resume_result == LUA_ERRRUN) {
+                std::cerr << "lua coroutine error - " << lua_tostring(co.thread, -1) << "\n";
+                exit(1);
             } else {
                 co.resumable = false;
-            }
-            if (retvalcount > 0) {
-                co.delay = static_cast<float>(lua_tonumber(co.thread, -1));
             }
         }
     }

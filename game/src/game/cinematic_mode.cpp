@@ -66,7 +66,9 @@ void CinematicMode::handle_event(const sf::Event& event) {
 
 void CinematicMode::update() {
     for (auto& [_, e] : p_area->entities) {
-        e.update_motion(p_area->cart_to_iso);
+        if (!e.is_offstage()) {
+            e.update_motion(p_area->cart_to_iso);
+        }
     }
     if (!p_area->dialogue.is_playing()) {
         for (auto& s : p_area->scripts) {

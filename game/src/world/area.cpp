@@ -29,7 +29,7 @@ void Area::update_motionguide() {
 void Area::handle_trigger(const Trigger& trigger) {
     FlagTable::Once = FlagTable::has_flag(trigger.once_id);
     if (!trigger.condition.evaluate()) { return; }
-    if (FlagTable::Once) { FlagTable::set_flag(trigger.once_id, 1); }
+    if (FlagTable::Once) { FlagTable::set_flag(trigger.once_id, 1, false); }
 
     switch (trigger.action.index()) {
     case 0: {
@@ -56,7 +56,7 @@ void Area::handle_trigger(const Trigger& trigger) {
         if (suppress_portals) { return; }
 
         const auto gotoarea = std::get<GotoArea>(trigger.action);
-        if (FlagTable::get_flag(gotoarea.lock_id)) {
+        if (FlagTable::get_flag(gotoarea.lock_id, true)) {
             auto popup_ui = gui::Popup::create(gui::Position::center({0, 0}), sf::Vector2f(700, 150), p_region->get_style(), "This door is locked.");
             popup_ui->set_position(gui::Position::center({0, 0}));
             get_player().get_tracker().stop();
@@ -166,11 +166,11 @@ void Area::set_mode(GameMode mode) {
     }
     if (mode == GameMode::Sleep) {
         background.unload_textures();
+    } else if (gamemode == GameMode::Sleep) {
+        background.load_textures();
         for (auto& t : triggers) {
             t.cooldown = false;
         }
-    } else if (gamemode == GameMode::Sleep) {
-        background.load_textures();
     }
     gamemode = mode;
 }
@@ -221,7 +221,7 @@ void Area::update() {
     background.update(camera.getFrustum());
     sorted_entities = sprites_topo_sort(entities);
 
-    const auto g = FlagTable::get_flag("Player_Coin");
+    const auto g = FlagTable::get_flag("Player_Coin", true);
     gui.get_widget<gui::Panel>("gold_counter")->get_widget<gui::Text>("goldtxt")->set_label(std::to_string(g));
 
     if (cinematic_timer > 0.f) {
@@ -272,9 +272,11 @@ void Area::render(sf::RenderTarget& target) {
     }
 
     for (const auto& e : sorted_entities) {
-        target.draw(e->get_sprite());
-        if (e->is_hovered()) {
-            target.draw(e->get_outline_sprite());
+        if (!e->is_offstage()) {
+            target.draw(e->get_sprite());
+            if (e->is_hovered()) {
+                target.draw(e->get_outline_sprite());
+            }
         }
     }
 

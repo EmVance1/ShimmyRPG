@@ -29,22 +29,22 @@ static void load_file(const std::string& filename, const std::string& prefix) {
             f = prefix + "_" + f;
         }
         if (v == "true") {
-            FlagTable::set_flag(f, 1);
+            FlagTable::set_flag(f, 1, false);
         } else if (v == "false") {
-            FlagTable::set_flag(f, 0);
+            FlagTable::set_flag(f, 0, false);
         } else {
-            FlagTable::set_flag(f, std::atoi(v.c_str()));
+            FlagTable::set_flag(f, std::atoi(v.c_str()), false);
         }
     }
 }
 
 
 void load_flags() {
-    FlagTable::set_flag("true", 1);
-    FlagTable::set_flag("false", 0);
-    FlagTable::set_flag("inf", UINT32_MAX);
-    FlagTable::set_flag("default", 1);
-    FlagTable::set_flag("unlocked", 0);
+    FlagTable::set_flag("true", 1, false);
+    FlagTable::set_flag("false", 0, false);
+    FlagTable::set_flag("inf", UINT32_MAX, false);
+    FlagTable::set_flag("default", 1, false);
+    FlagTable::set_flag("unlocked", 0, false);
 
     for (const auto& f : std::fs::directory_iterator("res/flags/")) {
         load_file(f.path().generic_string(), f.path().stem().generic_string());

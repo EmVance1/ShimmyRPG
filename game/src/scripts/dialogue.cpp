@@ -23,7 +23,7 @@ void Dialogue::begin(SpeechGraph&& graph, GameMode init_mode, const std::string&
             m_vertex = "entry" + std::to_string(i);
         }
         if (FlagTable::Once) {
-            FlagTable::set_flag(once_id, 1);
+            FlagTable::set_flag(once_id, 1, false);
         }
     }
     m_vertex_index = 0;

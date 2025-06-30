@@ -21,6 +21,11 @@ void Area::load_prefab(const rapidjson::Value& prefabs, const rapidjson::Value& 
     );
     auto& entity = entities[e_id];
 
+    // OFFSTAGE
+    if (value.HasMember("offstage")) {
+        entity.set_offstage(JSON_IS_TRUE(value, "offstage"));
+    }
+
     // POSITION
     const auto& pos = JSON_GET(value, "position");
     if (pos.HasMember("world")) {

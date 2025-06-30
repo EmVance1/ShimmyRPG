@@ -1,63 +1,25 @@
----@diagnostic disable: lowercase-global
----@type fun(mode: integer)
-set_mode = set_mode
-
----@diagnostic disable: lowercase-global
----@type fun(pos: table)
-camera_set_pos = camera_set_pos
-
----@diagnostic disable: lowercase-global
----@type fun(pos: table)
-camera_zoom = camera_zoom
-
----@diagnostic disable: lowercase-global
----@type fun(entity: string): table
-get_position = get_position
-
----@diagnostic disable: lowercase-global
----@type fun(file: string): nil
-start_dialogue = start_dialogue
-
----@diagnostic disable: lowercase-global
----@type fun(entity: string, pos: table)
-set_path = set_path
-
----@diagnostic disable: lowercase-global
----@type fun(name: string, val: integer)
-set_flag = set_flag
-
----@diagnostic disable: lowercase-global
----@type fun(name: string): integer
-get_flag = get_flag
-
-
-Modes = {
-    NORMAL = 0,
-    DIALOGUE = 1,
-    CINEMATIC = 2,
-    COMBAT = 3,
-}
 
 
 function OnStartAsync()
-    set_mode(Modes.CINEMATIC)
+    local shimmy = shmy.entity("ShimmyPrime")
 
-    camera_set_pos(get_position("ShimmyPrime"));
+    shmy.set_mode(shmy.mode.CINEMATIC)
 
-    coroutine.yield(1.0)
+    shmy.camera.set_target(shimmy:get_position());
 
-    start_dialogue("res/scripts/ShimmyIntroScene.shmy")
+    shmy.wait_seconds(1.0)
 
-    coroutine.yield(0)
+    shmy.play_dialogue("res/scripts/ShimmyIntroScene.shmy")
 
-    set_flag("ShimmyIntroScene_HasPlayed", 1)
+    shimmy:set_path({ x=400, y=50 })
 
-    set_combat({}, { "shimmy_staff", "shimmy_customer" })
-    set_mode(Modes.COMBAT)
-    -- set_path("ShimmyPrime", { x=400, y=50 })
+    shmy.flags["ShimmyIntroScene_HasPlayed"] = 1
 
-    coroutine.yield(0.7)
+    -- shmy.set_combat({}, { "shimmy_staff", "shimmy_customer" })
+    -- shmy.set_mode(shmy.mode.COMBAT)
 
-    set_mode(Modes.NORMAL)
+    shmy.wait_seconds(0.7)
+
+    shmy.set_mode(shmy.mode.NORMAL)
 end
 

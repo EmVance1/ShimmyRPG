@@ -30,7 +30,7 @@
             "id": "SpeakToShimmy",
             "bounds": [ 140, 0, 394, 380 ],
             "action": { "BeginScript": "res/scripts/ShimmyIntroScene.lua" },
-            "condition": "ShimmyIntroScene_IsActive & once & false"
+            "condition": "ShimmyIntroScene_IsActive & once"
         }
     ],
     "entities": [
