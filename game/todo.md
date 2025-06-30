@@ -22,9 +22,9 @@
 
 - [ ] IMPROVE error handling and logging
     - [ ] script parser error reporting
-    - [ ] rapidjson error handlers
-    - [ ] lua pcalls / logging
-    - [ ] total fallthrough in release mode
+    - [x] rapidjson error handlers
+    - [x] lua pcalls / logging
+    - [x] total fallthrough in release mode
 
 
 - [ ] DESIGN character creator
@@ -62,8 +62,8 @@
     - [x] dialogue exit can trigger scripts (=> exit_into{ script })
     - [x] lockable/unlockable doors (hacky)
     - [x] better camera control (mostly zoom actions, on triggers) (super hacky)
-    - [ ] 'offstage' entities
-    - [ ] improve json error handling
+    - [x] 'offstage' entities
+    - [x] improve json error handling
     - [ ] better handling of textures
     - [ ] grow tooltips to fit content
     - [ ] better initial configuration

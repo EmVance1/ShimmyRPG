@@ -19,6 +19,7 @@ public:
     };
 
     struct AsyncCallback {
+        bool callable = false;
         lua_State* thread = nullptr;
         bool resumable = false;
         float delay = 0;

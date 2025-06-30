@@ -233,7 +233,7 @@ int l_set_mode(lua_State* L) {
     return 0;
 }
 
-int l_set_combat(lua_State* L) {
+int l_yield_combat(lua_State* L) {
     const size_t a_len = lua_objlen(L, 1);
     auto ally_tags = std::unordered_set<std::string>();
     for (size_t i = 0; i < a_len; i++) {
@@ -258,7 +258,7 @@ int l_set_combat(lua_State* L) {
 }
 
 #ifdef DEBUG
-int l_play_dialogue(lua_State* L) {
+int l_yield_dialogue(lua_State* L) {
     const auto filename = lua_tostring(L, 1);
     try {
         lua_pushstring(L, "script");
@@ -277,7 +277,7 @@ int l_play_dialogue(lua_State* L) {
     return lua_yield(L, 1);
 }
 #else
-int l_play_dialogue(lua_State* L) {
+int l_yield_dialogue(lua_State* L) {
     const auto filename = lua_tostring(L, 1);
     lua_pushstring(L, "script");
     lua_gettable(L, LUA_REGISTRYINDEX);

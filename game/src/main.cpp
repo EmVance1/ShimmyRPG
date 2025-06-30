@@ -71,19 +71,28 @@ int main() {
 
         region.update_all();
 
+        window.clear(sf::Color::Black);
+
         target.clear(sf::Color::Black);
-        region.get_active_area().render(target);
+        region.get_active_area().render_world(target);
+
+        target.postFxDisplay();
+        auto target_sp = sf::Sprite(target.getTexture());
+        target_sp.setColor(region.get_active_area().overlaycolor);
+        window.draw(target_sp);
+
+        target.clear(sf::Color::Transparent);
+        region.get_active_area().render_overlays(target);
         target.setView(target.getDefaultView());
         const auto mouse = sf::Mouse::getPosition(window);
         cursor.setPosition(sf::Vector2f(mouse));
         target.draw(cursor);
         target.draw(fps_draw);
-        target.postFxDisplay();
 
-        window.clear(sf::Color::Black);
-        auto target_sp = sf::Sprite(target.getTexture());
-        target_sp.setColor(region.get_active_area().overlaycolor);
+        target.postFxDisplay();
+        target_sp = sf::Sprite(target.getTexture());
         window.draw(target_sp);
+
         window.display();
     }
 }

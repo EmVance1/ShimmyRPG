@@ -256,7 +256,7 @@ void Area::update() {
 #endif
 }
 
-void Area::render(sf::RenderTarget& target) {
+void Area::render_world(sf::RenderTarget& target) {
     target.setView(camera);
 
     target.clear(sf::Color(10, 10, 10));
@@ -279,7 +279,9 @@ void Area::render(sf::RenderTarget& target) {
             }
         }
     }
+}
 
+void Area::render_overlays(sf::RenderTarget& target) {
 #ifdef DEBUG
     debugger.render(target);
 #endif

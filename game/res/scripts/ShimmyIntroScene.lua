@@ -9,7 +9,7 @@ function OnStartAsync()
 
     shmy.wait_seconds(1.0)
 
-    shmy.play_dialogue("res/scripts/ShimmyIntroScene.shmy")
+    shmy.yield_to_dialogue("res/scripts/ShimmyIntroScene.shmy")
 
     shimmy:set_path({ x=400, y=50 })
 

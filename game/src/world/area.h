@@ -93,6 +93,7 @@ struct Area {
 
     void handle_event(const sf::Event& event);
     void update();
-    void render(sf::RenderTarget& target);
+    void render_world(sf::RenderTarget& target);
+    void render_overlays(sf::RenderTarget& target);
 };
 

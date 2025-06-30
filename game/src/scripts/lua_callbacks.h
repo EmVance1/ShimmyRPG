@@ -23,8 +23,8 @@ int l_magic_flag_set(lua_State* L);
 int l_magic_flag_get(lua_State* L);
 
 int l_set_mode(lua_State* L);
-int l_set_combat(lua_State* L);
-int l_play_dialogue(lua_State* L);
+int l_yield_combat(lua_State* L);
+int l_yield_dialogue(lua_State* L);
 
 int l_set_overlay(lua_State* L);
 int l_goto_area(lua_State* L);

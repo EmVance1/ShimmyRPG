@@ -14,12 +14,6 @@ static bool lua_hasfunction(lua_State* L, const char* name) {
     }
 }
 
-static void lua_initcoroutine(lua_State* L, const char* name, LuaScript::AsyncCallback& as) {
-    as.thread = lua_newthread(L);
-    lua_getglobal(as.thread, name);
-    lua_pop(L, -1);
-}
-
 
 #define lua_registertable(L, name, func, idx) \
     lua_pushcfunction(L, func); \
@@ -32,11 +26,15 @@ void lua_register_engine_funcs(lua_State* L) {
     lua_registertable(L, "set_flag",       &l_set_flag,           -2);
     lua_registertable(L, "get_flag",       &l_get_flag,           -2);
     lua_registertable(L, "create_flag",    &l_set_or_create_flag, -2);
-    lua_registertable(L, "set_mode",       &l_set_mode,           -2);
-    lua_registertable(L, "set_combat",     &l_set_combat,         -2);
-    lua_registertable(L, "play_dialogue",  &l_play_dialogue,      -2);
     lua_registertable(L, "set_overlay",    &l_set_overlay,        -2);
     lua_registertable(L, "goto_area",      &l_goto_area,          -2);
+
+    lua_registertable(L, "set_mode",          &l_set_mode,        -2);
+    lua_registertable(L, "set_combat",        &l_yield_combat,    -2);
+    // lua_registertable(L, "yield_to_combat",   &l_yield_combat,    -2);
+    lua_registertable(L, "yield_to_dialogue", &l_yield_dialogue,  -2);
+    lua_registertable(L, "yield_seconds",     &l_wait_seconds,    -2);
+    lua_registertable(L, "yield",             &l_yield,           -2);
 
     lua_pushstring(L, "camera");
     lua_createtable(L, 0, 2);
@@ -67,11 +65,6 @@ void lua_register_engine_funcs(lua_State* L) {
     lua_setfield(L, -2, "COMBAT");
     lua_settable(L, -3);
 
-    lua_pushcfunction(L, &l_wait_seconds);
-    lua_setfield(L, -2, "wait_seconds");
-    lua_pushcfunction(L, &l_yield);
-    lua_setfield(L, -2, "yield");
-
     lua_setglobal(L, "shmy");
 }
 
@@ -86,10 +79,10 @@ void lua_set_overriden_funcs(lua_State* L, uint32_t& funcs) {
 
 void lua_set_coroutines(lua_State* L, std::unordered_map<LuaScript::Callback, LuaScript::AsyncCallback>& coroutines) {
     if (lua_hasfunction(L, "OnStartAsync")) {
-        lua_initcoroutine(L, "OnStartAsync", coroutines[LuaScript::Callback::OnStart]);
+        coroutines[LuaScript::Callback::OnStart].callable = true;
     }
     if (lua_hasfunction(L, "OnUpdateAsync")) {
-        lua_initcoroutine(L, "OnUpdateAsync", coroutines[LuaScript::Callback::OnUpdate]);
+        coroutines[LuaScript::Callback::OnUpdate].callable = true;
     }
 }
 
