@@ -13,6 +13,10 @@ bool operator==(const SpeechExit&, const SpeechExit&) {
     return true;
 }
 
+bool operator==(const SpeechExitInto& a, const SpeechExitInto& b) {
+    return a.script == b.script;
+}
+
 bool operator==(const SpeechGoto& a, const SpeechGoto& b) {
     return a.vertex == b.vertex;
 }

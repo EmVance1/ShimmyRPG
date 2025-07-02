@@ -147,6 +147,9 @@ float PathTracker::get_active_path_length() const {
 void PathTracker::progress() {
     if (!is_moving()) { return; }
 
+    if (into_sf(path[path_index + 1]) == position) {
+        if (++path_index == path.size() - 1) { return; }
+    }
     const auto diff = into_sf(path[path_index + 1]) - position;
     const auto dist = diff.length();
     if (dist < speed) {

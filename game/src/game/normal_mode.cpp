@@ -126,9 +126,10 @@ void NormalMode::handle_event(const sf::Event& event) {
             p_area->gui.remove_widget("context_menu");
         }
     } else if (auto scrl = event.getIf<sf::Event::MouseWheelScrolled>()) {
-        const auto zoom = (scrl->delta > 0) ? 0.98f : 1.02f;
+        p_area->zoom *= (scrl->delta > 0) ? 0.98f : 1.02f;
+        p_area->zoom_target = p_area->zoom;
         const auto begin = p_area->get_player().get_sprite().getPosition();
-        p_area->camera.zoom(zoom);
+        p_area->camera.setSize(p_area->zoom * (sf::Vector2f)p_area->window->getSize());
         const auto end = p_area->get_player().get_sprite().getPosition();
         p_area->camera.move(begin - end);
     }

@@ -30,17 +30,16 @@ void lua_register_engine_funcs(lua_State* L) {
     lua_registertable(L, "goto_area",      &l_goto_area,          -2);
 
     lua_registertable(L, "set_mode",          &l_set_mode,        -2);
-    // lua_registertable(L, "set_combat",        &l_yield_combat,    -2);
     lua_registertable(L, "yield_to_combat",   &l_yield_combat,    -2);
     lua_registertable(L, "yield_to_dialogue", &l_yield_dialogue,  -2);
-    lua_registertable(L, "yield_seconds",     &l_wait_seconds,    -2);
+    lua_registertable(L, "yield_seconds",     &l_yield_seconds,   -2);
     lua_registertable(L, "yield",             &l_yield,           -2);
 
     lua_pushstring(L, "camera");
     lua_createtable(L, 0, 2);
     lua_registertable(L, "set_position", &l_camera_set_pos,    -2);
     lua_registertable(L, "set_target",   &l_camera_set_target, -2);
-    lua_registertable(L, "zoom",         &l_camera_zoom,       -2);
+    lua_registertable(L, "set_zoom",     &l_camera_set_zoom,   -2);
     lua_settable(L, -3);
 
     lua_pushstring(L, "flags");

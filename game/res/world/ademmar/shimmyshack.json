@@ -5,7 +5,7 @@
         "scale": 5.35
     },
     "background": [
-        { "file": "res/textures/shimmyshack.png", "bounds": [ -68, -70, 2054, 1156 ] }
+        { "file": "ademmar/shimmyshack.png", "bounds": [ -68, -70, 2054, 1156 ] }
     ],
     "triggers": [
         {

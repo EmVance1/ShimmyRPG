@@ -3,7 +3,7 @@
 
 
 std::string read_to_string(const std::string& filename) {
-    auto f = std::ifstream(filename);
+    auto f = std::ifstream(filename, std::ios::binary);
 
     f.seekg(0, std::ios::end);
     const auto size = (size_t)f.tellg();

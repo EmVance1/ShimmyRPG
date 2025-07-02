@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "json.h"
+#include <rapidjson/error/en.h>
 
 
 sf::Vector2f json_to_vector2f(const rapidjson::Value& arr) {
@@ -54,7 +55,15 @@ rapidjson::Document load_json_from_file(const std::string& filename) {
     char readBuffer[65536];
     rapidjson::FileReadStream is(fp, readBuffer, sizeof(readBuffer));
     rapidjson::Document doc;
+#ifdef DEBUG
+    rapidjson::ParseResult ok = doc.ParseStream(is);
+    if (!ok) {
+        throw std::invalid_argument(std::string("invalid json document - ")
+                + rapidjson::GetParseError_En(ok.Code()) + " (" + std::to_string(ok.Offset()) + ")");
+    }
+#else
     doc.ParseStream(is);
+#endif
     fclose(fp);
     return doc;
 }

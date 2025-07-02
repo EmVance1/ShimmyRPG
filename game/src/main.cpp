@@ -35,6 +35,11 @@ int main() {
     region.load_from_folder(region_folder);
     region.set_active_area(region_area);
 
+    // auto& pixelate = target.loadShaderFromFile("res/shaders/pixelate.frag");
+    // pixelate.setUniform("u_resolution", (sf::Vector2f)window.getSize());
+
+    target.loadShaderFromFile("res/shaders/poster.frag");
+
     const auto font = sf::Font("res/fonts/calibri.ttf");
     auto fps_draw = sf::Text(font, "0", 25);
     fps_draw.setPosition({ 10, 10 });
@@ -81,6 +86,7 @@ int main() {
         target_sp.setColor(region.get_active_area().overlaycolor);
         window.draw(target_sp);
 
+        /*
         target.clear(sf::Color::Transparent);
         region.get_active_area().render_overlays(target);
         target.setView(target.getDefaultView());
@@ -92,6 +98,14 @@ int main() {
         target.postFxDisplay();
         target_sp = sf::Sprite(target.getTexture());
         window.draw(target_sp);
+        */
+
+        region.get_active_area().render_overlays(window);
+        window.setView(window.getDefaultView());
+        const auto mouse = sf::Mouse::getPosition(window);
+        cursor.setPosition(sf::Vector2f(mouse));
+        window.draw(cursor);
+        window.draw(fps_draw);
 
         window.display();
     }

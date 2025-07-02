@@ -1,60 +1,32 @@
 # Shimmy Engine Schedule
 
-### In Progress
+### Technical
 
-- [ ] DESIGN combat system
-    - [x] core mechanics
-    - [ ] species bonuses
-    - [ ] class features
-    - [ ] marionette ability
+- [ ] security
+    - [ ] merge lua states
+    - [ ] prevent access to io, os, debug tables
 
-- [ ] IMPLEMENT combat system
-    - [ ] entity stats
-    - [x] turn rotation
-    - [x] factions
-    - [x] per turn movement
-    - [ ] action gui
-    - [ ] temp stat calculation (requires basic inventory)
-    - [ ] targeting
-    - [ ] cross-entity interaction
-    - [ ] stand-in visuals
-
-
-- [ ] IMPROVE error handling and logging
-    - [ ] script parser error reporting
+- [ ] debugging
     - [x] rapidjson error handlers
     - [x] lua pcalls / logging
     - [x] total fallthrough in release mode
+    - [ ] script parser error reporting
+    - [ ] LSP for .shmy files
 
-
-- [ ] DESIGN character creator
-    - [ ] class features (see combat)
-    - [ ] species features (see combat)
-    - [ ] draw GUI
-    - [ ] specify serialization
-
-- [ ] IMPLEMENT character creator
-
-
-- [ ] IMPLEMENT navmesh generation (will probably not have usable real time perf) (actulally 0.3ms isnt bad)
-    - [x] marching squares / floodfill
-    - [x] contour merging
-    - [x] douglas-peucker simplification
-    - [x] hole punching
-    - [x] ear clip triangulation
-    - [x] delauney triangulation (used a library)
-    - [x] serialization
-    - [x] sexy editor babyyyyyy
-
-- [ ] IMPLEMENT navmesh navigation
+- [ ] navmesh navigation
     - [x] graph A*
     - [x] string pulling / line of sight
     - [x] discouraged regions
     - [ ] movement pentalty regions
     - [ ] fix weird behaviour inside discouraged regions
 
+- [ ] misc
+    - [ ] preload scripts instead of lazy load
+    - [ ] post processing settings
+    - [ ] test animation API
+    - [ ] determine SFX management solution (dialogue being priority)
 
-- [ ] open issues from proof of concept cult game:
+- [ ] cult game issues
     - [x] gui style in region def
     - [x] fix broken "move to" action
     - [x] fix conditional dialogue bug (rng?) we say maybe
@@ -64,26 +36,73 @@
     - [x] better camera control (mostly zoom actions, on triggers) (super hacky)
     - [x] 'offstage' entities
     - [x] improve json error handling
-    - [ ] better handling of textures
+    - [ ] better handling of large backgrounds (async loading?)
     - [ ] grow tooltips to fit content
     - [ ] better initial configuration
     - [ ] ANY kind of save files
 
 
+### Gameplay
+
+- [ ] combat system design
+    - [x] core mechanics
+    - [ ] species bonuses
+    - [ ] class features
+    - [ ] marionette ability
+
+- [ ] combat system implementation
+    - [x] turn rotation
+    - [x] factions
+    - [x] per turn movement
+    - [ ] entity stats
+    - [ ] action gui
+    - [ ] temp stat calculation (requires basic inventory)
+    - [ ] targeting
+    - [ ] cross-entity interaction
+    - [ ] stand-in visuals
+
+
+- [ ] character creator design
+    - [ ] class features (see combat)
+    - [ ] species features (see combat)
+    - [ ] draw GUI
+    - [ ] specify serialization
+
+- [ ] character creator implementation
+
+
 ### Back Burner
 
-- [ ] IMPLEMENT inventory
+- [ ] inventory system
+- [ ] primitive dynamic lighting
+- [ ] level editor
+- [ ] fine grained memory management
+- [ ] reactive flags (callbacks)
+- [ ] shmy_script as a library
 
-- [ ] IMPLEMENT primitive dynamic lighting
 
-- [ ] IMPROVE level editor
+### Final Boss Shit
 
-- [ ] IMPROVE memory management / scripting
+- [ ] actual usable build process for collaboration
+- [ ] replace SFML with modern OpenGL
+- [ ] leading into emscripten support
+- [ ] campaign package registry
+- [ ] multiplayer???????
 
 
 ### Completed
 
-- [x] FIX visual glitching
+- [x] fix visual glitching
 
-- [x] IMPLEMENT frustum loading
+- [x] frustum loading
+
+- [x] navmesh generation (will probably not have usable real time perf) (actulally 0.3ms isnt bad)
+    - [x] marching squares / floodfill
+    - [x] contour merging
+    - [x] douglas-peucker simplification
+    - [x] hole punching
+    - [x] ear clip triangulation
+    - [x] delauney triangulation (used a library)
+    - [x] serialization
+    - [x] sexy editor babyyyyyy
 

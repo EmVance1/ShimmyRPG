@@ -1,10 +1,9 @@
 safecode.txt
 game/todo.txt
-mechanics/
+designdocs/
 .vs/
 
 archive/
-imgui/
 
 editor/bin/
 editor/compile_flags.txt

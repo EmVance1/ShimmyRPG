@@ -14,8 +14,9 @@ struct SpeechResponse {
 };
 struct SpeechGoto { std::string vertex; };
 struct SpeechExit {};
+struct SpeechExitInto { std::string script; };
 
-using SpeechOutcome = std::variant<std::vector<SpeechResponse>, SpeechGoto, SpeechExit>;
+using SpeechOutcome = std::variant<std::vector<SpeechResponse>, SpeechGoto, SpeechExit, SpeechExitInto>;
 
 struct SpeechVertex {
     FlagExpr conditions;
@@ -34,6 +35,7 @@ SpeechGraph dialogue_from_line(const std::string& speaker, const std::string& li
 
 bool operator==(const SpeechResponse& a, const SpeechResponse& b);
 bool operator==(const SpeechExit& a, const SpeechExit& b);
+bool operator==(const SpeechExitInto& a, const SpeechExitInto& b);
 bool operator==(const SpeechGoto& a, const SpeechGoto& b);
 bool operator==(const SpeechVertex& a, const SpeechVertex& b);
 

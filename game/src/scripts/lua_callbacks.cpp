@@ -42,12 +42,12 @@ static void create_entity_table(lua_State* L, Entity* e) {
     lua_pushcfunction(L, l_entity_set_voicebank);
     lua_settable(L, -3);
 
-    lua_pushstring(L, "lock");
-    lua_pushcfunction(L, l_entity_lock);
+    lua_pushstring(L, "set_pathing_locked");
+    lua_pushcfunction(L, l_entity_set_locked);
     lua_settable(L, -3);
 
-    lua_pushstring(L, "unlock");
-    lua_pushcfunction(L, l_entity_unlock);
+    lua_pushstring(L, "set_pathing_paused");
+    lua_pushcfunction(L, l_entity_set_paused);
     lua_settable(L, -3);
 }
 
@@ -119,19 +119,29 @@ int l_entity_set_voicebank(lua_State* L) {
     return 0;
 }
 
-int l_entity_lock(lua_State* L) {
+int l_entity_set_locked(lua_State* L) {
     lua_pushstring(L, "ptr");
     lua_gettable(L, 1);
     const auto entity = (Entity*)lua_touserdata(L, -1);
-    entity->get_tracker().stop();
+    const auto lock = lua_toboolean(L, 2);
+    if (lock) {
+        entity->get_tracker().stop();
+    } else {
+        entity->get_tracker().start();
+    }
     return 0;
 }
 
-int l_entity_unlock(lua_State* L) {
+int l_entity_set_paused(lua_State* L) {
     lua_pushstring(L, "ptr");
     lua_gettable(L, 1);
     const auto entity = (Entity*)lua_touserdata(L, -1);
-    entity->get_tracker().start();
+    const auto lock = lua_toboolean(L, 2);
+    if (lock) {
+        entity->get_tracker().pause();
+    } else {
+        entity->get_tracker().start();
+    }
     return 0;
 }
 
@@ -156,7 +166,7 @@ int l_camera_set_target(lua_State* L) {
     return 0;
 }
 
-int l_camera_zoom(lua_State* L) {
+int l_camera_set_zoom(lua_State* L) {
     const auto scale = (float)lua_tonumber(L, 1);
     lua_pushstring(L, "script");
     lua_gettable(L, LUA_REGISTRYINDEX);
@@ -291,6 +301,21 @@ int l_yield_dialogue(lua_State* L) {
 }
 #endif
 
+int l_yield(lua_State* L) {
+    if (lua_gettop(L) != 0) {
+        return luaL_error(L, "yield() does not take any arguments");
+    }
+    lua_pushnumber(L, 0.f);
+    return lua_yield(L, 1);
+}
+
+int l_yield_seconds(lua_State* L) {
+    if (lua_gettop(L) != 1) {
+        return luaL_error(L, "wait_seconds(n) takes exactly one argument");
+    }
+    return lua_yield(L, 1);
+}
+
 
 int l_set_overlay(lua_State* L) {
     const auto col = lua_tocolor(L, 1);
@@ -317,21 +342,5 @@ int l_goto_area(lua_State* L) {
     script->parent_area().p_region->get_active_area().suppress_portals = true;
 
     return 0;
-}
-
-
-int l_wait_seconds(lua_State* L) {
-    if (lua_gettop(L) != 1) {
-        return luaL_error(L, "wait_seconds(n) takes exactly one argument");
-    }
-    return lua_yield(L, 1);
-}
-
-int l_yield(lua_State* L) {
-    if (lua_gettop(L) != 0) {
-        return luaL_error(L, "yield() does not take any arguments");
-    }
-    lua_pushnumber(L, 0.f);
-    return lua_yield(L, 1);
 }
 

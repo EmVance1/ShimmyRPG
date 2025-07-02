@@ -33,3 +33,86 @@ std::ostream& operator<<(std::ostream& stream, const FlagModifier& p) {
 
 std::unordered_map<std::string, uint32_t> FlagTable::cache;
 
+
+void FlagTable::change_flag(const std::string& key, const FlagModifier& mod) {
+    if (const auto add = std::get_if<FlagAdd>(&mod)) {
+        if (add->strict) {
+#ifdef DEBUG
+        if (!has_flag(key)) {
+            std::cerr << "runtime error: flag table does not contain key '" << key << "'\n";
+            exit(1);
+        }
+#endif
+            cache.at(key) += add->dif;
+        } else {
+            cache[key] += add->dif;
+        }
+    } else if (const auto sub = std::get_if<FlagSub>(&mod)) {
+        if (sub->strict) {
+#ifdef DEBUG
+        if (!has_flag(key)) {
+            std::cerr << "runtime error: flag table does not contain key '" << key << "'\n";
+            exit(1);
+        }
+#endif
+            auto& flag = cache.at(key);
+            flag = (sub->dif > (int)flag) ? 0 : (int)flag - sub->dif;
+        } else {
+            auto& flag = cache[key];
+            flag = (sub->dif > (int)flag) ? 0 : (int)flag - sub->dif;
+        }
+    } else {
+        const auto set = std::get<FlagSet>(mod);
+        if (set.strict) {
+#ifdef DEBUG
+        if (!has_flag(key)) {
+            std::cerr << "runtime error: flag table does not contain key '" << key << "'\n";
+            exit(1);
+        }
+#endif
+            cache.at(key) = set.val;
+        } else {
+            cache[key] = set.val;
+        }
+    }
+}
+
+void FlagTable::set_flag(const std::string& key, uint32_t val, bool strict) {
+    if (strict) {
+#ifdef DEBUG
+        if (!has_flag(key)) {
+            std::cerr << "runtime error: flag table does not contain key '" << key << "'\n";
+            exit(1);
+        }
+#endif
+        cache.at(key) = val;
+    } else {
+        cache[key] = val;
+    }
+}
+
+uint32_t FlagTable::get_flag(const std::string& key, bool strict) {
+    if (strict) {
+#ifdef DEBUG
+        if (!has_flag(key)) {
+            std::cerr << "runtime error: flag table does not contain key '" << key << "'\n";
+            exit(1);
+        }
+#endif
+        return cache.at(key);
+    } else {
+        return cache[key];
+    }
+}
+
+bool FlagTable::has_flag(const std::string& key) {
+    return cache.find(key) != cache.end();
+}
+
+void FlagTable::unset_flag(const std::string& key) {
+    const auto it = cache.find(key);
+    if (it != cache.end()) {
+        cache.erase(it);
+    }
+}
+

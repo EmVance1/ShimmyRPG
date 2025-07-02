@@ -32,7 +32,7 @@ int FlagExpr::evaluate() const {
     case FlagExpr::Type::Value:
         return value;
     case FlagExpr::Type::Identifier:
-        return FlagTable::get_flag(name);
+        return FlagTable::get_flag(name, true);
     case FlagExpr::Type::Once:
         if (!FlagTable::Once) {
             FlagTable::Once = true;
@@ -42,9 +42,9 @@ int FlagExpr::evaluate() const {
     case FlagExpr::Type::Random:
         if (value != 0) {
             auto dist = std::uniform_int_distribution<uint32_t>(1, value);
-            FlagTable::set_flag(name, dist(RNG));
+            FlagTable::set_flag(name, dist(RNG) - 1, false);
         }
-        return FlagTable::get_flag(name);
+        return FlagTable::get_flag(name, true);
     }
     return 0;
 }

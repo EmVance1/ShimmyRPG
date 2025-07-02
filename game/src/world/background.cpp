@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "background.h"
+#include "thread_pool/thread_pool.h"
 #include "util/json.h"
 
 
@@ -8,22 +9,18 @@ Background::Background(bool dynamic) : m_dynamic(dynamic) {
 
 void Background::load_from_json(const rapidjson::Value& value) {
     m_tiles.reserve(value.GetArray().Size());
-    for (const auto& pair : value.GetArray()) {
-        if (m_dynamic) {
+    if (m_dynamic) {
+        for (const auto& pair : value.GetArray()) {
             m_tiles.push_back(Tile{
                 sf::Texture(),
-                pair["file"].GetString(),
+                std::string("res/textures/") + pair["file"].GetString(),
                 json_to_floatrect(pair["bounds"]),
                 false,
             });
-        } else {
-            m_tiles.push_back(Tile{
-                sf::Texture(pair["file"].GetString()),
-                pair["file"].GetString(),
-                json_to_floatrect(pair["bounds"]),
-                true,
-            });
         }
+    } else {
+        prep_from_json(value);
+        load_textures();
     }
 }
 
@@ -32,7 +29,7 @@ void Background::prep_from_json(const rapidjson::Value& value) {
     for (const auto& pair : value.GetArray()) {
         m_tiles.push_back(Tile{
             sf::Texture(),
-            pair["file"].GetString(),
+            std::string("res/textures/") + pair["file"].GetString(),
             json_to_floatrect(pair["bounds"]),
             false,
         });
@@ -41,11 +38,23 @@ void Background::prep_from_json(const rapidjson::Value& value) {
 
 
 void Background::load_textures() {
-    for (auto& tile : m_tiles) {
-        std::ignore = tile.texture.loadFromFile(tile.filename);
-        tile.loaded = true;
+    switch (m_tiles.size()) {
+    case 0: return;
+    case 1:
+        std::ignore = m_tiles[0].texture.loadFromFile(m_tiles[0].filename);
+        m_tiles[0].loaded = true;
+        return;
+    default:
+        auto pool = dp::thread_pool<>();
+        for (size_t i = 0; i < m_tiles.size(); i++) {
+            pool.enqueue_detach([&, i](){
+                m_tiles[i].loaded = true;
+                std::ignore = m_tiles[i].texture.loadFromFile(m_tiles[i].filename);
+                m_tiles[i].texture.setSmooth(true);
+            });
+        }
+        pool.wait_for_tasks();
     }
-
 }
 
 void Background::unload_textures() {

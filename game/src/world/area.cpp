@@ -283,6 +283,7 @@ void Area::render_world(sf::RenderTarget& target) {
 
 void Area::render_overlays(sf::RenderTarget& target) {
 #ifdef DEBUG
+    target.setView(camera);
     debugger.render(target);
 #endif
 
