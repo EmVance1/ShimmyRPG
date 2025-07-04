@@ -10,7 +10,7 @@
     "triggers": [
         {
             "//": "front door",
-            "rect": [ 315, 535, 115, 40 ],
+            "rect": [ 265, 535, 120, 30 ],
             "action": { "GotoArea": { "index": 1, "spawnpos": [ 810, 360 ], "suppress_triggers": true } },
             "condition": "!Ademmar_CurfewInPlace"
         },
@@ -27,7 +27,7 @@
         },
         {
             "//": "curfew blocker",
-            "rect": [ 315, 535, 115, 40 ],
+            "rect": [ 265, 535, 120, 30 ],
             "action": { "Popup": "There is a curfew in place. It is unwise to go outside." },
             "condition": "Ademmar_CurfewInPlace"
         }
@@ -42,7 +42,7 @@
         },
         {
             "ids": { "script": "ShimmyPrime", "story": "Shimmy" },
-            "texture": "npc_friendly_placeholder",
+            "texture": "anim_test",
             "position": { "world": [ 330, 50 ] },
             "controller": { "speed": 2 },
             "tags": [ "npc", "trader", "shimmy_staff" ],

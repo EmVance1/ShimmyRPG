@@ -22,10 +22,10 @@ struct Area {
     static const sf::RenderWindow* window;
 
     Region* p_region;
-    const std::string id;
+    std::string id;
     std::string area_label;
 
-    Background background;
+    AsyncBackground background;
     nav::NavMesh pathfinder;
     sf::Vector2f topleft;
     float scale;
@@ -42,10 +42,10 @@ struct Area {
     std::vector<Entity*> sorted_entities;
     std::string player_id = "";
 
+    std::vector<LuaScript> scripts;
     std::vector<Trigger> triggers;
     bool suppress_triggers = false;
     bool suppress_portals = false;
-    std::vector<LuaScript> scripts;
 
     sf::RectangleShape motionguide_square;
     std::optional<ContextAction> queued;
@@ -69,12 +69,13 @@ struct Area {
 #endif
 
     Area(const std::string& id, Region* parent_region);
+    Area(Area&& other);
 
     void load_prefab(const rapidjson::Value& prefabs, const rapidjson::Value& value, const std::string& name);
     void load_entity(const rapidjson::Value& prefabs, const rapidjson::Value& value);
     void load_gui();
 
-    void init(const rapidjson::Value& prefabs, const rapidjson::Document& doc);
+    void init(const rapidjson::Value& prefabs, const rapidjson::Document& doc, bool active);
     void set_mode(GameMode mode);
 
     Entity& get_player();

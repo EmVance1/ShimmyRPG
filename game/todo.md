@@ -2,29 +2,36 @@
 
 ### Technical
 
-- [ ] security
-    - [ ] merge lua states
-    - [ ] prevent access to io, os, debug tables
+- [ ] scripting and security
+    - [ ] merge lua states (more advanced scheduler)
+    - [ ] sandboxing to prevent io, os, debug table access
+    - [ ] preload scripts instead of lazy load
 
 - [ ] debugging
     - [x] rapidjson error handlers
     - [x] lua pcalls / logging
-    - [x] total fallthrough in release mode
-    - [ ] script parser error reporting
+    - [ ] total fallthrough in release mode (might need to rethink this one)
+    - [ ] script parser error reporting (maybe make rust lib)
     - [ ] LSP for .shmy files
 
-- [ ] navmesh navigation
+- [ ] navigation
     - [x] graph A*
     - [x] string pulling / line of sight
     - [x] discouraged regions
     - [ ] movement pentalty regions
     - [ ] fix weird behaviour inside discouraged regions
 
-- [ ] misc
-    - [ ] preload scripts instead of lazy load
-    - [ ] post processing settings
-    - [ ] test animation API
+- [ ] sound and graphics
+    - [x] test animation API
+    - [x] minimal sound player class
+    - [ ] minimal music player class
     - [ ] determine SFX management solution (dialogue being priority)
+    - [ ] post processing settings
+    - [ ] integrate particle system
+    - [ ] automatic spritesheet generation from asset collections
+
+- [ ] misc
+    - [ ] flag callbacks (onRead, onWrite)
 
 - [ ] cult game issues
     - [x] gui style in region def
@@ -36,7 +43,7 @@
     - [x] better camera control (mostly zoom actions, on triggers) (super hacky)
     - [x] 'offstage' entities
     - [x] improve json error handling
-    - [ ] better handling of large backgrounds (async loading?)
+    - [x] multithreaded background loading
     - [ ] grow tooltips to fit content
     - [ ] better initial configuration
     - [ ] ANY kind of save files

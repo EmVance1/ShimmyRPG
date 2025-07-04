@@ -9,7 +9,7 @@
 #define OUTLINE_WIDTH 5
 
 
-void Region::load_from_folder(const std::string& folder) {
+void Region::load_from_folder(const std::string& folder, size_t initial_area) {
     m_textures.clear();
     m_alphamaps.clear();
     m_areas.clear();
@@ -17,6 +17,7 @@ void Region::load_from_folder(const std::string& folder) {
     const auto doc = load_json_from_file(folder + "region.json");
 
     m_id = folder;
+    m_active_area = initial_area;
 
     for (const auto& [k, v] : doc["textures"].GetObject()) {
         const auto name = std::string(k.GetString());
@@ -38,36 +39,42 @@ void Region::load_from_folder(const std::string& folder) {
         m_atlases[name + "_outline"].setSmooth(smooth);
     }
 
-    m_guistyle.load_from_file(std::string("res/styles/") + doc["gui_style"].GetString() + ".json");
+    m_guistyle.load_from_folder(std::string("res/gui/") + doc["gui_style"].GetString() + "/");
 
+    const auto& areas = doc["areas"].GetArray();
+    m_areas.reserve(areas.Size());
     const auto prefabs = load_json_from_file("res/prefabs.json");
-    for (const auto& area : doc["areas"].GetArray()) {
+    for (const auto& area : areas) {
         m_areas.emplace_back(area.GetString(), this);
     }
     size_t i = 0;
-    for (const auto& area : doc["areas"].GetArray()) {
+    for (const auto& area : areas) {
 #ifdef DEBUG
         try {
-            const auto area_doc = load_json_from_file(folder + area.GetString() + ".json");;
-            m_areas[i].init(prefabs, area_doc);
+            const auto area_doc = load_json_from_file(folder + area.GetString() + ".json");
+            m_areas[i].init(prefabs, area_doc, i == m_active_area);
         } catch (const std::exception& e) {
             std::cerr << "error loading area '" << m_areas[i].id << "': " << e.what() << "\n";
             exit(1);
         }
 #else
         const auto area_doc = load_json_from_file(folder + area.GetString() + ".json");;
-        m_areas[i].init(prefabs, area_doc);
+        m_areas[i].init(prefabs, area_doc, i == m_active_area);
 #endif
-        m_areas[i].set_mode(GameMode::Sleep);
+        if (i != m_active_area) {
+            m_areas[i].set_mode(GameMode::Sleep);
+        }
         i++;
     }
 }
 
 void Region::set_active_area(size_t index) {
+    Time::stop();
+    const auto mode = m_areas[m_active_area].gamemode;
     m_areas[m_active_area].set_mode(GameMode::Sleep);
-    m_areas[index].set_mode(GameMode::Normal);
+    m_areas[index].set_mode(mode);
     m_active_area = index;
-    Time::set_frame();
+    Time::start();
 }
 
 void Region::update_all() {

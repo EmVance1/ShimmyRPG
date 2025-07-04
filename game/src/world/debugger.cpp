@@ -46,7 +46,7 @@ void AreaDebugView::init(const Area* area) {
         }
         auto& shape = m_outlines.emplace_back();
         shape.setPosition(e.get_sprite().getPosition() - e.get_sprite().getOrigin());
-        shape.setSize(sf::Vector2f(e.get_sprite().getTexture().getSize()));
+        shape.setSize(sf::Vector2f(e.get_sprite().getAnimation().getCellSize()));
         shape.setFillColor(sf::Color::Transparent);
         shape.setOutlineThickness(1);
         shape.setOutlineColor(sf::Color::Cyan);

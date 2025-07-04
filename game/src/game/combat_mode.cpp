@@ -99,7 +99,7 @@ void CombatMode::handle_event(const sf::Event& event) {
 void CombatMode::update() {
     for (auto& [_, e] : p_area->entities) {
         if (!e.is_offstage()) {
-            e.update_motion(p_area->cart_to_iso);
+            e.update(p_area->cart_to_iso);
         }
     }
 
@@ -130,8 +130,7 @@ void CombatMode::update() {
         p_area->camera.setTrackingPos(get_active().get_sprite().getPosition());
     }
 
-    p_area->camera.update(Time::deltatime());
-
-    p_area->gui.update();
+    // p_area->camera.update(Time::deltatime());
+    // p_area->gui.update();
 }
 

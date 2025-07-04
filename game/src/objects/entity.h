@@ -110,6 +110,6 @@ public:
     void set_hovered(bool hovered);
     bool is_hovered() const { return m_is_hovered; }
 
-    void update_motion(const sf::Transform& cart_to_iso);
+    void update(const sf::Transform& cart_to_iso);
 };
 

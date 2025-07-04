@@ -67,7 +67,7 @@ void CinematicMode::handle_event(const sf::Event& event) {
 void CinematicMode::update() {
     for (auto& [_, e] : p_area->entities) {
         if (!e.is_offstage()) {
-            e.update_motion(p_area->cart_to_iso);
+            e.update(p_area->cart_to_iso);
         }
     }
     if (!p_area->dialogue.is_playing()) {
@@ -76,8 +76,7 @@ void CinematicMode::update() {
         }
     }
 
-    p_area->camera.update(Time::deltatime());
-
-    p_area->gui.update();
+    // p_area->camera.update(Time::deltatime());
+    // p_area->gui.update();
 }
 

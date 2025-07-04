@@ -20,7 +20,7 @@ void Background::load_from_json(const rapidjson::Value& value) {
         }
     } else {
         prep_from_json(value);
-        load_textures();
+        load_all();
     }
 }
 
@@ -37,7 +37,7 @@ void Background::prep_from_json(const rapidjson::Value& value) {
 }
 
 
-void Background::load_textures() {
+void Background::load_all() {
     switch (m_tiles.size()) {
     case 0: return;
     case 1:
@@ -57,7 +57,7 @@ void Background::load_textures() {
     }
 }
 
-void Background::unload_textures() {
+void Background::unload_all() {
     for (auto& tile : m_tiles) {
         tile.texture = sf::Texture();
         tile.loaded = false;

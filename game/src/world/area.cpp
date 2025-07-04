@@ -165,9 +165,9 @@ void Area::set_mode(GameMode mode) {
         gui.get_widget("tooltip")->set_visible(false);
     }
     if (mode == GameMode::Sleep) {
-        background.unload_textures();
+        background.unload_all();
     } else if (gamemode == GameMode::Sleep) {
-        background.load_textures();
+        background.reinit_frustum(camera.getFrustum());
         for (auto& t : triggers) {
             t.cooldown = false;
         }
@@ -218,8 +218,11 @@ void Area::update() {
         break;
     }
 
-    background.update(camera.getFrustum());
+    if (gamemode == GameMode::Sleep) { return; }
+
     sorted_entities = sprites_topo_sort(entities);
+    camera.update(Time::deltatime());
+    background.update(camera.getFrustum());
 
     const auto g = FlagTable::get_flag("Player_Coin", true);
     gui.get_widget<gui::Panel>("gold_counter")->get_widget<gui::Text>("goldtxt")->set_label(std::to_string(g));
@@ -250,6 +253,8 @@ void Area::update() {
             camera.setSize(zoom * (sf::Vector2f)window->getSize());
         }
     }
+
+    gui.update();
 
 #ifdef DEBUG
     debugger.update();

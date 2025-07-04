@@ -32,15 +32,21 @@ int main() {
     auto region_folder = std::string("");
     auto region_area = 0;
     startup_file >> region_folder >> region_area;
-    region.load_from_folder(region_folder);
-    region.set_active_area(region_area);
+    region.load_from_folder(region_folder, region_area);
 
     // auto& pixelate = target.loadShaderFromFile("res/shaders/pixelate.frag");
     // pixelate.setUniform("u_resolution", (sf::Vector2f)window.getSize());
 
-    target.loadShaderFromFile("res/shaders/poster.frag");
+    // target.loadShaderFromFile("res/shaders/poster.frag");
 
-    const auto font = sf::Font("res/fonts/calibri.ttf");
+    // auto& CRT = target.loadShaderFromFile("res/shaders/CRT.frag");
+    // CRT.setUniform("u_curvature", sf::Vector2f(4.f, 4.f));
+
+    // auto& glitch = target.loadShaderFromFile("res/shaders/glitch.frag");
+    // glitch.setUniform("u_dist", 3);
+    // glitch.setUniform("u_resolution", (sf::Vector2f)window.getSize());
+
+    const auto font = sf::Font("res/calibri.ttf");
     auto fps_draw = sf::Text(font, "0", 25);
     fps_draw.setPosition({ 10, 10 });
     fps_draw.setFillColor(sf::Color::White);
@@ -66,8 +72,7 @@ int main() {
                     FlagTable::clear();
                     load_flags();
                     const auto temp = region.get_active_area_index();
-                    region.load_from_folder(region_folder);
-                    region.set_active_area(temp);
+                    region.load_from_folder(region_folder, temp);
                 }
             }
 

@@ -80,12 +80,12 @@ void NormalMode::handle_event(const sf::Event& event) {
                         );
                     for (const auto& action : e->get_actions()) {
                         const auto act = action.to_string();
-                        if (strncmp(act, "Move To", 8) == 0) {
-                            const auto id = e->get_id();
+                        if (action.index() == ContextAction::ActionID::MoveTo) {
+                            const auto& id = e->get_id();
                             ctx_menu->add_button(act, [&, id](){ move_to_action(id); });
-                        } else if (strncmp(act, "Speak", 8) == 0) {
-                            const auto id = e->get_id();
-                            const auto sp = e->get_dialogue();
+                        } else if (action.index() == ContextAction::ActionID::Speak) {
+                            const auto& id = e->get_id();
+                            const auto& sp = e->get_dialogue();
                             ctx_menu->add_button(act, [&, id, sp](){ speak_action(id, sp); });
                         } else {
                             ctx_menu->add_button(action.to_string());
@@ -139,7 +139,7 @@ void NormalMode::handle_event(const sf::Event& event) {
 void NormalMode::update() {
     for (auto& [_, e] : p_area->entities) {
         if (!e.is_offstage()) {
-            e.update_motion(p_area->cart_to_iso);
+            e.update(p_area->cart_to_iso);
         }
     }
     for (auto& s : p_area->scripts) {
@@ -152,15 +152,12 @@ void NormalMode::update() {
         p_area->queued = {};
     }
 
-    p_area->camera.update(Time::deltatime());
     p_area->camera.setTrackingPos(p_area->get_player().get_sprite().getPosition());
+    // p_area->camera.update(Time::deltatime());
 
     for (auto& t : p_area->triggers) {
         if (p_area->get_player().get_trigger_collider().intersects(t.bounds)) {
-            if (p_area->suppress_triggers) {
-                t.cooldown = true;
-            }
-            if (!t.cooldown) {
+            if (!p_area->suppress_triggers && !t.cooldown) {
                 p_area->handle_trigger(t);
             }
             t.cooldown = true;
@@ -171,7 +168,7 @@ void NormalMode::update() {
     p_area->suppress_triggers = false;
     p_area->suppress_portals = false;
 
-    p_area->gui.update();
+    // p_area->gui.update();
 
 }
 
