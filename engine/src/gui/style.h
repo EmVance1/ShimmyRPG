@@ -27,9 +27,9 @@ struct Style {
     sf::Font font;
 
     Style();
-    Style(const std::string& filename);
+    Style(const std::string& folder);
 
-    bool load_from_file(const std::string& filename);
+    bool load_from_folder(const std::string& folder);
 };
 
 enum class Alignment {

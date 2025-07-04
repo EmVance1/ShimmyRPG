@@ -1,5 +1,5 @@
 {
-    "project": "engine",
+    "project": "ShimmyEn",
     "cpp": "c++20",
     "pch": "pch.h",
     "dependencies": [ "../../_Libs/SFML-3:static_headers", "../../sfutil", "../../navmesh", "rapidjson", "thread_pool" ],

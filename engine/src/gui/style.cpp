@@ -7,16 +7,16 @@
 namespace gui {
 
 Style::Style() {
-    auto _ = font.openFromFile("res/fonts/calibri.ttf");
+    auto _ = font.openFromFile("res/calibri.ttf");
 }
 
 Style::Style(const std::string& filename) {
-    load_from_file(filename);
+    load_from_folder(filename);
 }
 
 
-bool Style::load_from_file(const std::string& filename) {
-    auto src = read_to_string(filename);
+bool Style::load_from_folder(const std::string& filename) {
+    auto src = read_to_string(filename + "style.json");
     rapidjson::Document doc;
     doc.Parse(src.data());
 
@@ -31,15 +31,13 @@ bool Style::load_from_file(const std::string& filename) {
     text_color_3 = json_to_color(doc["text_color_3"].GetArray());
     outline_width = doc["outline_width"].GetFloat();
     default_cell = json_to_intrect(doc["default_cell"].GetArray());
-    if (!doc["background_texture"].IsNull()) {
-        const auto b = background_texture.loadFromFile(
-                doc["background_texture"].GetString()
-            );
+    if (doc["textured"].IsTrue()) {
+        const auto b = background_texture.loadFromFile(filename + "atlas.png");
         background_texture.setSmooth(true);
         textured = true;
-        return b && font.openFromFile(doc["fontfile"].GetString());
+        return b && font.openFromFile(filename + doc["font"].GetString());
     }
-    return font.openFromFile(doc["fontfile"].GetString());
+    return font.openFromFile(filename + doc["font"].GetString());
 }
 
 
