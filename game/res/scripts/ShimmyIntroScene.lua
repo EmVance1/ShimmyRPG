@@ -9,7 +9,6 @@ function OnStartAsync()
     shmy.yield_seconds(1.0)
     shmy.yield_to_dialogue("res/scripts/ShimmyIntroScene.shmy")
 
-
     shmy.flags["ShimmyIntroScene_HasPlayed"] = 1
 
     -- shimmy:set_path({ x=400, y=50 })
@@ -18,5 +17,6 @@ function OnStartAsync()
 
     shmy.yield_seconds(0.7)
     shmy.set_mode(shmy.mode.NORMAL)
+    shmy.exit()
 end
 

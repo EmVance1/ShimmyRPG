@@ -4,6 +4,7 @@
 #include <rapidjson/document.h>
 #include <sfutil/camera.h>
 #include <navmesh/lib.h>
+#include "lua/lua.h"
 #include "objects/entity.h"
 #include "objects/trigger.h"
 #include "scripts/lua_script.h"
@@ -42,6 +43,7 @@ struct Area {
     std::vector<Entity*> sorted_entities;
     std::string player_id = "";
 
+    lua_State* lua_vm;
     std::vector<LuaScript> scripts;
     std::vector<Trigger> triggers;
     bool suppress_triggers = false;
@@ -69,13 +71,15 @@ struct Area {
 #endif
 
     Area(const std::string& id, Region* parent_region);
+    Area(const Area& other) = delete;
     Area(Area&& other);
+    ~Area();
 
     void load_prefab(const rapidjson::Value& prefabs, const rapidjson::Value& value, const std::string& name);
     void load_entity(const rapidjson::Value& prefabs, const rapidjson::Value& value);
     void load_gui();
 
-    void init(const rapidjson::Value& prefabs, const rapidjson::Document& doc, bool active);
+    void init(const rapidjson::Value& prefabs, const rapidjson::Document& doc);
     void set_mode(GameMode mode);
 
     Entity& get_player();

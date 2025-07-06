@@ -344,3 +344,13 @@ int l_goto_area(lua_State* L) {
     return 0;
 }
 
+
+int l_exit(lua_State* L) {
+    lua_pushstring(L, "script");
+    lua_gettable(L, LUA_REGISTRYINDEX);
+    auto script = static_cast<LuaScript*>(lua_touserdata(L, -1));
+    script->terminate();
+
+    return 0;
+}
+

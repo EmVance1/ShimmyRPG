@@ -59,6 +59,7 @@ void CinematicMode::handle_event(const sf::Event& event) {
             if (const auto fu = p_area->dialogue.get_followup()) {
                 auto& s = p_area->scripts.emplace_back(*p_area);
                 s.load_from_file(fu.value());
+                s.start();
             }
         }
     }

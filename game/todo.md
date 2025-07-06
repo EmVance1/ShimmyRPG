@@ -3,8 +3,10 @@
 ### Technical
 
 - [ ] scripting and security
-    - [ ] merge lua states (more advanced scheduler)
-    - [ ] sandboxing to prevent io, os, debug table access
+    - [x] event handler verification
+    - [x] OnCreate / OnExit events
+    - [x] merge lua states (env tables)
+    - [x] minimal sandboxing to prevent io, os, debug table access
     - [ ] preload scripts instead of lazy load
 
 - [ ] debugging
@@ -31,7 +33,7 @@
     - [ ] automatic spritesheet generation from asset collections
 
 - [ ] misc
-    - [ ] flag callbacks (onRead, onWrite)
+    - [ ] ghost entities (no interaction)
 
 - [ ] cult game issues
     - [x] gui style in region def
@@ -44,6 +46,7 @@
     - [x] 'offstage' entities
     - [x] improve json error handling
     - [x] multithreaded background loading
+    - [x] pooling of bg loader threads
     - [ ] grow tooltips to fit content
     - [ ] better initial configuration
     - [ ] ANY kind of save files

@@ -52,14 +52,14 @@ void Region::load_from_folder(const std::string& folder, size_t initial_area) {
 #ifdef DEBUG
         try {
             const auto area_doc = load_json_from_file(folder + area.GetString() + ".json");
-            m_areas[i].init(prefabs, area_doc, i == m_active_area);
+            m_areas[i].init(prefabs, area_doc);
         } catch (const std::exception& e) {
             std::cerr << "error loading area '" << m_areas[i].id << "': " << e.what() << "\n";
             exit(1);
         }
 #else
         const auto area_doc = load_json_from_file(folder + area.GetString() + ".json");;
-        m_areas[i].init(prefabs, area_doc, i == m_active_area);
+        m_areas[i].init(prefabs, area_doc);
 #endif
         if (i != m_active_area) {
             m_areas[i].set_mode(GameMode::Sleep);

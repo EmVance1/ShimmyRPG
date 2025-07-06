@@ -36,6 +36,7 @@ void Area::handle_trigger(const Trigger& trigger) {
         const auto loadscript = std::get<BeginScript>(trigger.action);
         auto& s = scripts.emplace_back(*this);
         s.load_from_file(loadscript.filename);
+        s.start();
         break; }
     case 1: {
         const auto loaddia = std::get<BeginDialogue>(trigger.action);
@@ -167,7 +168,7 @@ void Area::set_mode(GameMode mode) {
     if (mode == GameMode::Sleep) {
         background.unload_all();
     } else if (gamemode == GameMode::Sleep) {
-        background.reinit_frustum(camera.getFrustum());
+        background.update(camera.getFrustum());
         for (auto& t : triggers) {
             t.cooldown = false;
         }

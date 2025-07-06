@@ -30,4 +30,5 @@ int l_yield_dialogue(lua_State* L);
 int l_set_mode(lua_State* L);
 int l_set_overlay(lua_State* L);
 int l_goto_area(lua_State* L);
+int l_exit(lua_State* L);
 

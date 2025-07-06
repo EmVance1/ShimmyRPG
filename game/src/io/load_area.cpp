@@ -8,7 +8,7 @@
 #include "algo/iso_map.h"
 #include "objects/trigger.h"
 #include "scripts/lua_script.h"
-#include "gui/gui.h"
+#include "scripts/lua_init.h"
 #include "json_debug.h"
 
 
@@ -20,7 +20,6 @@ Area::Area(const std::string& _id, Region* parent_region)
     camera(sf::FloatRect({0, 0}, (sf::Vector2f)window->getSize())),
     gui(gui::Position::topleft({0, 0}), sf::Vector2f(window->getSize()), parent_region->get_style())
 {
-    // std::cout << "constructed area\n";
     motionguide_square.setFillColor(sf::Color::Transparent);
     motionguide_square.setOutlineColor(sf::Color::Cyan);
     motionguide_square.setOutlineThickness(1);
@@ -32,53 +31,23 @@ Area::Area(const std::string& _id, Region* parent_region)
     cinemabar_bot.setPosition({0, (float)winsize.y});
     cinemabar_bot.setSize({(float)winsize.x, 150});
     cinemabar_bot.setFillColor(sf::Color::Black);
+
+    lua_vm = luaL_newstate();
+    luaL_openlibs(lua_vm);
+    lua_register_engine_funcs(lua_vm);
 }
 
-Area::Area(Area&& other) :
-    p_region(std::move(other.p_region)),
-    id(std::move(other.id)),
-    area_label(std::move(other.area_label)),
-    background(std::move(other.background)),
-    pathfinder(std::move(other.pathfinder)),
-    topleft(std::move(other.topleft)),
-    scale(std::move(other.scale)),
-    zoom(std::move(other.zoom)),
-    zoom_target(std::move(other.zoom_target)),
-    overlaycolor(std::move(other.overlaycolor)),
-    cart_to_iso(std::move(other.cart_to_iso)),
-    iso_to_cart(std::move(other.iso_to_cart)),
-    entities(std::move(other.entities)),
-    script_name_LUT(std::move(other.script_name_LUT)),
-    story_name_LUT(std::move(other.story_name_LUT)),
-    sorted_entities(std::move(other.sorted_entities)),
-    player_id(std::move(other.player_id)),
-    scripts(std::move(other.scripts)),
-    triggers(std::move(other.triggers)),
-    suppress_triggers(std::move(other.suppress_triggers)),
-    suppress_portals(std::move(other.suppress_portals)),
-    motionguide_square(std::move(other.motionguide_square)),
-    queued(std::move(other.queued)),
-    camera(std::move(other.camera)),
-    gui(std::move(other.gui)),
-    gamemode(std::move(other.gamemode)),
-    normal_mode(std::move(other.normal_mode)),
-    cinematic_mode(std::move(other.cinematic_mode)),
-    combat_mode(std::move(other.combat_mode)),
-    sleep_mode(std::move(other.sleep_mode)),
-    cinemabar_top(std::move(other.cinemabar_top)),
-    cinemabar_bot(std::move(other.cinemabar_bot)),
-    cinematic_timer(std::move(other.cinematic_timer)),
-    dialogue(std::move(other.dialogue))
+Area::Area(Area&& other) : gui(std::move(other.gui)) {
+    std::cout << "Area objects should never be copied or moved\n";
+    exit(1);
+}
 
-#ifdef DEBUG
-    , debugger(std::move(other.debugger))
-#endif
-{
-    // std::cout << "moved area\n";
+Area::~Area() {
+    lua_close(lua_vm);
 }
 
 
-void Area::init(const rapidjson::Value& prefabs, const rapidjson::Document& doc, bool active) {
+void Area::init(const rapidjson::Value& prefabs, const rapidjson::Document& doc) {
     const auto& meta = JSON_GET(doc, "world");
 
     area_label = std::string(JSON_GET_STR(meta, "label"));
@@ -96,11 +65,7 @@ void Area::init(const rapidjson::Value& prefabs, const rapidjson::Document& doc,
         camera.setSize(meta["zoom"].GetFloat() * (sf::Vector2f)window->getSize());
     }
 
-    if (active) {
-        background.load_from_json(JSON_GET(doc, "background"), 0.2f, camera.getFrustum());
-    } else {
-        background.load_from_json(JSON_GET(doc, "background"), 0.2f);
-    }
+    background.load_from_json(JSON_GET(doc, "background"), 0.5f);
 
     for (const auto& e : JSON_GET_ARRAY(doc, "entities")) {
         load_entity(prefabs, e);

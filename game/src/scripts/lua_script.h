@@ -14,8 +14,11 @@ class Entity;
 class LuaScript {
 public:
     enum class Callback {
-        OnStart  = 0,
+        OnStart = 0,
         OnUpdate = 1,
+
+        OnCreate = 2,
+        OnExit = 3,
     };
 
     struct AsyncCallback {
@@ -25,17 +28,19 @@ public:
     };
 
 private:
+    Area* p_parent_area = nullptr;
     lua_State* m_state = nullptr;
+    int m_chunk = 0;
+    int m_env = 0;
+
     uint32_t m_funcs = 0;
     AsyncCallback m_coroutines[2];
 
-    Area* p_parent_area = nullptr;
-
 public:
     LuaScript(Area& parent_area);
-    LuaScript(Area& parent_area, const std::string& filename, bool autoplay = true);
+    LuaScript(Area& parent_area, const std::string& filename);
 
-    void load_from_file(const std::string& filename, bool autoplay = true);
+    void load_from_file(const std::string& filename);
 
     Area& parent_area() { return *p_parent_area; }
     const Area& parent_area() const { return *p_parent_area; }
@@ -43,6 +48,8 @@ public:
     Entity& lookup_entity(const std::string& id);
     const Entity& lookup_entity(const std::string& id) const;
 
+    void start();
+    void terminate();
     void update();
 };
 
