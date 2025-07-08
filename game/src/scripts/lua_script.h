@@ -32,9 +32,13 @@ private:
     lua_State* m_state = nullptr;
     int m_chunk = 0;
     int m_env = 0;
+    bool m_terminate = false;
 
     uint32_t m_funcs = 0;
     AsyncCallback m_coroutines[2];
+
+private:
+    void terminate();
 
 public:
     LuaScript(Area& parent_area);
@@ -49,7 +53,7 @@ public:
     const Entity& lookup_entity(const std::string& id) const;
 
     void start();
-    void terminate();
     void update();
+    void mark_for_termination();
 };
 

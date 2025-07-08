@@ -14,17 +14,22 @@ static void set_response_flags(const std::unordered_map<std::string, FlagModifie
 void Dialogue::begin(SpeechGraph&& graph, GameMode init_mode, const std::string& id) {
     m_id = id;
     m_graph = std::move(graph);
-    m_vertex = "entry0";
+    m_vertex = "";
     for (size_t i = 0; m_graph.contains("entry" + std::to_string(i)); i++) {
         const auto name = "entry" + std::to_string(i);
         const auto once_id = "once_dia_" + id + "_" + name;
         FlagTable::Once = FlagTable::has_flag(once_id);
         if (m_graph.at(name).conditions.evaluate()) {
             m_vertex = "entry" + std::to_string(i);
+            break;
         }
         if (FlagTable::Once) {
             FlagTable::set_flag(once_id, 1, false);
         }
+    }
+    if (m_vertex == "") {
+        std::cerr << "dialogue error -  no eligible entry point found\n";
+        exit(1);
     }
     m_vertex_index = 0;
     m_state = State::Lines;

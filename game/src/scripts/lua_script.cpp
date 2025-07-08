@@ -70,12 +70,29 @@ void LuaScript::load_from_file(const std::string& filename) {
     lua_setfield(m_state, -2, "math");
     lua_getglobal(m_state, "string");
     lua_setfield(m_state, -2, "string");
+    lua_getglobal(m_state, "table");
+    lua_setfield(m_state, -2, "table");
+    lua_getglobal(m_state, "coroutine");
+    lua_setfield(m_state, -2, "coroutine");
+
+    lua_getglobal(m_state, "print");
+    lua_setfield(m_state, -2, "print");
+    lua_getglobal(m_state, "pcall");
+    lua_setfield(m_state, -2, "pcall");
     lua_getglobal(m_state, "pairs");
     lua_setfield(m_state, -2, "pairs");
     lua_getglobal(m_state, "ipairs");
     lua_setfield(m_state, -2, "ipairs");
-    lua_getglobal(m_state, "print");
-    lua_setfield(m_state, -2, "print");
+    lua_getglobal(m_state, "tonumber");
+    lua_setfield(m_state, -2, "tonumber");
+    lua_getglobal(m_state, "tostring");
+    lua_setfield(m_state, -2, "tostring");
+    lua_getglobal(m_state, "next");
+    lua_setfield(m_state, -2, "next");
+    lua_getglobal(m_state, "select");
+    lua_setfield(m_state, -2, "select");
+    lua_getglobal(m_state, "unpack");
+    lua_setfield(m_state, -2, "unpack");
 
     lua_newtable(m_state); // chunk, env, meta
     lua_pushcfunction(m_state, block_globals);
@@ -199,8 +216,16 @@ void LuaScript::terminate() {
     m_state = nullptr;
 }
 
+void LuaScript::mark_for_termination() {
+    m_terminate = true;
+}
+
 void LuaScript::update() {
     if (!m_state) { return; }
+    if (m_terminate) {
+        terminate();
+        return;
+    }
 
     const auto deltatime = Time::deltatime();
 

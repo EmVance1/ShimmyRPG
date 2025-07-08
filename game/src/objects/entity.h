@@ -37,6 +37,7 @@ private:
     std::string m_id;
     std::string m_script_id;
     bool m_is_offstage = false;
+    bool m_is_ghost = false;
 
     sfu::AlphaMap m_bitmap;
     sfu::AnimatedSprite m_sprite;
@@ -104,6 +105,10 @@ public:
     void set_offstage(bool offstage) { m_is_offstage = offstage; }
     bool is_offstage() const { return m_is_offstage; }
 
+    void set_ghost(bool ghost) { m_is_ghost = ghost; }
+    bool is_ghost() const { return m_is_ghost; }
+
+    bool is_interactible() const { return !(m_is_offstage || m_is_ghost); }
     bool is_character() const { return m_is_character; }
 
     bool contains(const sf::Vector2f& point) const;

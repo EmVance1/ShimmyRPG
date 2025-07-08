@@ -243,6 +243,21 @@ int l_set_mode(lua_State* L) {
     return 0;
 }
 
+int l_yield(lua_State* L) {
+    if (lua_gettop(L) != 0) {
+        return luaL_error(L, "yield() does not take any arguments");
+    }
+    lua_pushnumber(L, 0.f);
+    return lua_yield(L, 1);
+}
+
+int l_yield_seconds(lua_State* L) {
+    if (lua_gettop(L) != 1) {
+        return luaL_error(L, "wait_seconds(n) takes exactly one argument");
+    }
+    return lua_yield(L, 1);
+}
+
 int l_yield_combat(lua_State* L) {
     const size_t a_len = lua_objlen(L, 1);
     auto ally_tags = std::unordered_set<std::string>();
@@ -277,11 +292,9 @@ int l_yield_dialogue(lua_State* L) {
         auto dia = dialogue_from_file(filename);
         script->parent_area().begin_dialogue(std::move(dia), filename);
     } catch (const std::exception& e) {
-        std::cerr << "Dialogue error: " << e.what() << "\n";
+        std::cerr << "dialogue error: " << e.what() << "\n";
         exit(1);
     }
-
-    // return 0;
 
     lua_pushnumber(L, 0.0);
     return lua_yield(L, 1);
@@ -294,25 +307,18 @@ int l_yield_dialogue(lua_State* L) {
     const auto script = static_cast<LuaScript*>(lua_touserdata(L, -1));
     script->parent_area().begin_dialogue(dialogue_from_file(filename), filename);
 
-    // return 0;
-
     lua_pushnumber(L, 0.0);
     return lua_yield(L, 1);
 }
 #endif
 
-int l_yield(lua_State* L) {
-    if (lua_gettop(L) != 0) {
-        return luaL_error(L, "yield() does not take any arguments");
-    }
-    lua_pushnumber(L, 0.f);
-    return lua_yield(L, 1);
-}
+int l_yield_exit(lua_State* L) {
+    lua_pushstring(L, "script");
+    lua_gettable(L, LUA_REGISTRYINDEX);
+    auto script = static_cast<LuaScript*>(lua_touserdata(L, -1));
+    script->mark_for_termination();
 
-int l_yield_seconds(lua_State* L) {
-    if (lua_gettop(L) != 1) {
-        return luaL_error(L, "wait_seconds(n) takes exactly one argument");
-    }
+    lua_pushnumber(L, 0.f);
     return lua_yield(L, 1);
 }
 
@@ -349,7 +355,7 @@ int l_exit(lua_State* L) {
     lua_pushstring(L, "script");
     lua_gettable(L, LUA_REGISTRYINDEX);
     auto script = static_cast<LuaScript*>(lua_touserdata(L, -1));
-    script->terminate();
+    script->mark_for_termination();
 
     return 0;
 }

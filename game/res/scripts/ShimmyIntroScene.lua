@@ -1,5 +1,4 @@
 
-
 function OnStartAsync()
     local shimmy = shmy.entity("ShimmyPrime")
 
@@ -17,6 +16,5 @@ function OnStartAsync()
 
     shmy.yield_seconds(0.7)
     shmy.set_mode(shmy.mode.NORMAL)
-    shmy.exit()
 end
 

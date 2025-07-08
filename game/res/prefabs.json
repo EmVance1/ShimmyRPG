@@ -1,22 +1,18 @@
 {
     "door_simple_wooden_single": {
-        "texture": "door_simple_wooden_single",
-        "boundary": [ [0, 145], [80, 195] ],
-        "tags": [ "wood", "door", "simple_lock" ]
+        "texture": "door_simple_wooden_single", "tags": [ "wood", "door", "simple_lock" ],
+        "trait_customsort": [ [0, 145], [80, 195] ]
     },
     "door_simple_wooden_double": {
-        "texture": "door_simple_wooden_double",
-        "boundary": [ [0, 150], [80, 200] ],
-        "tags": [ "wood", "door", "simple_lock" ]
+        "texture": "door_simple_wooden_double", "tags": [ "wood", "door", "simple_lock" ],
+        "trait_customsort": [ [0, 150], [80, 200] ]
     },
     "table_simple_wooden_round": {
-        "texture": "table_simple_wooden_round",
-        "boundary": [ [-10, 99], [146, 99] ],
-        "tags": [ "wood", "furniture" ]
+        "texture": "table_simple_wooden_round", "tags": [ "wood", "furniture" ],
+        "trait_customsort": [ [-10, 99], [146, 99] ]
     },
     "crate_simple_wooden_small": {
-        "texture": "crate_simple_wooden_small",
-        "boundary": [ [0, 99], [132, 99] ],
-        "tags": [ "wood", "box", "small_inventory" ]
+        "texture": "crate_simple_wooden_small", "tags": [ "wood", "box", "small_inventory" ],
+        "trait_customsort": [ [0, 99], [132, 99] ]
     }
 }

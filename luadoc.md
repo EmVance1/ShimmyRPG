@@ -1,9 +1,12 @@
 # Lua Scripting API
 
+## Execution Environment
+In order to provide basic safety for users executing scripts written by untrusted users, scripts expose a restricted subset of the lua standard library. The library tables that remain usable are `math`, `string`, `table`, `coroutine`, as well as the functions `print`, `pcall`, `pairs`, `ipairs`, `tonumber`, `tostring`, `type`, `next`, `select` and `unpack`.
+
 ## Overridable Functions
 The Shimmy engine expects every script to override one or more of the following event handlers. In order for your scripts to behave predictably, all code that directly interacts with the scene should be inside one of these event handlers. Some of these handlers are available in both regular and coroutine variants (see section on [yields](#Yields)). If possible, the regular variant should be preferred, as it incurs lower overhead. It is *not* legal to define both versions of the same handler.
 
-### OnCreate (UNIMPLEMENTED)
+### OnCreate
 ```lua
 function OnCreate() ... end
 ```
@@ -33,7 +36,7 @@ function OnUpdateAsync(deltatime) ... end
 ```
 Async (coroutine) variant of `OnUpdate`. Enables [`yield`](#Yields) functionality. If `OnUpdateAsync` yields, it will *not* be called in following frames until the yielded call is resumed and executed to completion.
 
-### OnExit (UNIMPLEMENTED)
+### OnExit
 ```lua
 function OnExit() ... end
 ```
@@ -50,6 +53,7 @@ if shmy.flags["MyOtherFlag"] then
     -- some code
 end
 ```
+If this however feels *too* magical, the (identical) functions `shmy.flags.get({name})`, `shmy.flags.set({name}, {value})` and `shmy.flags.create({name}, {value})` are provided, the latter being the only way to actually create new flags at runtime, as opposed to editing the flags folder.
 
 ### Synchronous Functions
 ```lua
@@ -67,6 +71,11 @@ Sets a color which is blended (multiplied) with the entire screen (excluding GUI
 ```lua
 shmy.goto_area({index}, {spawn_pos}, {suppress_triggers})
 ```
+Sets the active area to the one provided.
+```lua
+shmy.exit()
+```
+Marks the script for termination as soon as control is returned to the engine. This does *not* in itself interrupt the execution of the current event handler (see `shmy.yield_exit()`), but it does guarantee that the calling handler is the last handler to be run or resumed, aside from of course `OnExit`.
 
 ##### Camera
 ```lua
@@ -141,5 +150,8 @@ Note: when spawning dialogue from a script, it is technically legal for said dia
 shmy.yield_to_combat({ally_tags}, {enemy_tags})
 ```
 Analogous to `shmy.yield_to_dialogue` - constructs a combat encounter from the provided tag arrays and yields control to the engine until the encounter reaches any valid conclusion state. This conclusion state is saved to the reserved "CombatConclusion" flag which can be queried like any other, and compared against the constants stored in `shmy.combat_conclusions` to handle consequences.
+```lua
+shmy.yield_exit()
 ```
+Terminates execution of the current script immediately. Additionally it is guaranteed that the caller is the last handler to be run or resumed, aside from of course `OnExit`.
 

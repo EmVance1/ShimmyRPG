@@ -17,16 +17,11 @@ void Area::load_prefab(const rapidjson::Value& prefabs, const rapidjson::Value& 
         p_region->m_atlases.at(tex),
         p_region->m_atlases.at(tex + std::string("_outline")),
         p_region->m_alphamaps.at(tex + std::string("_map")),
-        &pathfinder, value.HasMember("controller") || prefab.HasMember("controller")
+        &pathfinder, value.HasMember("trait_movement") || prefab.HasMember("trait_movement")
     );
     auto& entity = entities[e_id];
 
-    // OFFSTAGE
-    if (value.HasMember("offstage")) {
-        entity.set_offstage(JSON_IS_TRUE(value, "offstage"));
-    }
-
-    // POSITION
+    // POSITION ===============================================
     const auto& pos = JSON_GET(value, "position");
     if (pos.HasMember("world")) {
         entity.set_position(json_to_vector2f(pos["world"]), cart_to_iso);
@@ -34,70 +29,22 @@ void Area::load_prefab(const rapidjson::Value& prefabs, const rapidjson::Value& 
         entity.set_sprite_position(json_to_vector2f(pos["iso"]));
     }
 
-    // CONTROLLER
-    if (prefab.HasMember("controller")) {
-        const auto& con = JSON_GET(prefab, "controller");
-        entity.get_tracker().set_speed(JSON_GET_FLOAT(con, "speed"));
-    } else if (value.HasMember("controller")) {
-        const auto& con = JSON_GET(value, "controller");
-        entity.get_tracker().set_speed(JSON_GET_FLOAT(con, "speed"));
-    }
-
-    // BOUNDARY
-    if (prefab.HasMember("boundary")) {
-        const auto& bry = JSON_GET_ARRAY(prefab, "boundary");
-        entity.set_sorting_boundary(json_to_vector2f(bry[0]), json_to_vector2f(bry[1]));
-    } else if (value.HasMember("boundary")) {
-        const auto& bry = JSON_GET_ARRAY(value, "boundary");
-        entity.set_sorting_boundary(json_to_vector2f(bry[0]), json_to_vector2f(bry[1]));
-    } else {
-        entity.set_sorting_boundary(sf::Vector2f(0, 0));
-    }
-
-    // IDS
-    if (prefab.HasMember("ids")) {
-        const auto& ids = JSON_GET(prefab, "ids");
-        const auto script = JSON_GET_STR(ids, "script");
-        script_name_LUT[script] = e_id;
-        story_name_LUT[script] = JSON_GET_STR(ids, "story");
-        entity.set_script_id(script);
-    } else if (value.HasMember("ids")) {
-        const auto& ids = JSON_GET(value, "ids");
-        const auto script = JSON_GET_STR(ids, "script");
-        script_name_LUT[script] = e_id;
-        story_name_LUT[script] = JSON_GET_STR(ids, "story");
-        entity.set_script_id(script);
-    }
-
-    // DIALOGUE
-    if (prefab.HasMember("dialogue")) {
-        const auto& dia = JSON_GET(prefab, "dialogue");
-        if (dia.HasMember("file")) {
-            entity.set_dialogue(JSON_GET_STR(dia, "file"));
-        } else {
-            entity.set_dialogue(JSON_GET_STR(dia, "line"));
-        }
-    } else if (value.HasMember("dialogue")) {
-        const auto& dia = JSON_GET(value, "dialogue");
-        if (dia.HasMember("file")) {
-            entity.set_dialogue(JSON_GET_STR(dia, "file"));
-        } else {
-            entity.set_dialogue(JSON_GET_STR(dia, "line"));
-        }
-    }
-
-    // TAGS
+    // TAGS ===================================================
     if (prefab.HasMember("tags")) {
         for (const auto& tag : JSON_GET_ARRAY(prefab, "tags")) {
             entity.get_tags().emplace(tag.GetString());
         }
-    } else if (value.HasMember("tags")) {
+    }
+    if (value.HasMember("tags")) {
         for (const auto& tag : JSON_GET_ARRAY(value, "tags")) {
             entity.get_tags().emplace(tag.GetString());
         }
-    } else {
+    }
+#ifdef DEBUG
+    if (!prefab.HasMember("tags") && !prefab.HasMember("tags")) {
         throw std::invalid_argument(std::string("invalid json access - object has no member 'tags'\n"));
     }
+#endif
 
     if (entity.get_tags().contains("player")) {
         if (player_id == "") {
@@ -113,6 +60,66 @@ void Area::load_prefab(const rapidjson::Value& prefabs, const rapidjson::Value& 
         if (entity.get_tags().contains("chest"))       { entity.get_actions().emplace_back(OpenInvAction{}); }
         if (entity.get_tags().contains("simple_lock")) { entity.get_actions().emplace_back(LockpickAction{}); }
         if (entity.get_tags().contains("carryable"))   { entity.get_actions().emplace_back(PickUpAction{}); }
+    }
+
+    // MOVEMENT ===============================================
+    if (prefab.HasMember("trait_movement")) {
+        const auto& con = JSON_GET(prefab, "trait_movement");
+        entity.get_tracker().set_speed(JSON_GET_FLOAT(con, "speed"));
+    } else if (value.HasMember("trait_movement")) {
+        const auto& con = JSON_GET(value, "trait_movement");
+        entity.get_tracker().set_speed(JSON_GET_FLOAT(con, "speed"));
+    }
+
+    // SCRIPTABLE =============================================
+    if (prefab.HasMember("trait_scriptable")) {
+        const auto& ids = JSON_GET(prefab, "trait_scriptable");
+        const auto script = JSON_GET_STR(ids, "script_id");
+        script_name_LUT[script] = e_id;
+        story_name_LUT[script] = JSON_GET_STR(ids, "story_id");
+        entity.set_script_id(script);
+    } else if (value.HasMember("trait_scriptable")) {
+        const auto& ids = JSON_GET(value, "trait_scriptable");
+        const auto script = JSON_GET_STR(ids, "script_id");
+        script_name_LUT[script] = e_id;
+        story_name_LUT[script] = JSON_GET_STR(ids, "story_id");
+        entity.set_script_id(script);
+    }
+
+    // DIALOGUE ===============================================
+    if (prefab.HasMember("trait_speech")) {
+        const auto& dia = JSON_GET(prefab, "trait_speech");
+        if (dia.HasMember("file")) {
+            entity.set_dialogue(JSON_GET_STR(dia, "file"));
+        } else {
+            entity.set_dialogue(JSON_GET_STR(dia, "line"));
+        }
+    } else if (value.HasMember("trait_speech")) {
+        const auto& dia = JSON_GET(value, "trait_speech");
+        if (dia.HasMember("file")) {
+            entity.set_dialogue(JSON_GET_STR(dia, "file"));
+        } else {
+            entity.set_dialogue(JSON_GET_STR(dia, "line"));
+        }
+    }
+
+    // CUSTOM SORTING =========================================
+    if (prefab.HasMember("trait_customsort")) {
+        const auto& bry = JSON_GET_ARRAY(prefab, "trait_customsort");
+        entity.set_sorting_boundary(json_to_vector2f(bry[0]), json_to_vector2f(bry[1]));
+    } else if (value.HasMember("trait_customsort")) {
+        const auto& bry = JSON_GET_ARRAY(value, "trait_customsort");
+        entity.set_sorting_boundary(json_to_vector2f(bry[0]), json_to_vector2f(bry[1]));
+    } else {
+        entity.set_sorting_boundary(sf::Vector2f(0, 0));
+    }
+
+    // RESTRICTIONS ===========================================
+    if (value.HasMember("is_offstage")) {
+        entity.set_offstage(JSON_IS_TRUE(value, "is_offstage"));
+    }
+    if (value.HasMember("is_ghost")) {
+        entity.set_ghost(JSON_IS_TRUE(value, "is_ghost"));
     }
 }
 
@@ -129,16 +136,11 @@ void Area::load_entity(const rapidjson::Value& prefabs, const rapidjson::Value& 
         p_region->m_atlases.at(tex),
         p_region->m_atlases.at(tex + std::string("_outline")),
         p_region->m_alphamaps.at(tex + std::string("_map")),
-        &pathfinder, value.HasMember("controller")
+        &pathfinder, value.HasMember("trait_movement")
     );
     auto& entity = entities[e_id];
 
-    // OFFSTAGE
-    if (value.HasMember("offstage")) {
-        entity.set_offstage(JSON_IS_TRUE(value, "offstage"));
-    }
-
-    // POSITION
+    // POSITION ===============================================
     const auto& pos = JSON_GET(value, "position");
     if (pos.HasMember("world")) {
         entity.set_position(json_to_vector2f(pos["world"]), cart_to_iso);
@@ -146,44 +148,10 @@ void Area::load_entity(const rapidjson::Value& prefabs, const rapidjson::Value& 
         entity.set_sprite_position(json_to_vector2f(pos["iso"]));
     }
 
-    // CONTROLLER
-    if (value.HasMember("controller")) {
-        const auto& con = JSON_GET(value, "controller");
-        entity.get_tracker().set_speed(JSON_GET_FLOAT(con, "speed"));
-    }
-
-    // BOUNDARY
-    if (value.HasMember("boundary")) {
-        const auto& bry = JSON_GET_ARRAY(value, "boundary");
-        entity.set_sorting_boundary(json_to_vector2f(bry[0]), json_to_vector2f(bry[1]));
-    } else {
-        entity.set_sorting_boundary(sf::Vector2f(0, 0));
-    }
-
-    // IDS
-    if (value.HasMember("ids")) {
-        const auto& ids = JSON_GET(value, "ids");
-        const auto script = JSON_GET_STR(ids, "script");
-        script_name_LUT[script] = e_id;
-        story_name_LUT[script] = JSON_GET_STR(ids, "story");
-        entity.set_script_id(script);
-    }
-
-    // DIALOGUE
-    if (value.HasMember("dialogue")) {
-        const auto& dia = JSON_GET(value, "dialogue");
-        if (dia.HasMember("file")) {
-            entity.set_dialogue(JSON_GET_STR(dia, "file"));
-        } else {
-            entity.set_dialogue(JSON_GET_STR(dia, "line"));
-        }
-    }
-
-    // TAGS
+    // TAGS ===================================================
     for (const auto& tag : JSON_GET_ARRAY(value, "tags")) {
         entity.get_tags().emplace(tag.GetString());
     }
-
     if (entity.get_tags().contains("player")) {
         if (player_id == "") {
             player_id = e_id;
@@ -198,6 +166,47 @@ void Area::load_entity(const rapidjson::Value& prefabs, const rapidjson::Value& 
         if (entity.get_tags().contains("chest"))       { entity.get_actions().emplace_back(OpenInvAction{}); }
         if (entity.get_tags().contains("simple_lock")) { entity.get_actions().emplace_back(LockpickAction{}); }
         if (entity.get_tags().contains("carryable"))   { entity.get_actions().emplace_back(PickUpAction{}); }
+    }
+
+    // SCRIPTABLE =============================================
+    if (value.HasMember("trait_scriptable")) {
+        const auto& ids = JSON_GET(value, "trait_scriptable");
+        const auto script = JSON_GET_STR(ids, "script_id");
+        script_name_LUT[script] = e_id;
+        story_name_LUT[script] = JSON_GET_STR(ids, "story_id");
+        entity.set_script_id(script);
+    }
+
+    // MOVEMENT ===============================================
+    if (value.HasMember("trait_movement")) {
+        const auto& con = JSON_GET(value, "trait_movement");
+        entity.get_tracker().set_speed(JSON_GET_FLOAT(con, "speed"));
+    }
+
+    // DIALOGUE ===============================================
+    if (value.HasMember("trait_speech")) {
+        const auto& dia = JSON_GET(value, "trait_speech");
+        if (dia.HasMember("file")) {
+            entity.set_dialogue(JSON_GET_STR(dia, "file"));
+        } else {
+            entity.set_dialogue(JSON_GET_STR(dia, "line"));
+        }
+    }
+
+    // CUSTOM SORTING =========================================
+    if (value.HasMember("trait_customsort")) {
+        const auto& bry = JSON_GET_ARRAY(value, "trait_customsort");
+        entity.set_sorting_boundary(json_to_vector2f(bry[0]), json_to_vector2f(bry[1]));
+    } else {
+        entity.set_sorting_boundary(sf::Vector2f(0, 0));
+    }
+
+    // RESTRICTIONS ===========================================
+    if (value.HasMember("is_offstage")) {
+        entity.set_offstage(JSON_IS_TRUE(value, "is_offstage"));
+    }
+    if (value.HasMember("is_ghost")) {
+        entity.set_ghost(JSON_IS_TRUE(value, "is_ghost"));
     }
 }
 

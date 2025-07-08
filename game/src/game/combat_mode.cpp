@@ -67,7 +67,7 @@ void CombatMode::handle_event(const sf::Event& event) {
         }
         auto tt = std::dynamic_pointer_cast<gui::TextWidget>(p_area->gui.get_widget("tooltip"));
         tt->set_visible(false);
-        if (auto top = top_contains(p_area->sorted_entities, mapped); top && !top->is_offstage()) {
+        if (auto top = top_contains(p_area->sorted_entities, mapped); top && top->is_interactible()) {
             top->set_hovered(true);
             if (top->is_character()) {
                 tt->set_position(gui::Position::topleft(sf::Vector2f(mmv->position) - sf::Vector2f(0.f, tt->get_size().y)));

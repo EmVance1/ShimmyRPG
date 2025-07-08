@@ -1,44 +1,44 @@
-# Shimmy Engine Schedule
+# Shimmy Engine Schedule (+ indicates low prio, i.e. post alpha 1.0)
 
 ### Technical
 
-- [ ] scripting and security
+- scripting and security
     - [x] event handler verification
     - [x] OnCreate / OnExit events
     - [x] merge lua states (env tables)
     - [x] minimal sandboxing to prevent io, os, debug table access
+    - [ ] protect builtin tables (shallow copies)
     - [ ] preload scripts instead of lazy load
 
-- [ ] debugging
+- debugging
     - [x] rapidjson error handlers
     - [x] lua pcalls / logging
     - [ ] total fallthrough in release mode (might need to rethink this one)
-    - [ ] script parser error reporting (maybe make rust lib)
-    - [ ] LSP for .shmy files
+    - [ ] +script parser error reporting (maybe make rust lib)
+    - [ ] +LSP for .shmy files
 
-- [ ] navigation
+- navigation
     - [x] graph A*
     - [x] string pulling / line of sight
     - [x] discouraged regions
     - [ ] movement pentalty regions
     - [ ] fix weird behaviour inside discouraged regions
 
-- [ ] sound and graphics
+- sound and graphics
     - [x] test animation API
     - [x] minimal sound player class
     - [ ] minimal music player class
     - [ ] determine SFX management solution (dialogue being priority)
-    - [ ] post processing settings
-    - [ ] integrate particle system
-    - [ ] automatic spritesheet generation from asset collections
+    - [ ] post processing config
+    - [ ] post processing scripting
+    - [ ] particle system config
+    - [ ] particle system scripting
+    - [ ] +automatic spritesheet generation from asset collections
 
-- [ ] misc
-    - [ ] ghost entities (no interaction)
-
-- [ ] cult game issues
+- cult game issues
     - [x] gui style in region def
     - [x] fix broken "move to" action
-    - [x] fix conditional dialogue bug (rng?) we say maybe
+    - [x] fix conditional dialogue bug (rng?)
     - [x] fix npc despawning after movement
     - [x] dialogue exit can trigger scripts (=> exit_into{ script })
     - [x] lockable/unlockable doors (hacky)
@@ -48,8 +48,19 @@
     - [x] multithreaded background loading
     - [x] pooling of bg loader threads
     - [ ] grow tooltips to fit content
-    - [ ] better initial configuration
     - [ ] ANY kind of save files
+    - [ ] better initial configuration
+
+- miscellaneous
+    - [x] ghost entities (uninteractible)
+    - [x] shmy documentation
+    - [ ] improve scripted zoom control
+    - [ ] refine triggers (more shapes, concise actions)
+    - [ ] improve handling of prefabs
+    - [ ] json schema overhaul
+    - [ ] json documentation
+    - [ ] some way of reporting missing traits
+    - [ ] redo door locking less hacky
 
 
 ### Gameplay
@@ -85,28 +96,26 @@
 
 - [ ] inventory system
 - [ ] primitive dynamic lighting
-- [ ] level editor
-- [ ] fine grained memory management
-- [ ] reactive flags (callbacks)
-- [ ] shmy_script as a library
+- [ ] +swap out graphics backend
+- [ ] +level editor
+- [ ] +fine grained memory management
+- [ ] +reactive flags (callbacks)
+- [ ] +shmy_script as a library
 
 
 ### Final Boss Shit
 
-- [ ] actual usable build process for collaboration
-- [ ] replace SFML with modern OpenGL
-- [ ] leading into emscripten support
-- [ ] campaign package registry
-- [ ] multiplayer???????
+- [ ] +actual usable build process for collaboration
+- [ ] +leading into emscripten support
+- [ ] +campaign package registry
+- [ ] +multiplayer???????
 
 
 ### Completed
 
 - [x] fix visual glitching
 
-- [x] frustum loading
-
-- [x] navmesh generation (will probably not have usable real time perf) (actulally 0.3ms isnt bad)
+- [x] navmesh generation (will probably not have usable real time perf. Edit: actually 0.3ms isnt bad)
     - [x] marching squares / floodfill
     - [x] contour merging
     - [x] douglas-peucker simplification

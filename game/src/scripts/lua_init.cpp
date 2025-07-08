@@ -21,27 +21,25 @@ void lua_register_engine_funcs(lua_State* L) {
 
     lua_pushcfunction(L, &l_entity_get);
     lua_setfield(L, -2, "entity");
-    lua_pushcfunction(L, &l_set_flag);
-    lua_setfield(L, -2, "set_flag");
-    lua_pushcfunction(L, &l_get_flag);
-    lua_setfield(L, -2, "get_flag");
-    lua_pushcfunction(L, &l_set_or_create_flag);
-    lua_setfield(L, -2, "create_flag");
     lua_pushcfunction(L, &l_set_overlay);
     lua_setfield(L, -2, "set_overlay");
     lua_pushcfunction(L, &l_goto_area);
     lua_setfield(L, -2, "goto_area");
+    lua_pushcfunction(L, &l_exit);
+    lua_setfield(L, -2, "exit");
 
     lua_pushcfunction(L, &l_set_mode);
     lua_setfield(L, -2, "set_mode");
+    lua_pushcfunction(L, &l_yield);
+    lua_setfield(L, -2, "yield");
+    lua_pushcfunction(L, &l_yield_seconds);
+    lua_setfield(L, -2, "yield_seconds");
     lua_pushcfunction(L, &l_yield_combat);
     lua_setfield(L, -2, "yield_to_combat");
     lua_pushcfunction(L, &l_yield_dialogue);
     lua_setfield(L, -2, "yield_to_dialogue");
-    lua_pushcfunction(L, &l_yield_seconds);
-    lua_setfield(L, -2, "yield_seconds");
-    lua_pushcfunction(L, &l_yield);
-    lua_setfield(L, -2, "yield");
+    lua_pushcfunction(L, &l_yield_exit);
+    lua_setfield(L, -2, "yield_exit");
 
     lua_pushstring(L, "camera");
     lua_createtable(L, 0, 3);
@@ -55,6 +53,13 @@ void lua_register_engine_funcs(lua_State* L) {
 
     lua_pushstring(L, "flags");
     lua_newtable(L);
+    lua_pushcfunction(L, &l_set_flag);
+    lua_setfield(L, -2, "set");
+    lua_pushcfunction(L, &l_get_flag);
+    lua_setfield(L, -2, "get");
+    lua_pushcfunction(L, &l_set_or_create_flag);
+    lua_setfield(L, -2, "create");
+
     lua_newtable(L);
     lua_pushcfunction(L, &l_magic_flag_get);
     lua_setfield(L, -2, "__index");
