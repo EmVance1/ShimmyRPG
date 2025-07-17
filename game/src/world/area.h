@@ -7,8 +7,8 @@
 #include "lua/lua.h"
 #include "objects/entity.h"
 #include "objects/trigger.h"
-#include "scripts/lua_script.h"
-#include "scripts/dialogue.h"
+#include "scripting/lua/script.h"
+#include "game/dialogue.h"
 #include "action.h"
 #include "gui/panel.h"
 #include "background.h"
@@ -44,7 +44,7 @@ struct Area {
     std::string player_id = "";
 
     lua_State* lua_vm;
-    std::vector<LuaScript> scripts;
+    std::vector<lua::Script> scripts;
     std::vector<Trigger> triggers;
     bool suppress_triggers = false;
     bool suppress_portals = false;

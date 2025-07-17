@@ -77,20 +77,20 @@ void AreaDebugView::update() {
         i++;
     }
 
-    m_motionguide_line.set_count(p_area->get_player().get_tracker().get_inverse_index() + 1);
+    m_motionguide_line.setCount(p_area->get_player().get_tracker().get_inverse_index() + 1);
 }
 
 void AreaDebugView::handle_event(const sf::Event& event) {
     if (event.is<sf::Event::MouseMoved>()) {
         auto path = std::vector<sf::Vector2f>();
         for (const auto& p : p_area->get_player().get_tracker().get_active_path()) { path.push_back({ p.x, p.y }); }
-        m_motionguide_line = PartialLine::from_path(path);
-        m_motionguide_line.set_start(0);
+        m_motionguide_line = sfu::LineShape(path);
+        m_motionguide_line.setStart(0);
     } else if (event.is<sf::Event::MouseButtonPressed>()) {
         auto path = std::vector<sf::Vector2f>();
         for (const auto& p : p_area->get_player().get_tracker().get_active_path()) { path.push_back({ p.x, p.y }); }
-        m_motionguide_line = PartialLine::from_path(path);
-        m_motionguide_line.set_start(0);
+        m_motionguide_line = sfu::LineShape(path);
+        m_motionguide_line.setStart(0);
     }
 }
 

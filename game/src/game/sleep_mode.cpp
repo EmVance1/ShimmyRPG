@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "normal_mode.h"
 #include "world/area.h"
-#include "scripts/lua_script.h"
+#include "scripting/lua/script.h"
 
 
 void SleepMode::handle_event(const sf::Event&) {}

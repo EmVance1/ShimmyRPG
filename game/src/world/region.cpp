@@ -28,13 +28,13 @@ void Region::load_from_folder(const std::string& folder, size_t initial_area) {
 
         const auto img = sf::Image(texfile);
         m_alphamaps[name + "_map"].loadFromImage(
-                (img.getSize().x < 200) ? gen_clickmap(img, OUTLINE_WIDTH) : gen_clickmap_threaded(img, OUTLINE_WIDTH)
+                (img.getSize().x < 200) ? filter::clickmap(img, OUTLINE_WIDTH) : filter::clickmap_threaded(img, OUTLINE_WIDTH)
             );
         std::ignore = m_atlases[name].loadFromImage(img, dims);
         m_atlases[name].setSmooth(smooth);
         if (!outline) { continue; }
         std::ignore = m_atlases[name + "_outline"].loadFromImage(
-                (img.getSize().x < 200) ? gen_outline(img, OUTLINE_WIDTH) : gen_outline_threaded(img, OUTLINE_WIDTH), dims
+                (img.getSize().x < 200) ? filter::outline(img, OUTLINE_WIDTH) : filter::outline_threaded(img, OUTLINE_WIDTH), dims
             );
         m_atlases[name + "_outline"].setSmooth(smooth);
     }

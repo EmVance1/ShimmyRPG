@@ -1,11 +1,18 @@
-#include "navmesh/types.h"
 #include "pch.h"
 #include "tracker.h"
 #include "time/deltatime.h"
 
 
+namespace nav {
+
+sf::Vector2f into_sf(const nav::Vector2f& v) { return sf::Vector2f(v.x, v.y); }
+nav::Vector2f from_sf(const sf::Vector2f& v) { return nav::Vector2f(v.x, v.y); }
+
+}
+
+
 bool PathTracker::set_position(const sf::Vector2f& pos) {
-    if (!mesh->get_triangle(into_nav(pos), 0.05f).has_value()) { return false; }
+    if (!mesh->get_triangle(nav::from_sf(pos), 0.05f).has_value()) { return false; }
     position = pos;
     path.clear();
     path_index = 0;
@@ -19,7 +26,7 @@ const sf::Vector2f& PathTracker::get_position() const {
 
 
 bool PathTracker::set_target_position(const sf::Vector2f& goal) {
-    path = mesh->pathfind(into_nav(position), into_nav(goal));
+    path = mesh->pathfind(nav::from_sf(position), nav::from_sf(goal));
     if (path.empty()) { return false; }
     path_index = 0;
     path_prog = 0;
@@ -30,7 +37,7 @@ sf::Vector2f PathTracker::get_target_position() const {
     if (path.empty()) {
         return position;
     } else {
-        return into_sf(path.back());
+        return nav::into_sf(path.back());
     }
 }
 
@@ -147,14 +154,14 @@ float PathTracker::get_active_path_length() const {
 void PathTracker::progress() {
     if (!is_moving()) { return; }
 
-    if (into_sf(path[path_index + 1]) == position) {
+    if (nav::into_sf(path[path_index + 1]) == position) {
         if (++path_index == path.size() - 1) { return; }
     }
-    const auto diff = into_sf(path[path_index + 1]) - position;
+    const auto diff = nav::into_sf(path[path_index + 1]) - position;
     const auto dist = diff.length();
     if (dist < speed) {
         path_index++;
-        position = into_sf(path[path_index]);
+        position = nav::into_sf(path[path_index]);
         const auto dir = diff * (1.f / dist);
         position += dir * (speed - dist);
     } else {

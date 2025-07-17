@@ -2,7 +2,92 @@
 #include "filters.h"
 
 
-#define TRANSPARENT_THRESHOLD 70
+namespace filter {
+
+constexpr uint8_t TRANSPARENT_THRESHOLD = 70;
+
+static bool is_border(const sf::Image& img, const sf::Vector2i& pos);
+static void fill_outline(sf::Image& result, const sf::Image& tex, const sf::Vector2u& pos, int width);
+
+
+sf::Image outline(const sf::Image& tex, int width) {
+    auto result = sf::Image(tex.getSize(), sf::Color::Transparent);
+
+    for (uint32_t y = 0; y < tex.getSize().y; y++) {
+        for (uint32_t x = 0; x < tex.getSize().x; x++) {
+            if (tex.getPixel({x, y}).a > TRANSPARENT_THRESHOLD) {
+                if (is_border(tex, {(int)x, (int)y})) {
+                    fill_outline(result, tex, {x, y}, width);
+                }
+            }
+        }
+    }
+
+    return result;
+}
+
+sf::Image outline_threaded(const sf::Image& tex, int width) {
+    auto result = sf::Image(tex.getSize(), sf::Color::Transparent);
+    auto pool = dp::thread_pool(std::thread::hardware_concurrency());
+
+    for (uint32_t i = 0; i < tex.getSize().y; i += 20) {
+        pool.enqueue_detach([=, &tex, &result](){
+            for (uint32_t y = i; y < i + 20 && y < tex.getSize().y; y++) {
+                for (uint32_t x = 0; x < tex.getSize().x; x++) {
+                    if (tex.getPixel({x, y}).a > TRANSPARENT_THRESHOLD) {
+                        if (is_border(tex, {(int)x, (int)y})) {
+                            fill_outline(result, tex, {x, y}, width);
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    pool.wait_for_tasks();
+    return result;
+}
+
+
+sf::Image clickmap(const sf::Image& tex, int width) {
+    auto result = sf::Image(tex.getSize(), sf::Color::Transparent);
+
+    for (uint32_t y = 0; y < tex.getSize().y; y++) {
+        for (uint32_t x = 0; x < tex.getSize().x; x++) {
+            if (tex.getPixel({x, y}).a > TRANSPARENT_THRESHOLD) {
+                result.setPixel({x, y}, tex.getPixel({x, y}));
+                if (is_border(tex, {(int)x, (int)y})) {
+                    fill_outline(result, tex, {x, y}, width);
+                }
+            }
+        }
+    }
+
+    return result;
+}
+
+sf::Image clickmap_threaded(const sf::Image& tex, int width) {
+    auto result = sf::Image(tex.getSize(), sf::Color::Transparent);
+    auto pool = dp::thread_pool(std::thread::hardware_concurrency());
+
+    for (uint32_t i = 0; i < tex.getSize().y; i += 20) {
+        pool.enqueue_detach([=, &tex, &result](){
+            for (uint32_t y = i; y < i + 20 && y < tex.getSize().y; y++) {
+                for (uint32_t x = 0; x < tex.getSize().x; x++) {
+                    if (tex.getPixel({x, y}).a > TRANSPARENT_THRESHOLD) {
+                        result.setPixel({x, y}, tex.getPixel({x, y}));
+                        if (is_border(tex, {(int)x, (int)y})) {
+                            fill_outline(result, tex, {x, y}, width);
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    pool.wait_for_tasks();
+    return result;
+}
 
 
 static bool is_border(const sf::Image& img, const sf::Vector2i& pos) {
@@ -34,88 +119,8 @@ static void fill_outline(sf::Image& result, const sf::Image& tex, const sf::Vect
     }
 }
 
-sf::Image gen_outline(const sf::Image& tex, int width) {
-    auto result = sf::Image(tex.getSize(), sf::Color::Transparent);
 
-    for (uint32_t y = 0; y < tex.getSize().y; y++) {
-        for (uint32_t x = 0; x < tex.getSize().x; x++) {
-            if (tex.getPixel({x, y}).a > TRANSPARENT_THRESHOLD) {
-                // result.setPixel({x, y}, tex.getPixel({x, y}));
-                if (is_border(tex, {(int)x, (int)y})) {
-                    fill_outline(result, tex, {x, y}, width);
-                }
-            }
-        }
-    }
-
-    return result;
-}
-
-sf::Image gen_outline_threaded(const sf::Image& tex, int width) {
-    auto result = sf::Image(tex.getSize(), sf::Color::Transparent);
-    auto pool = dp::thread_pool(std::thread::hardware_concurrency());
-
-    for (uint32_t i = 0; i < tex.getSize().y; i += 20) {
-        pool.enqueue_detach([=, &tex, &result](){
-            for (uint32_t y = i; y < i + 20 && y < tex.getSize().y; y++) {
-                for (uint32_t x = 0; x < tex.getSize().x; x++) {
-                    if (tex.getPixel({x, y}).a > TRANSPARENT_THRESHOLD) {
-                        // result.setPixel({x, y}, tex.getPixel({x, y}));
-                        if (is_border(tex, {(int)x, (int)y})) {
-                            fill_outline(result, tex, {x, y}, width);
-                        }
-                    }
-                }
-            }
-        });
-    }
-
-    pool.wait_for_tasks();
-    return result;
-}
-
-
-sf::Image gen_clickmap(const sf::Image& tex, int width) {
-    auto result = sf::Image(tex.getSize(), sf::Color::Transparent);
-
-    for (uint32_t y = 0; y < tex.getSize().y; y++) {
-        for (uint32_t x = 0; x < tex.getSize().x; x++) {
-            if (tex.getPixel({x, y}).a > TRANSPARENT_THRESHOLD) {
-                result.setPixel({x, y}, tex.getPixel({x, y}));
-                if (is_border(tex, {(int)x, (int)y})) {
-                    fill_outline(result, tex, {x, y}, width);
-                }
-            }
-        }
-    }
-
-    return result;
-}
-
-sf::Image gen_clickmap_threaded(const sf::Image& tex, int width) {
-    auto result = sf::Image(tex.getSize(), sf::Color::Transparent);
-    auto pool = dp::thread_pool(std::thread::hardware_concurrency());
-
-    for (uint32_t i = 0; i < tex.getSize().y; i += 20) {
-        pool.enqueue_detach([=, &tex, &result](){
-            for (uint32_t y = i; y < i + 20 && y < tex.getSize().y; y++) {
-                for (uint32_t x = 0; x < tex.getSize().x; x++) {
-                    if (tex.getPixel({x, y}).a > TRANSPARENT_THRESHOLD) {
-                        result.setPixel({x, y}, tex.getPixel({x, y}));
-                        if (is_border(tex, {(int)x, (int)y})) {
-                            fill_outline(result, tex, {x, y}, width);
-                        }
-                    }
-                }
-            }
-        });
-    }
-
-    pool.wait_for_tasks();
-    return result;
-}
-
-
+/*
 static float closest_squared(const sf::Image& img, const sf::Vector2i& pos, int radius, const std::function<bool(const sf::Color&)> pred) {
     float min = std::numeric_limits<float>::infinity();
 
@@ -185,4 +190,6 @@ sf::Image map_area_threaded(const sf::Image& img, int avoid_radius) {
     pool.wait_for_tasks();
     return result;
 }
+*/
 
+}

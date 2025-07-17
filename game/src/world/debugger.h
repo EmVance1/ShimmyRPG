@@ -1,7 +1,7 @@
 #pragma once
 #include <SFML/Graphics.hpp>
+#include <sfutil/lineshape.h>
 #include <vector>
-#include "graphics/partialline.h"
 
 
 struct Area;
@@ -13,7 +13,7 @@ private:
     std::vector<sf::RectangleShape> m_outlines;
     std::vector<sf::CircleShape> m_colliders;
     std::vector<sf::VertexArray> m_boundaries;
-    PartialLine m_motionguide_line;
+    sfu::LineShape m_motionguide_line;
     const Area* p_area;
 
 public:

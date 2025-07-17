@@ -7,8 +7,11 @@ archive/
 
 editor/bin/
 editor/compile_flags.txt
+editor/vc140.pdb
 engine/bin/
 engine/compile_flags.txt
+engine/vc140.pdb
 game/bin/
 game/compile_flags.txt
+game/vc140.pdb
 

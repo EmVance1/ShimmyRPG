@@ -3,6 +3,14 @@
 #include <navmesh/types.h>
 
 
+namespace nav {
+
+sf::Vector2f into_sf(const nav::Vector2f& v);
+nav::Vector2f from_sf(const sf::Vector2f& v);
+
+}
+
+
 class PathTracker {
 public:
     constexpr static float MAX_PENALTY = 100000.f;
@@ -20,9 +28,6 @@ private:
 
 public:
     PathTracker(const nav::NavMesh* _mesh) : mesh(_mesh) {}
-
-    static sf::Vector2f into_sf(const nav::Vector2f& v) { return sf::Vector2f(v.x, v.y); }
-    static nav::Vector2f into_nav(const sf::Vector2f& v) { return nav::Vector2f(v.x, v.y); }
 
     void set_speed(float _speed) { speed = _speed; }
     float get_speed() const { return speed; }
@@ -47,7 +52,7 @@ public:
 
     bool is_moving() const { return !(path.empty() || (path_index == path.size() - 1) || override_stop); }
     void pause() { override_stop = true; }
-    void stop() { override_stop = true; path.clear(); path_index = 0; path_prog = 0; }
+    void stop()  { override_stop = true; path.clear(); path_index = 0; path_prog = 0; }
     void start() { override_stop = false; }
 
     void progress();

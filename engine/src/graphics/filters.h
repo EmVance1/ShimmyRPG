@@ -2,12 +2,16 @@
 #include <SFML/Graphics.hpp>
 
 
-sf::Image gen_outline_threaded(const sf::Image& tex, int width);
-sf::Image gen_outline(const sf::Image& tex, int width);
+namespace filter {
 
-sf::Image gen_clickmap(const sf::Image& tex, int width);
-sf::Image gen_clickmap_threaded(const sf::Image& tex, int width);
+sf::Image outline_threaded(const sf::Image& tex, int width);
+sf::Image outline(const sf::Image& tex, int width);
 
-sf::Image map_area_threaded(const sf::Image& map, int avoid_radius);
-sf::Image map_area(const sf::Image& map, int avoid_radius);
+sf::Image clickmap(const sf::Image& tex, int width);
+sf::Image clickmap_threaded(const sf::Image& tex, int width);
+
+// sf::Image map_area_threaded(const sf::Image& map, int avoid_radius);
+// sf::Image map_area(const sf::Image& map, int avoid_radius);
+
+}
 

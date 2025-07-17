@@ -5,10 +5,10 @@
 #include "world/region.h"
 #include "util/str.h"
 #include "util/json.h"
-#include "algo/iso_map.h"
+#include "util/iso_map.h"
 #include "objects/trigger.h"
-#include "scripts/lua_script.h"
-#include "scripts/lua_init.h"
+#include "scripting/lua/script.h"
+#include "scripting/lua/init.h"
 #include "json_debug.h"
 
 
@@ -34,7 +34,7 @@ Area::Area(const std::string& _id, Region* parent_region)
 
     lua_vm = luaL_newstate();
     luaL_openlibs(lua_vm);
-    lua_register_engine_funcs(lua_vm);
+    lua::init_engine_api(lua_vm);
 }
 
 Area::Area(Area&& other) : gui(std::move(other.gui)) {

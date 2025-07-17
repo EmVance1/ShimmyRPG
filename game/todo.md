@@ -57,10 +57,12 @@
     - [ ] improve scripted zoom control
     - [ ] refine triggers (more shapes, concise actions)
     - [ ] improve handling of prefabs
+    - [ ] appdata folder abstraction
     - [ ] json schema overhaul
     - [ ] json documentation
     - [ ] some way of reporting missing traits
     - [ ] redo door locking less hacky
+    - [ ] full code style audit (namespacing, fixed conventions, API wrapping)
 
 
 ### Gameplay
@@ -107,6 +109,7 @@
 
 - [ ] +actual usable build process for collaboration
 - [ ] +leading into emscripten support
+- [ ] +reactive gui scripting
 - [ ] +campaign package registry
 - [ ] +multiplayer???????
 

@@ -5,12 +5,11 @@
 #include "time/deltatime.h"
 #include "region.h"
 #include "objects/trigger.h"
-#include "scripts/lua_script.h"
+#include "scripting/lua/script.h"
 #include "gui/gui.h"
 
 
-static std::random_device RD;
-static std::mt19937 RNG(RD());
+static std::mt19937 RNG{ std::random_device()() };
 
 
 Entity& Area::get_player() {

@@ -110,8 +110,6 @@ void Area::load_prefab(const rapidjson::Value& prefabs, const rapidjson::Value& 
     } else if (value.HasMember("trait_customsort")) {
         const auto& bry = JSON_GET_ARRAY(value, "trait_customsort");
         entity.set_sorting_boundary(json_to_vector2f(bry[0]), json_to_vector2f(bry[1]));
-    } else {
-        entity.set_sorting_boundary(sf::Vector2f(0, 0));
     }
 
     // RESTRICTIONS ===========================================
@@ -197,8 +195,6 @@ void Area::load_entity(const rapidjson::Value& prefabs, const rapidjson::Value& 
     if (value.HasMember("trait_customsort")) {
         const auto& bry = JSON_GET_ARRAY(value, "trait_customsort");
         entity.set_sorting_boundary(json_to_vector2f(bry[0]), json_to_vector2f(bry[1]));
-    } else {
-        entity.set_sorting_boundary(sf::Vector2f(0, 0));
     }
 
     // RESTRICTIONS ===========================================

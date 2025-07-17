@@ -34,31 +34,31 @@ function Setup(scene)
 
 
     scene:entity("player_placeholder", Position.world{ 320, 480 }, { "player" })
-        :can_script{ script = "player", story = "Stanza" }
-        :can_move{ speed = 2.5 }
+        :trait_scriptable{ script_id = "player", story_id = "Stanza" }
+        :trait_movement{ speed = 2.5 }
 
     scene:entity("anim_test", Position.world{ 330, 50 }, { "npc", "trader", "shimmy_staff" })
-        :can_script{ script = "ShimmyPrime", story = "Shimmy" }
-        :can_move{ speed = 2.0 }
-        :can_speak{ file = "res/scripts/ShimmyDialogue.shmy" }
+        :trait_scriptable{ script_id = "ShimmyPrime", story_id = "Shimmy" }
+        :trait_movement{ speed = 2.0 }
+        :trait_speech{ file = "res/scripts/ShimmyDialogue.shmy" }
 
     scene:entity("npc_friendly_placeholder", Position.world{ 500, 290 }, { "npc", "shimmy_customer" })
-        :can_script{ script = "BrianPrime", story = "Brian" }
-        :can_move{ speed = 2.0 }
-        :can_speak{ file = "res/scripts/BrianDialogue.shmy" }
+        :trait_scriptable{ script_id = "BrianPrime", story_id = "Brian" }
+        :trait_movement{ speed = 2.0 }
+        :trait_speech{ file = "res/scripts/BrianDialogue.shmy" }
 
     scene:entity("npc_neutral_placeholder", Position.world{ 460, 130 }, { "npc", "shimmy_customer" })
-        :can_script{ script = "Sally", story = "Sally" }
-        :can_move{ speed = 2.0 }
-        :can_speak{ file = "This curfew nonsense is a bad fucking joke..." }
+        :trait_scriptable{ script_id = "Sally", story_id = "Sally" }
+        :trait_movement{ speed = 2.0 }
+        :trait_speech{ file = "This curfew nonsense is a bad fucking joke..." }
 
     scene:entity("npc_neutral_placeholder", Position.world{ 400, 130 }, { "npc", "shimmy_customer" })
-        :can_script{ script = "Bill", story = "Bill" }
-        :can_move{ speed = 2.0 }
-        :can_speak{ file = "Shimmy really knows how to brew a strong drink." }
+        :trait_scriptable{ script_id = "Bill", story_id = "Bill" }
+        :trait_movement{ speed = 2.0 }
+        :trait_speech{ file = "Shimmy really knows how to brew a strong drink." }
 
     scene:entity("table_simple_wooden_long", Position.iso{ 490, 408 }, { "furniture", "wood" })
-        :boundary({ 0, 265 }, { 378, 110 })
+        :trait_customsort({ 0, 265 }, { 378, 110 })
 
     --     {
     --         "prefab": "table_simple_wooden_round",
