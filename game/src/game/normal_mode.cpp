@@ -29,10 +29,10 @@ void NormalMode::speak_action(const std::string& target, const std::string& spee
     if (sf::Vector2f(p_area->get_player().get_tracker().get_position()
                          - t.get_tracker().get_position()).lengthSquared() < (thresh * thresh * 1.1f)) {
         if (speech.ends_with(".shmy")) {
-            p_area->begin_dialogue(dialogue_from_file(speech), speech);
+            p_area->begin_dialogue(shmy::speech::load_from_file(speech), speech);
             p_area->set_mode(GameMode::Dialogue);
         } else {
-            p_area->begin_dialogue(dialogue_from_line(t.get_script_id(), speech), t.get_script_id());
+            p_area->begin_dialogue(shmy::speech::load_from_line(t.get_script_id(), speech), t.get_script_id());
             p_area->set_mode(GameMode::Dialogue);
         }
     } else {

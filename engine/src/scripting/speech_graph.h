@@ -6,36 +6,39 @@
 #include "flag_expr.h"
 
 
-struct SpeechResponse {
+namespace shmy { namespace speech {
+
+struct Response {
     FlagExpr conditions;
     std::string text;
     std::string edge;
     std::unordered_map<std::string, FlagModifier> flags;
 };
-struct SpeechGoto { std::string vertex; };
-struct SpeechExit {};
-struct SpeechExitInto { std::string script; };
+struct Goto { std::string vertex; };
+struct Exit {};
+struct ExitInto { std::string script; };
 
-using SpeechOutcome = std::variant<std::vector<SpeechResponse>, SpeechGoto, SpeechExit, SpeechExitInto>;
+using Outcome = std::variant<std::vector<Response>, Goto, Exit, ExitInto>;
 
-struct SpeechVertex {
+struct Vertex {
     FlagExpr conditions;
     std::string speaker;
     std::vector<std::string> lines;
-    SpeechOutcome outcome;
+    Outcome outcome;
 };
 
-using SpeechGraph = std::unordered_map<std::string, SpeechVertex>;
+using Graph = std::unordered_map<std::string, Vertex>;
 
 
-SpeechGraph dialogue_from_file(const std::string& filename);
-SpeechGraph dialogue_from_string(const std::string& str);
-SpeechGraph dialogue_from_line(const std::string& speaker, const std::string& line);
+Graph load_from_file(const std::string& filename);
+Graph load_from_string(const std::string& str);
+Graph load_from_line(const std::string& speaker, const std::string& line);
 
 
-bool operator==(const SpeechResponse& a, const SpeechResponse& b);
-bool operator==(const SpeechExit& a, const SpeechExit& b);
-bool operator==(const SpeechExitInto& a, const SpeechExitInto& b);
-bool operator==(const SpeechGoto& a, const SpeechGoto& b);
-bool operator==(const SpeechVertex& a, const SpeechVertex& b);
+bool operator==(const Vertex& a, const Vertex& b);
+bool operator==(const Response& a, const Response& b);
+bool operator==(const Goto& a, const Goto& b);
+bool operator==(const Exit& a, const Exit& b);
+bool operator==(const ExitInto& a, const ExitInto& b);
 
+} }

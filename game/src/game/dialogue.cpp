@@ -4,6 +4,8 @@
 #include "scripting/speech_graph.h"
 
 
+namespace dia = shmy::speech;
+
 static void set_response_flags(const std::unordered_map<std::string, FlagModifier>& flags) {
     for (const auto& [k, v] : flags) {
         FlagTable::change_flag(k, v);
@@ -11,7 +13,7 @@ static void set_response_flags(const std::unordered_map<std::string, FlagModifie
 }
 
 
-void Dialogue::begin(SpeechGraph&& graph, GameMode init_mode, const std::string& id) {
+void Dialogue::begin(dia::Graph&& graph, GameMode init_mode, const std::string& id) {
     m_id = id;
     m_graph = std::move(graph);
     m_vertex = "";
@@ -43,7 +45,7 @@ void Dialogue::advance(size_t index) {
     case State::Empty: case State::EmptyWithFollowup:
         throw std::exception("no active dialogue");
     case State::Player: {
-        const auto& options = std::get<std::vector<SpeechResponse>>(current_vertex().outcome);
+        const auto& options = std::get<std::vector<dia::Response>>(current_vertex().outcome);
         const auto& response = options[index];
         set_response_flags(response.flags);
         if (response.edge == "exit") {
@@ -57,12 +59,12 @@ void Dialogue::advance(size_t index) {
     case State::Lines:
         m_vertex_index++;
         if (m_vertex_index == current_vertex().lines.size()) {
-            if (std::holds_alternative<SpeechExit>(current_vertex().outcome)) {
+            if (std::holds_alternative<dia::Exit>(current_vertex().outcome)) {
                 m_state = State::Empty;
-            } else if (const auto script = std::get_if<SpeechExitInto>(&current_vertex().outcome)) {
+            } else if (const auto script = std::get_if<dia::ExitInto>(&current_vertex().outcome)) {
                 m_followup = script->script;
                 m_state = State::EmptyWithFollowup;
-            } else if (auto vert = std::get_if<SpeechGoto>(&current_vertex().outcome)) {
+            } else if (auto vert = std::get_if<dia::Goto>(&current_vertex().outcome)) {
                 m_vertex = vert->vertex;
                 m_vertex_index = 0;
             } else {
@@ -87,7 +89,7 @@ Dialogue::Element Dialogue::get_current_element() const {
     case State::Empty: case State::EmptyWithFollowup:
         throw std::exception("no active dialogue");
     case State::Player: {
-        const auto& options = std::get<std::vector<SpeechResponse>>(current_vertex().outcome);
+        const auto& options = std::get<std::vector<dia::Response>>(current_vertex().outcome);
         auto vec = std::vector<Choice>();
         for (size_t i = 0; i < options.size(); i++) {
             if (options[i].conditions.evaluate()) {

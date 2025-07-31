@@ -20,7 +20,7 @@ struct Trigger {
     sfu::RotatedFloatRect bounds;
     TriggerAction action;
     std::string once_id;
-    FlagExpr condition = FlagExpr::True();
+    shmy::FlagExpr condition = shmy::FlagExpr::True();
     bool cooldown = false;
 };
 

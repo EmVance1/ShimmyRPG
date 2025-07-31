@@ -1,12 +1,12 @@
 {
     "textures": {
-        "player_placeholder":        { "file": "ademmar/player_placeholder.png",       "outlined": true, "smooth": true, "dims": [1, 1] },
-        "anim_test":                 { "file": "ademmar/anim_test.png",                "outlined": true, "smooth": true, "dims": [4, 5] },
-        "npc_neutral_placeholder":   { "file": "ademmar/npc_neutral_placeholder.png",  "outlined": true, "smooth": true, "dims": [1, 1] },
-        "npc_friendly_placeholder":  { "file": "ademmar/npc_friendly_placeholder.png", "outlined": true, "smooth": true, "dims": [1, 1] },
-        "table_simple_wooden_long":  { "file": "ademmar/table_long.png",               "outlined": true, "smooth": true, "dims": [1, 1] },
-        "table_simple_wooden_round": { "file": "ademmar/table_round.png",              "outlined": true, "smooth": true, "dims": [1, 1] },
-        "door_simple_wooden_single": { "file": "ademmar/door.png",                     "outlined": true, "smooth": true, "dims": [1, 1] }
+        "player_placeholder":        { "file": "textures/ademmar/player_placeholder.png",       "outlined": true, "smooth": true, "dims": [1, 1] },
+        "anim_test":                 { "file": "textures/ademmar/anim_test.png",                "outlined": true, "smooth": true, "dims": [4, 5] },
+        "npc_neutral_placeholder":   { "file": "textures/ademmar/npc_neutral_placeholder.png",  "outlined": true, "smooth": true, "dims": [1, 1] },
+        "npc_friendly_placeholder":  { "file": "textures/ademmar/npc_friendly_placeholder.png", "outlined": true, "smooth": true, "dims": [1, 1] },
+        "table_simple_wooden_long":  { "file": "textures/ademmar/table_long.png",               "outlined": true, "smooth": true, "dims": [1, 1] },
+        "table_simple_wooden_round": { "file": "textures/ademmar/table_round.png",              "outlined": true, "smooth": true, "dims": [1, 1] },
+        "door_simple_wooden_single": { "file": "textures/ademmar/door.png",                     "outlined": true, "smooth": true, "dims": [1, 1] }
     },
     "gui_style": "wooden",
     "areas": [

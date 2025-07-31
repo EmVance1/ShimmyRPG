@@ -2,6 +2,8 @@
 #include "lexer.h"
 
 
+namespace shmy { namespace detail {
+
 constexpr static bool SYM_LUT[] = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 1, 1, 1, 0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 1,
@@ -171,3 +173,4 @@ std::optional<Token> Lexer::next() {
     return {};
 }
 
+} }

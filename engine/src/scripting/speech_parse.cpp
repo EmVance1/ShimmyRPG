@@ -5,19 +5,26 @@
 #include <stdexcept>
 
 
-using SpeechVertexTuple = std::pair<std::string, SpeechVertex>;
+using namespace shmy::detail;
 
-std::optional<SpeechVertexTuple> parse_vertex(Lexer& lexer, size_t& entrycount);
-SpeechOutcome parse_outcome(Lexer& lexer);
+namespace shmy {
+
 FlagExpr parse_flag_expr(Lexer& lexer);
-void set_pragma(const std::string& pragma);
+
+namespace speech {
+
+using VertexTuple = std::pair<std::string, Vertex>;
+
+static std::optional<VertexTuple> parse_vertex(Lexer& lexer, size_t& entrycount);
+static Outcome parse_outcome(Lexer& lexer);
+static void set_pragma(const std::string& pragma);
 
 
 static bool p_set_strict = true;
 static size_t p_pool_size = 16;
 
-SpeechGraph parse_speechgraph(Lexer lexer) {
-    auto result = SpeechGraph();
+Graph parse_graph(Lexer&& lexer) {
+    auto result = Graph();
     size_t entrycount = 0;
     p_set_strict = true;
 
@@ -31,7 +38,7 @@ SpeechGraph parse_speechgraph(Lexer lexer) {
 }
 
 
-std::string span_to_str(size_t row, size_t col) {
+static std::string span_to_str(size_t row, size_t col) {
     return std::to_string(row) + ":" + std::to_string(col);
 }
 
@@ -46,7 +53,7 @@ static std::string unwrap_token(const std::optional<Token>& value, int expect) {
         throw std::invalid_argument(std::string("token unwrapped to wrong type - ") + span_to_str(value->row, value->col));
 }
 
-std::optional<SpeechVertexTuple> parse_vertex(Lexer& lexer, size_t& entrycount) {
+static std::optional<VertexTuple> parse_vertex(Lexer& lexer, size_t& entrycount) {
     auto next = lexer.next();
     if (!next.has_value()) { return {}; }
     while (next->type == TokenType::Pragma) { set_pragma(next->val); next = lexer.next(); if (!next.has_value()) { return {}; } }
@@ -79,28 +86,28 @@ std::optional<SpeechVertexTuple> parse_vertex(Lexer& lexer, size_t& entrycount) 
     }
 after_loop1:
     unwrap_token(lexer.next(), TokenType::Arrow);
-    return { { key, SpeechVertex{ std::move(conditions), speaker, lines, parse_outcome(lexer) } } };
+    return { { key, Vertex{ std::move(conditions), speaker, lines, parse_outcome(lexer) } } };
 }
 
-SpeechOutcome parse_outcome(Lexer& lexer) {
+static Outcome parse_outcome(Lexer& lexer) {
     auto next = lexer.next();
     switch (next->type) {
     case TokenType::Identifier:
         if (next->val== "exit") {
-            return SpeechExit{};
+            return Exit{};
         } else if (next->val == "exit_into") {
             unwrap_token(lexer.next(), TokenType::OpenBrace);
             const auto script = unwrap_token(lexer.next(), TokenType::StringLiteral);
             unwrap_token(lexer.next(), TokenType::CloseBrace);
-            return SpeechExitInto(script);
+            return ExitInto(script);
         } else {
-            return SpeechGoto(next->val);
+            return Goto(next->val);
         }
     case TokenType::OpenBrace: break;
     default: throw std::invalid_argument(std::string("token unwrapped to wrong type - ") + span_to_str(next->row, next->col));
     }
 
-    auto responses = std::vector<SpeechResponse>();
+    auto responses = std::vector<Response>();
     while (true) {
         auto conditions = FlagExpr::True();
         auto text = std::string("");
@@ -166,7 +173,7 @@ after_loop3:
         }
 
 this_one:
-        responses.emplace_back(SpeechResponse{
+        responses.emplace_back(Response{
             std::move(conditions),
             text,
             edge,
@@ -179,7 +186,7 @@ after_loop2:
 }
 
 
-void set_pragma(const std::string& pragma) {
+static void set_pragma(const std::string& pragma) {
     if (pragma == "!SET_OR_CREATE") {
         p_set_strict = false;
     } else if (pragma == "!SET_STRICT") {
@@ -193,3 +200,4 @@ void set_pragma(const std::string& pragma) {
     }
 }
 
+} }

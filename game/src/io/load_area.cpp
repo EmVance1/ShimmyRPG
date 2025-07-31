@@ -112,7 +112,7 @@ void Area::init(const rapidjson::Value& prefabs, const rapidjson::Document& doc)
         if (e.HasMember("condition")) {
             const auto cond = std::string(JSON_GET_STR(e, "condition"));
             try {
-                t.condition = FlagExpr::from_string(cond);
+                t.condition = shmy::FlagExpr::from_string(cond);
             } catch (const std::exception& e) {
                 std::cout << "error parsing 'condition': " << e.what() << "\n";
             }

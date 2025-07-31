@@ -7,6 +7,7 @@
 #include "world/area.h"
 #include "world/region.h"
 #include "objects/entity.h"
+#include "io/env.h"
 #include <unordered_set>
 
 
@@ -288,7 +289,7 @@ int l_yield_dialogue(lua_State* L) {
         lua_pushstring(L, "script");
         lua_gettable(L, LUA_REGISTRYINDEX);
         const auto script = static_cast<lua::Script*>(lua_touserdata(L, -1));
-        auto dia = dialogue_from_file(filename);
+        auto dia = shmy::speech::load_from_file(shmy::env::get() + filename);
         script->parent_area().begin_dialogue(std::move(dia), filename);
     } catch (const std::exception& e) {
         std::cerr << "dialogue error: " << e.what() << "\n";
@@ -304,7 +305,7 @@ int l_yield_dialogue(lua_State* L) {
     lua_pushstring(L, "script");
     lua_gettable(L, LUA_REGISTRYINDEX);
     const auto script = static_cast<lua::Script*>(lua_touserdata(L, -1));
-    script->parent_area().begin_dialogue(dialogue_from_file(filename), filename);
+    script->parent_area().begin_dialogue(shmy::speech::load_from_file(shmy::env::get() + filename), filename);
 
     lua_pushnumber(L, 0.0);
     return lua_yield(L, 1);

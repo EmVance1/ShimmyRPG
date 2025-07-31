@@ -1,6 +1,6 @@
 #pragma once
-#include "flags.h"
+#include <string>
 
 
-void load_flags();
+void load_flags(const std::string& dir);
 

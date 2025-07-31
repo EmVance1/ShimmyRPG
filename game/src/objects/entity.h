@@ -43,7 +43,7 @@ private:
     sfu::AnimatedSprite m_sprite;
     sfu::AnimatedSprite m_outline_sprite;
 
-    PathTracker m_tracker;
+    shmy::PathTracker m_tracker;
     SortBoundary m_boundary;
     sfu::FloatCircle m_collider;
 
@@ -90,8 +90,8 @@ public:
     void set_dialogue(const std::string& filename);
     const std::string& get_dialogue() const;
 
-    const PathTracker& get_tracker() const { return m_tracker; }
-    PathTracker& get_tracker() { return m_tracker; }
+    const shmy::PathTracker& get_tracker() const { return m_tracker; }
+    shmy::PathTracker& get_tracker() { return m_tracker; }
 
     const std::vector<ContextAction>& get_actions() const { return m_actions; }
     std::vector<ContextAction>& get_actions() { return m_actions; }

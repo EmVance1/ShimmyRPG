@@ -5,7 +5,7 @@
         "scale": 5.35
     },
     "background": [
-        { "file": "ademmar/shimmyshack.png", "bounds": [ -68, -70, 2054, 1156 ] }
+        { "file": "textures/ademmar/shimmyshack.png", "bounds": [ -68, -70, 2054, 1156 ] }
     ],
     "triggers": [
         {
@@ -17,13 +17,13 @@
         {
             "//": "welcome cutscene",
             "rect": [ 140, 0, 394, 380 ],
-            "action": { "BeginScript": "res/scripts/ShimmyIntroScene.lua" },
+            "action": { "BeginScript": "scripts/ShimmyIntroScene.lua" },
             "condition": "ShimmyIntroScene_IsActive & once"
         },
         {
             "//": "behind bar",
             "rect": [ 192, 0, 342, 100 ],
-            "action": { "BeginDialogue": "res/scripts/ShimmyBehindBar.shmy" }
+            "action": { "BeginDialogue": "speech/ShimmyBehindBar.shmy" }
         },
         {
             "//": "curfew blocker",
@@ -42,13 +42,13 @@
             "texture": "npc_friendly_placeholder", "position": { "world": [ 330, 50 ] }, "tags": [ "npc", "trader", "shimmy_staff" ],
             "trait_scriptable": { "script_id": "ShimmyPrime", "story_id": "Shimmy" },
             "trait_movement": { "speed": 2.0 },
-            "trait_speech": { "file": "res/scripts/ShimmyDialogue.shmy" }
+            "trait_speech": { "file": "speech/ShimmyDialogue.shmy" }
         },
         {
             "texture": "npc_friendly_placeholder", "position": { "world": [ 500, 290 ] }, "tags": [ "npc", "shimmy_customer" ],
             "trait_scriptable": { "script_id": "BrianPrime", "story_id": "Brian" },
             "trait_movement": { "speed": 2.0 },
-            "trait_speech": { "file": "res/scripts/BrianDialogue.shmy" }
+            "trait_speech": { "file": "speech/BrianDialogue.shmy" }
         },
         {
             "texture": "npc_neutral_placeholder", "position": { "world": [ 460, 130 ] }, "tags": [ "npc", "shimmy_customer" ],

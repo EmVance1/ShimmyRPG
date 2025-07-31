@@ -2,7 +2,7 @@
 #include "filters.h"
 
 
-namespace filter {
+namespace shmy { namespace filter {
 
 constexpr uint8_t TRANSPARENT_THRESHOLD = 70;
 
@@ -192,4 +192,4 @@ sf::Image map_area_threaded(const sf::Image& img, int avoid_radius) {
 }
 */
 
-}
+} }

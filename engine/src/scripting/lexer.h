@@ -1,8 +1,9 @@
 #pragma once
 #include <string>
 #include <optional>
-#include <string_view>
 
+
+namespace shmy { namespace detail {
 
 class LexerError : public std::exception {
 private:
@@ -74,3 +75,4 @@ public:
     std::optional<Token> next();
 };
 
+} }

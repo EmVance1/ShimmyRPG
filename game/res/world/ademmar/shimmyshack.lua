@@ -14,7 +14,7 @@ function Setup(scene)
     scene.scale = 5.35
 
     scene.background = {
-        { "ademmar/shimmyshack.png", { -68, -70, 2054, 1156 } }
+        { "textures/ademmar/shimmyshack.png", { -68, -70, 2054, 1156 } }
     },
 
     -- front door
@@ -22,7 +22,7 @@ function Setup(scene)
         :condition("!Ademmar_CurfewInPlace")
 
     -- welcome cutscene
-    scene:trigger_rect({ 140, 0, 394, 380 },  Action.script("res/scripts/ShimmyIntroScene.lua"))
+    scene:trigger_rect({ 140, 0, 394, 380 },  Action.script("speech/ShimmyIntroScene.lua"))
         :condition("ShimmyIntroScene_IsActive & once")
 
     -- curfew blocker
@@ -30,7 +30,7 @@ function Setup(scene)
         :condition("Ademmar_CurfewInPlace")
 
     -- behind bar
-    scene:trigger_rect({ 192, 0, 342, 100 },  Action.dialogue("res/scripts/ShimmyBehindBar.shmy"))
+    scene:trigger_rect({ 192, 0, 342, 100 },  Action.dialogue("speech/ShimmyBehindBar.shmy"))
 
 
     scene:entity("player_placeholder", Position.world{ 320, 480 }, { "player" })
@@ -40,12 +40,12 @@ function Setup(scene)
     scene:entity("anim_test", Position.world{ 330, 50 }, { "npc", "trader", "shimmy_staff" })
         :trait_scriptable{ script_id = "ShimmyPrime", story_id = "Shimmy" }
         :trait_movement{ speed = 2.0 }
-        :trait_speech{ file = "res/scripts/ShimmyDialogue.shmy" }
+        :trait_speech{ file = "speech/ShimmyDialogue.shmy" }
 
     scene:entity("npc_friendly_placeholder", Position.world{ 500, 290 }, { "npc", "shimmy_customer" })
         :trait_scriptable{ script_id = "BrianPrime", story_id = "Brian" }
         :trait_movement{ speed = 2.0 }
-        :trait_speech{ file = "res/scripts/BrianDialogue.shmy" }
+        :trait_speech{ file = "speech/BrianDialogue.shmy" }
 
     scene:entity("npc_neutral_placeholder", Position.world{ 460, 130 }, { "npc", "shimmy_customer" })
         :trait_scriptable{ script_id = "Sally", story_id = "Sally" }

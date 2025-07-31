@@ -11,6 +11,8 @@ nav::Vector2f from_sf(const sf::Vector2f& v);
 }
 
 
+namespace shmy {
+
 class PathTracker {
 public:
     constexpr static float MAX_PENALTY = 100000.f;
@@ -58,3 +60,4 @@ public:
     void progress();
 };
 
+}

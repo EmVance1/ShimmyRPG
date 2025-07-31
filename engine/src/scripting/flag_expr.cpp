@@ -7,6 +7,8 @@ static std::random_device RD;
 static std::mt19937 RNG(RD());
 
 
+namespace shmy {
+
 int FlagExpr::evaluate() const {
     switch (op){
     case FlagExpr::Type::Or:
@@ -95,3 +97,4 @@ bool operator==(const FlagExpr& a, const FlagExpr& b) {
            a.name == b.name;
 }
 
+}

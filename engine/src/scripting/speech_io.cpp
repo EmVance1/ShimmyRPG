@@ -4,26 +4,28 @@
 #include "util/str.h"
 
 
-SpeechGraph parse_speechgraph(Lexer lexer);
+namespace shmy { namespace speech {
 
-SpeechGraph dialogue_from_file(const std::string& filename) {
+Graph parse_graph(detail::Lexer&& lexer);
+
+Graph load_from_file(const std::string& filename) {
     const auto src = read_to_string(filename);
-    auto lexer = Lexer(src);
+    auto lexer = detail::Lexer(src);
     try {
-        return parse_speechgraph(lexer);
+        return parse_graph(std::move(lexer));
     } catch (const std::exception& e) {
         std::cout << e.what() << "\n";
         return {};
     }
 }
 
-SpeechGraph dialogue_from_line(const std::string& speaker, const std::string& line) {
-    auto res = SpeechGraph();
-    res.emplace("entry0", SpeechVertex{
+Graph load_from_line(const std::string& speaker, const std::string& line) {
+    auto res = Graph();
+    res.emplace("entry0", Vertex{
         FlagExpr::True(),
         speaker,
         { line },
-        SpeechExit{}
+        Exit{}
     });
     return res;
 }
@@ -103,3 +105,4 @@ void write(std::ostream& stream, const SpeechGraph& graph) {
 }
 */
 
+} }

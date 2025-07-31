@@ -88,7 +88,7 @@ struct Area {
     void update_motionguide();
     void handle_trigger(const Trigger& trigger);
 
-    void begin_dialogue(SpeechGraph&& graph, const std::string& id);
+    void begin_dialogue(shmy::speech::Graph&& graph, const std::string& id);
     void begin_combat(
             const std::unordered_set<std::string>& ally_tags,
             const std::unordered_set<std::string>& enemy_tags,

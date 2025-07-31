@@ -5,7 +5,7 @@
         "scale": 5.09
     },
     "background": [
-        { "file": "ademmar/fountainroad.png", "bounds": [ 0, 0, 1920, 1080 ] }
+        { "file": "textures/ademmar/fountainroad.png", "bounds": [ 0, 0, 1920, 1080 ] }
     ],
     "triggers": [
         {
@@ -16,17 +16,13 @@
     ],
     "entities": [
         {
-            "ids": { "script": "player", "story": "-" },
-            "texture": "player_placeholder",
-            "position": { "world": [ 350, 450 ] },
-            "controller": { "speed": 2.5 },
-            "tags": [ "player" ]
+            "texture": "player_placeholder", "position": { "world": [ 350, 450 ] }, "tags": [ "player" ],
+            "trait_scriptable": { "script_id": "player", "story_id": "-" },
+            "trait_movement": { "speed": 2.5 }
         },
         {
-            "texture": "door_simple_wooden_single",
-            "position": { "iso": [ 1170, 250 ] },
-            "boundary": [ [0, 155], [99, 204] ],
-            "tags": [ "door", "wood", "simple_lock" ]
+            "texture": "door_simple_wooden_single", "position": { "iso": [ 1170, 250 ] }, "tags": [ "door", "wood", "simple_lock" ],
+            "trait_customsort": [ [0, 155], [99, 204] ]
         }
     ]
 }

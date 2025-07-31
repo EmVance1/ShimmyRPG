@@ -6,7 +6,7 @@ function OnStartAsync()
 
     shmy.set_mode(shmy.mode.CINEMATIC)
     shmy.yield_seconds(1.0)
-    shmy.yield_to_dialogue("res/scripts/ShimmyIntroScene.shmy")
+    shmy.yield_to_dialogue("speech/ShimmyIntroScene.shmy")
 
     shmy.flags["ShimmyIntroScene_HasPlayed"] = 1
 

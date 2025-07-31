@@ -3,15 +3,30 @@
 #include "lexer.h"
 
 
-FlagExpr parse_or(Lexer& lexer, Token& next);
-FlagExpr parse_and(Lexer& lexer, Token& next);
-FlagExpr parse_eq(Lexer& lexer, Token& next);
-FlagExpr parse_cmp(Lexer& lexer, Token& next);
-FlagExpr parse_unit(Lexer& lexer, Token& next);
-FlagExpr parse_random(const std::string& id);
+namespace shmy {
+
+using namespace detail;
+
+static FlagExpr parse_or(Lexer& lexer, Token& next);
+static FlagExpr parse_and(Lexer& lexer, Token& next);
+static FlagExpr parse_eq(Lexer& lexer, Token& next);
+static FlagExpr parse_cmp(Lexer& lexer, Token& next);
+static FlagExpr parse_unit(Lexer& lexer, Token& next);
+static FlagExpr parse_random(const std::string& id);
+
+FlagExpr parse_flag_expr(Lexer& lexer) {
+    auto next = *lexer.next();
+    return parse_or(lexer, next);
+}
+
+FlagExpr FlagExpr::from_string(const std::string& expr) {
+    const auto temp = expr + ")";
+    auto lexer = Lexer(temp);
+    return parse_flag_expr(lexer);
+}
 
 
-FlagExpr parse_or(Lexer& lexer, Token& next) {
+static FlagExpr parse_or(Lexer& lexer, Token& next) {
     auto a = parse_and(lexer, next);
 
     while (true) {
@@ -29,7 +44,7 @@ FlagExpr parse_or(Lexer& lexer, Token& next) {
     }
 }
 
-FlagExpr parse_and(Lexer& lexer, Token& next) {
+static FlagExpr parse_and(Lexer& lexer, Token& next) {
     auto a = parse_eq(lexer, next);
 
     while (true) {
@@ -49,7 +64,7 @@ FlagExpr parse_and(Lexer& lexer, Token& next) {
     }
 }
 
-FlagExpr parse_eq(Lexer& lexer, Token& next) {
+static FlagExpr parse_eq(Lexer& lexer, Token& next) {
     auto a = parse_cmp(lexer, next);
 
     while (true) {
@@ -74,7 +89,7 @@ FlagExpr parse_eq(Lexer& lexer, Token& next) {
     }
 }
 
-FlagExpr parse_cmp(Lexer& lexer, Token& next) {
+static FlagExpr parse_cmp(Lexer& lexer, Token& next) {
     auto a = parse_unit(lexer, next);
 
     while (true) {
@@ -109,7 +124,7 @@ FlagExpr parse_cmp(Lexer& lexer, Token& next) {
     }
 }
 
-FlagExpr parse_unit(Lexer& lexer, Token& next) {
+static FlagExpr parse_unit(Lexer& lexer, Token& next) {
     switch (next.type) {
     case TokenType::Identifier: {
         auto id = next.val;
@@ -147,20 +162,7 @@ FlagExpr parse_unit(Lexer& lexer, Token& next) {
     }
 }
 
-FlagExpr parse_flag_expr(Lexer& lexer) {
-    auto next = *lexer.next();
-    return parse_or(lexer, next);
-}
-
-FlagExpr FlagExpr::from_string(const std::string& expr) {
-    const auto temp = expr + ")";
-    auto lexer = Lexer(temp);
-    return parse_flag_expr(lexer);
-}
-
-
-
-FlagExpr parse_random(const std::string& id) {
+static FlagExpr parse_random(const std::string& id) {
     auto num = std::string("");
     auto i = 0;
     while (isdigit(id[id.size() - 1 - i])) {
@@ -176,3 +178,4 @@ FlagExpr parse_random(const std::string& id) {
     }
 }
 
+}

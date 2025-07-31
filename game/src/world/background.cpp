@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "background.h"
 #include "util/json.h"
+#include "io/env.h"
 
 
 AsyncBackground::AsyncBackground(AsyncBackground&& other)
@@ -12,7 +13,7 @@ void AsyncBackground::load_from_json(const rapidjson::Value& value, float margin
     m_tiles.reserve(value.GetArray().Size());
     for (const auto& pair : value.GetArray()) {
         m_tiles.emplace_back(
-            std::string("res/textures/") + pair["file"].GetString(),
+            shmy::env::get() + pair["file"].GetString(),
             json_to_floatrect(pair["bounds"])
         );
     }

@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "load_flags.h"
+#include "flags.h"
 
 
 static void load_file(const std::string& filename, const std::string& prefix) {
@@ -46,13 +47,13 @@ static void load_file(const std::string& filename, const std::string& prefix) {
 }
 
 
-void load_flags() {
+void load_flags(const std::string& dir) {
     FlagTable::set_flag("true", 1, false);
     FlagTable::set_flag("false", 0, false);
     FlagTable::set_flag("inf", UINT32_MAX, false);
     FlagTable::set_flag("default", 1, false);
 
-    for (const auto& f : std::fs::directory_iterator("res/flags/")) {
+    for (const auto& f : std::fs::directory_iterator(dir)) {
         load_file(f.path().generic_string(), f.path().stem().generic_string());
     }
 }

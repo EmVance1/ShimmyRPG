@@ -3,6 +3,8 @@
 #include <memory>
 
 
+namespace shmy {
+
 struct FlagExpr {
     enum class Type {
         Or,
@@ -128,3 +130,4 @@ struct FlagExpr {
 bool operator==(const FlagExpr& a, const FlagExpr& b);
 std::ostream& operator<<(std::ostream& stream, const FlagExpr& value);
 
+}

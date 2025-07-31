@@ -2,7 +2,7 @@
 #include "util/str.h"
 
 
-void split_commas() {
+test(split_commas) {
     const auto testcase1 = "oief, woeif, weoifh,oiq,qwoif qwifh";
     const auto expect1 = std::vector<std::string>{ "oief", " woeif", " weoifh", "oiq", "qwoif qwifh" };
     assert_eq(expect1, split_string(testcase1, ','));
@@ -16,7 +16,7 @@ void split_commas() {
     assert_eq(expect3, split_string(testcase3, ','));
 }
 
-void trim_whitespace() {
+test(trim_whitespace) {
     const auto testcase1 = " weih ";
     const auto expect1 = "weih";
     assert_eq(expect1, trim_string(testcase1));

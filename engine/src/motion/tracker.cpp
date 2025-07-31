@@ -11,6 +11,8 @@ nav::Vector2f from_sf(const sf::Vector2f& v) { return nav::Vector2f(v.x, v.y); }
 }
 
 
+namespace shmy {
+
 bool PathTracker::set_position(const sf::Vector2f& pos) {
     if (!mesh->get_triangle(nav::from_sf(pos), 0.05f).has_value()) { return false; }
     position = pos;
@@ -168,4 +170,6 @@ void PathTracker::progress() {
         const auto dir = diff * (1.f / dist);
         position += dir * speed;
     }
+}
+
 }

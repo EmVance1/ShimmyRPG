@@ -7,6 +7,7 @@
 #include "objects/trigger.h"
 #include "scripting/lua/script.h"
 #include "gui/gui.h"
+#include "io/env.h"
 
 
 static std::mt19937 RNG{ std::random_device()() };
@@ -34,12 +35,12 @@ void Area::handle_trigger(const Trigger& trigger) {
     case 0: {
         const auto loadscript = std::get<BeginScript>(trigger.action);
         auto& s = scripts.emplace_back(*this);
-        s.load_from_file(loadscript.filename);
+        s.load_from_file(shmy::env::get() + loadscript.filename);
         s.start();
         break; }
     case 1: {
         const auto loaddia = std::get<BeginDialogue>(trigger.action);
-        begin_dialogue(dialogue_from_file(loaddia.filename), loaddia.filename);
+        begin_dialogue(shmy::speech::load_from_file(shmy::env::get() + loaddia.filename), loaddia.filename);
         set_mode(GameMode::Dialogue);
         break; }
     case 2: {
@@ -79,7 +80,7 @@ void Area::handle_trigger(const Trigger& trigger) {
     }
 }
 
-void Area::begin_dialogue(SpeechGraph&& graph, const std::string& dia_id) {
+void Area::begin_dialogue(shmy::speech::Graph&& graph, const std::string& dia_id) {
     dialogue.begin(std::move(graph), gamemode, dia_id);
     const auto line = std::get<Dialogue::Line>(dialogue.get_current_element());
     auto dia_gui = gui.get_widget<gui::Panel>("dialogue");

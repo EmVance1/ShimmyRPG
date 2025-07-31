@@ -4,6 +4,7 @@
 #include "util/json.h"
 #include "graphics/filters.h"
 #include "time/deltatime.h"
+#include "io/env.h"
 
 
 #define OUTLINE_WIDTH 5
@@ -21,29 +22,29 @@ void Region::load_from_folder(const std::string& folder, size_t initial_area) {
 
     for (const auto& [k, v] : doc["textures"].GetObject()) {
         const auto name = std::string(k.GetString());
-        const auto texfile = std::string("res/textures/") + v["file"].GetString();
+        const auto texfile = shmy::env::get() + v["file"].GetString();
         const auto outline = v["outlined"].IsTrue();
         const auto smooth  = v["smooth"].IsTrue();
         const auto dims    = json_to_vector2u(v["dims"]);
 
         const auto img = sf::Image(texfile);
         m_alphamaps[name + "_map"].loadFromImage(
-                (img.getSize().x < 200) ? filter::clickmap(img, OUTLINE_WIDTH) : filter::clickmap_threaded(img, OUTLINE_WIDTH)
+                (img.getSize().x < 200) ? shmy::filter::clickmap(img, OUTLINE_WIDTH) : shmy::filter::clickmap_threaded(img, OUTLINE_WIDTH)
             );
         std::ignore = m_atlases[name].loadFromImage(img, dims);
         m_atlases[name].setSmooth(smooth);
         if (!outline) { continue; }
         std::ignore = m_atlases[name + "_outline"].loadFromImage(
-                (img.getSize().x < 200) ? filter::outline(img, OUTLINE_WIDTH) : filter::outline_threaded(img, OUTLINE_WIDTH), dims
+                (img.getSize().x < 200) ? shmy::filter::outline(img, OUTLINE_WIDTH) : shmy::filter::outline_threaded(img, OUTLINE_WIDTH), dims
             );
         m_atlases[name + "_outline"].setSmooth(smooth);
     }
 
-    m_guistyle.load_from_folder(std::string("res/gui/") + doc["gui_style"].GetString() + "/");
+    m_guistyle.load_from_folder(shmy::env::get() + "gui/" + doc["gui_style"].GetString() + "/");
 
     const auto& areas = doc["areas"].GetArray();
     m_areas.reserve(areas.Size());
-    const auto prefabs = load_json_from_file("res/prefabs.json");
+    const auto prefabs = load_json_from_file(shmy::env::get() + "prefabs.json");
     for (const auto& area : areas) {
         m_areas.emplace_back(area.GetString(), this);
     }

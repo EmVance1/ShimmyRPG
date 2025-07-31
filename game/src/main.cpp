@@ -1,9 +1,11 @@
 #include "pch.h"
-#include "sfutil/sfutil.h"
+#include <sfutil/sfutil.h>
 #include "time/deltatime.h"
 #include "world/region.h"
 #include "world/area.h"
 #include "io/load_flags.h"
+#include "io/env.h"
+#include "util/str.h"
 
 
 #ifdef DEBUG
@@ -26,13 +28,18 @@ int main() {
     auto target = sfu::PostFx();
     auto _ = target.resize(window.getSize());
 
-    load_flags();
     auto region = Region();
-    auto startup_file = std::ifstream("res/startup.txt");
     auto region_folder = std::string("");
-    auto region_area = 0;
-    startup_file >> region_folder >> region_area;
-    region.load_from_folder(region_folder, region_area);
+    {
+        auto startup_file = std::ifstream("startup.txt");
+        auto startup_env = std::string("");
+        startup_file >> startup_env;
+        auto tokens = split_string(startup_env, ':');
+        shmy::env::set(tokens[0] + '/');
+        region_folder = tokens[1] + '/';
+        load_flags(shmy::env::get() + "flags");
+        region.load_from_folder(shmy::env::get() + region_folder, std::atoi(tokens[2].c_str()));
+    }
 
     // auto& pixelate = target.loadShaderFromFile("res/shaders/pixelate.frag");
     // pixelate.setUniform("u_resolution", (sf::Vector2f)window.getSize());
@@ -46,12 +53,12 @@ int main() {
     // glitch.setUniform("u_dist", 3);
     // glitch.setUniform("u_resolution", (sf::Vector2f)window.getSize());
 
-    const auto font = sf::Font("res/calibri.ttf");
+    const auto font = sf::Font("calibri.ttf");
     auto fps_draw = sf::Text(font, "0", 25);
     fps_draw.setPosition({ 10, 10 });
     fps_draw.setFillColor(sf::Color::White);
 
-    const auto cursor_tex = sf::Texture("res/textures/cursor.png");
+    const auto cursor_tex = sf::Texture(shmy::env::get() + "textures/cursor.png");
     auto cursor = sf::Sprite(cursor_tex);
     cursor.setOrigin({ 4, 3 });
 
@@ -70,9 +77,9 @@ int main() {
             } else if (const auto kyp = event->getIf<sf::Event::KeyPressed>()) {
                 if (kyp->code == sf::Keyboard::Key::R && kyp->control) {
                     FlagTable::clear();
-                    load_flags();
+                    load_flags(shmy::env::get() + "flags");
                     const auto temp = region.get_active_area_index();
-                    region.load_from_folder(region_folder, temp);
+                    region.load_from_folder(shmy::env::get() + region_folder, temp);
                 }
             }
 
