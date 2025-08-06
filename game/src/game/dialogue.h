@@ -1,6 +1,6 @@
 #pragma once
 #include <SFML/Graphics.hpp>
-#include "scripting/speech_graph.h"
+#include "scripting/speech/graph.h"
 #include "game/game_mode.h"
 
 

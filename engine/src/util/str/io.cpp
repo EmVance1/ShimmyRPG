@@ -2,23 +2,22 @@
 #include "../str.h"
 
 
-std::string read_to_string(const std::string& filename) {
-    auto f = std::ifstream(filename, std::ios::binary);
+namespace shmy { namespace str {
 
+std::string read_to_string(const std::fs::path& filename) {
+    auto f = std::ifstream(PATH_NORM(filename), std::ios::binary);
     f.seekg(0, std::ios::end);
     const auto size = (size_t)f.tellg();
     f.seekg(0, std::ios::beg);
-
-    auto buf = std::string("");
-    buf.resize(size);
-    f.read(buf.data(), size);
-    f.close();
-    return buf;
+    auto buffer = std::make_unique<char[]>(size);
+    f.read(buffer.get(), size);
+    return std::string(buffer.get(), size);
 }
 
-void write_to_file(const std::string& filename, const std::string& content) {
-    auto f = std::ofstream(filename);
+void write_to_file(const std::fs::path& filename, const std::string& content) {
+    auto f = std::ofstream(PATH_NORM(filename));
     f.write(content.data(), content.size());
     f.close();
 }
 
+} }

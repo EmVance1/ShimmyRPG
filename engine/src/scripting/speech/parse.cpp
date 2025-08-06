@@ -1,7 +1,7 @@
 #include "pch.h"
-#include "speech_graph.h"
-#include "flag_expr.h"
-#include "lexer.h"
+#include "graph.h"
+#include "../flag_expr.h"
+#include "../lexer.h"
 #include <stdexcept>
 
 
@@ -23,14 +23,13 @@ static void set_pragma(const std::string& pragma);
 static bool p_set_strict = true;
 static size_t p_pool_size = 16;
 
+
 Graph parse_graph(Lexer&& lexer) {
     auto result = Graph();
     size_t entrycount = 0;
     p_set_strict = true;
 
     while (auto pair = parse_vertex(lexer, entrycount)) {
-        // const auto [key, val] = *pair;
-        // result[pair->first] = std::move(pair->second);
         result.emplace(pair->first, std::move(pair->second));
     }
 

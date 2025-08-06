@@ -1,19 +1,18 @@
 #pragma once
 #include <SFML/Graphics.hpp>
-#include <unordered_map>
 #include <rapidjson/document.h>
 #include <sfutil/camera.h>
 #include <navmesh/lib.h>
-#include "lua/lua.h"
+#include <lua/lua.hpp>
+#include <unordered_map>
+#include "graphics/background.h"
+#include "gui/panel.h"
 #include "objects/entity.h"
 #include "objects/trigger.h"
 #include "scripting/lua/script.h"
 #include "game/dialogue.h"
 #include "action.h"
-#include "gui/panel.h"
-#include "background.h"
 #include "debugger.h"
-
 #include "game/game_mode.h"
 
 
@@ -26,7 +25,7 @@ struct Area {
     std::string id;
     std::string area_label;
 
-    AsyncBackground background;
+    shmy::AsyncBackground background;
     nav::NavMesh pathfinder;
     sf::Vector2f topleft;
     float scale;
@@ -44,7 +43,7 @@ struct Area {
     std::string player_id = "";
 
     lua_State* lua_vm;
-    std::vector<lua::Script> scripts;
+    std::vector<shmy::lua::Script> scripts;
     std::vector<Trigger> triggers;
     bool suppress_triggers = false;
     bool suppress_portals = false;

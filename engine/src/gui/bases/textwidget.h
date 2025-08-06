@@ -9,7 +9,7 @@ namespace gui {
 class TextWidget : public Widget {
 private:
     sf::Text m_label;
-    std::string m_label_value = "";
+    std::u32string m_label_value;
     uint32_t m_character_size = 25;
     Alignment m_text_alignment = Alignment::TopLeft;
     float m_text_padding = 5.f;
@@ -39,7 +39,8 @@ public:
     sf::Color get_text_color() { return m_label.getFillColor(); }
 
     void set_label(const std::string& label);
-    const std::string& get_label() const { return m_label_value; }
+    void set_label(const std::u32string& label);
+    const std::u32string& get_label() const { return m_label_value; }
 
     virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const {
         Widget::draw(target, states);

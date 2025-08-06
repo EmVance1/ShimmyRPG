@@ -1,35 +1,26 @@
-#include "SFML/Graphics/Color.hpp"
 #include "pch.h"
+#include <utf8.h>
 #include "textwidget.h"
 
 
 namespace gui {
 
-static void extend_str(std::string& sink, const std::string& src) {
-    for (const auto& c : src) {
-        sink.push_back(c);
-    }
-}
-
-static std::string wrapped(const std::string& src, const sf::Font& font, uint32_t character_size, float width) {
-    auto result = std::string("");
-    auto word = std::string("");
+static std::u32string wrapped(const std::u32string& src, const sf::Font& font, uint32_t character_size, float width) {
+    auto result = std::u32string();
+    auto word = std::u32string();
     auto line_width = 0.f;
     auto word_width = 0.f;
-    auto last = '\0';
+    auto last = U'\0';
 
-    for (const char c : src) {
+    for (const char32_t c : src) {
         const auto glyph = font.getGlyph(c, character_size, false);
-        auto diff = glyph.advance;
-        if (last != '\0') {
-            diff += font.getKerning(last, c, character_size);
-        }
+        const auto diff = glyph.advance + font.getKerning(last, c, character_size);
         if (line_width + word_width + diff <= width) {
             word.push_back(c);
             word_width += diff;
             if (c == ' ' || c == '\t' || c == '\n' || c == '\r') {
-                extend_str(result, word);
-                word = "";
+                result.insert(result.end(), word.begin(), word.end());
+                word.clear();
                 line_width += word_width;
                 word_width = 0.f;
             }
@@ -38,28 +29,28 @@ static std::string wrapped(const std::string& src, const sf::Font& font, uint32_
             line_width = 0.f;
             word.push_back(c);
             word_width += diff;
-            if (c == ' ' || c == '\t' || c == '\n' || c == '\r') {
-                extend_str(result, word);
-                word = "";
+            if (c == U' ' || c == U'\t' || c == U'\n' || c == U'\r') {
+                result.insert(result.end(), word.begin(), word.end());
+                word.clear();
                 line_width += word_width;
                 word_width = 0.f;
             }
         } else {
-            extend_str(result, word);
-            word = "";
+            result.insert(result.end(), word.begin(), word.end());
+            word.clear();
             line_width = glyph.advance;
             word_width = 0.f;
-            result.push_back('\n');
+            result.push_back(U'\n');
             result.push_back(c);
         }
         last = c;
     }
 
-    if (line_width + word_width <= width * 1.125f) {
-        extend_str(result, word);
+    if (line_width + word_width <= width) { // * 1.125f) {
+        result.insert(result.end(), word.begin(), word.end());
     } else {
-        result.push_back('\n');
-        extend_str(result, word);
+        result.push_back(U'\n');
+        result.insert(result.end(), word.begin(), word.end());
     }
 
     return result;
@@ -115,6 +106,12 @@ void TextWidget::set_text_color(const sf::Color& color) {
 }
 
 void TextWidget::set_label(const std::string& label) {
+    m_label_value = utf8::utf8to32(label);
+    m_label.setString(label);
+    apply_text_alignment();
+}
+
+void TextWidget::set_label(const std::u32string& label) {
     m_label_value = label;
     m_label.setString(label);
     apply_text_alignment();

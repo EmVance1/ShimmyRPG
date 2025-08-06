@@ -68,7 +68,7 @@ void AreaDebugView::update() {
 
     i = 0;
     for (const auto& t : p_area->triggers) {
-        FlagTable::Once = FlagTable::has_flag(t.once_id);
+        FlagTable::Never = !FlagTable::has_flag(t.once_id);
         if (!t.condition.evaluate() || t.cooldown) {
             m_triggers[i].setOutlineColor(sf::Color(255, 0, 255, 100));
         } else {

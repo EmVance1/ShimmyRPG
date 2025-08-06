@@ -1,18 +1,17 @@
 #include "pch.h"
-#include "rapidjson/document.h"
+#include <rapidjson/document.h>
 #include "util/uuid.h"
 #include "world/area.h"
 #include "world/region.h"
 #include "util/str.h"
 #include "util/json.h"
+#include "util/env.h"
 #include "util/iso_map.h"
 #include "objects/trigger.h"
-#include "scripting/lua/script.h"
-#include "scripting/lua/init.h"
-#include "json_debug.h"
 
 
 const sf::RenderWindow* Area::window = nullptr;
+void init_engine_api(lua_State* L);
 
 
 Area::Area(const std::string& _id, Region* parent_region)
@@ -34,7 +33,9 @@ Area::Area(const std::string& _id, Region* parent_region)
 
     lua_vm = luaL_newstate();
     luaL_openlibs(lua_vm);
-    lua::init_engine_api(lua_vm);
+    init_engine_api(lua_vm);
+    lua_pushlightuserdata(lua_vm, this);
+    lua_setfield(lua_vm, LUA_REGISTRYINDEX, "_area");
 }
 
 Area::Area(Area&& other) : gui(std::move(other.gui)) {
@@ -51,9 +52,9 @@ void Area::init(const rapidjson::Value& prefabs, const rapidjson::Document& doc)
     const auto& meta = JSON_GET(doc, "world");
 
     area_label = std::string(JSON_GET_STR(meta, "label"));
-    topleft = json_to_vector2f(JSON_GET_ARRAY(meta, "topleft"));
+    topleft = shmy::json::into_vector2f(JSON_GET_ARRAY(meta, "topleft"));
     scale = JSON_GET_FLOAT(meta, "scale");
-    pathfinder = nav::NavMesh::read_file(p_region->m_id + id + ".nav", scale);
+    pathfinder = nav::NavMesh::read_file((shmy::env::pkg_full() / p_region->m_id / id).concat(".nav").string(), scale);
 
     cart_to_iso = cartesian_to_isometric(topleft);
     iso_to_cart = isometric_to_cartesian(topleft);
@@ -75,8 +76,8 @@ void Area::init(const rapidjson::Value& prefabs, const rapidjson::Document& doc)
 
     for (const auto& e : JSON_GET_ARRAY(doc, "triggers")) {
         auto& t = triggers.emplace_back();
-        t.once_id = "once_trig_" + id + Uuid::generate_v4();
-        t.bounds = (sfu::RotatedFloatRect)json_to_floatrect(JSON_GET(e, "rect"));
+        t.once_id = "once_trig_" + id + shmy::Uuid::generate_v4();
+        t.bounds = (sfu::RotatedFloatRect)shmy::json::into_floatrect(JSON_GET(e, "rect"));
         if (e.HasMember("angle")) {
             t.bounds.angle = sf::degrees(JSON_GET_FLOAT(e, "angle"));
         }
@@ -93,7 +94,7 @@ void Area::init(const rapidjson::Value& prefabs, const rapidjson::Document& doc)
             const auto& act = action["GotoArea"];
             t.action = GotoArea{
                 JSON_GET_UINT64(act, "index"),
-                json_to_vector2f(JSON_GET(act, "spawnpos")),
+                shmy::json::into_vector2f(JSON_GET(act, "spawnpos")),
                 JSON_IS_TRUE(act, "suppress_triggers"),
                 act.HasMember("lock_id") ? JSON_GET_STR(act, "lock_id") : "false"
             };

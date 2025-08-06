@@ -126,11 +126,15 @@ static FlagExpr parse_cmp(Lexer& lexer, Token& next) {
 
 static FlagExpr parse_unit(Lexer& lexer, Token& next) {
     switch (next.type) {
+    case TokenType::IntLiteral: {
+        auto i = next.val;
+        next = *lexer.next();
+        return FlagExpr::Number(std::atoi(i.c_str())); }
     case TokenType::Identifier: {
         auto id = next.val;
         next = *lexer.next();
         if (id == "default") {
-            return FlagExpr::Default();
+            return FlagExpr::True();
         } else if (id == "once") {
             return FlagExpr::Once();
         } else if (id.starts_with("rng_")) {
@@ -139,10 +143,6 @@ static FlagExpr parse_unit(Lexer& lexer, Token& next) {
             return FlagExpr::Identifier(std::move(id));
         }
         break; }
-    case TokenType::IntLiteral: {
-        auto i = next.val;
-        next = *lexer.next();
-        return FlagExpr::Value(std::atoi(i.c_str())); }
     case TokenType::Bang: {
         next = *lexer.next();
         auto val = parse_unit(lexer, next);

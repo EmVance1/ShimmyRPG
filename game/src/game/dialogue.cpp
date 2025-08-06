@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "dialogue.h"
 #include "flags.h"
-#include "scripting/speech_graph.h"
 
 
 namespace dia = shmy::speech;
@@ -20,13 +19,11 @@ void Dialogue::begin(dia::Graph&& graph, GameMode init_mode, const std::string& 
     for (size_t i = 0; m_graph.contains("entry" + std::to_string(i)); i++) {
         const auto name = "entry" + std::to_string(i);
         const auto once_id = "once_dia_" + id + "_" + name;
-        FlagTable::Once = FlagTable::has_flag(once_id);
+        FlagTable::Never = !FlagTable::has_flag(once_id);
         if (m_graph.at(name).conditions.evaluate()) {
             m_vertex = "entry" + std::to_string(i);
-            break;
-        }
-        if (FlagTable::Once) {
             FlagTable::set_flag(once_id, 1, false);
+            break;
         }
     }
     if (m_vertex == "") {

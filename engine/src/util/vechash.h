@@ -1,6 +1,7 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 
+
 namespace std {
     template<typename T>
     class hash<sf::Vector2<T>> {

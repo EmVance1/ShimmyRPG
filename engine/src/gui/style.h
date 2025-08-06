@@ -1,6 +1,7 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 #include <sfutil/sfutil.h>
+#include <filesystem>
 
 
 namespace gui {
@@ -27,9 +28,9 @@ struct Style {
     sf::Font font;
 
     Style();
-    Style(const std::string& folder);
+    Style(const std::filesystem::path& dir);
 
-    bool load_from_folder(const std::string& folder);
+    bool load_from_dir(const std::filesystem::path& dir);
 };
 
 enum class Alignment {

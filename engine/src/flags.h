@@ -19,7 +19,7 @@ private:
     static std::unordered_map<std::string, uint32_t> cache;
 
 public:
-    inline static bool Once = false;
+    inline static bool Never = false;
 
     static void clear() { cache.clear(); }
 

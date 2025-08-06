@@ -1,8 +1,8 @@
 #include "gui/style.h"
 #include "pch.h"
+#include "gui/gui.h"
 #include "world/area.h"
 #include "world/region.h"
-#include "gui/gui.h"
 
 
 void Area::load_gui() {

@@ -2,8 +2,11 @@
 #include <SFML/Graphics.hpp>
 #include <thread_pool/thread_pool.h>
 #include <rapidjson/document.h>
+#include <filesystem>
 #include <future>
 
+
+namespace shmy {
 
 class AsyncBackground : public sf::Drawable {
 public:
@@ -12,7 +15,7 @@ public:
 private:
     struct Tile {
         sf::Texture texture;
-        std::string filename;
+        std::filesystem::path filename;
         sf::FloatRect bounds;
         std::future<sf::Image> progress;
         LoadState load_state = LoadState::UNLOADED;
@@ -23,10 +26,10 @@ private:
             : texture(std::move(other.texture)), filename(std::move(other.filename)), bounds(other.bounds), progress(std::move(other.progress)),
             load_state(other.load_state)
         {}
-        Tile(const std::string& _filename, sf::FloatRect _bounds)
+        Tile(const std::filesystem::path& _filename, sf::FloatRect _bounds)
             : filename(_filename), bounds(_bounds)
         {}
-        Tile(std::string&& _filename, sf::FloatRect _bounds)
+        Tile(std::filesystem::path&& _filename, sf::FloatRect _bounds)
             : filename(std::move(_filename)), bounds(_bounds)
         {}
     };
@@ -46,3 +49,4 @@ public:
     void draw(sf::RenderTarget& target, sf::RenderStates states) const;
 };
 
+}

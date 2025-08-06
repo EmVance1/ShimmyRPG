@@ -1,0 +1,11 @@
+{
+    "library": "utfcpp",
+    "minstd": "C++98",
+    "include": "source/",
+    "all": {
+        "links": [],
+        "binary.debug": "",
+        "binary.release": ""
+    },
+    "configs": {}
+}

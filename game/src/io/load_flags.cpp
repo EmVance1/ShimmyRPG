@@ -3,8 +3,10 @@
 #include "flags.h"
 
 
-static void load_file(const std::string& filename, const std::string& prefix) {
-    auto file = std::ifstream(filename);
+namespace shmy { namespace flags {
+
+static void load_file(const std::fs::path& filename, const std::string& prefix) {
+    auto file = std::ifstream(PATH_NORM(filename));
     auto line = std::string("");
     bool err = false;
 
@@ -47,7 +49,7 @@ static void load_file(const std::string& filename, const std::string& prefix) {
 }
 
 
-void load_flags(const std::string& dir) {
+void load_from_dir(const std::fs::path& dir) {
     FlagTable::set_flag("true", 1, false);
     FlagTable::set_flag("false", 0, false);
     FlagTable::set_flag("inf", UINT32_MAX, false);
@@ -58,3 +60,4 @@ void load_flags(const std::string& dir) {
     }
 }
 
+} }

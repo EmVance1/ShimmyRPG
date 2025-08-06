@@ -1,7 +1,7 @@
 #pragma once
+#include <sfutil/sfutil.h>
 #include <unordered_map>
 #include <string>
-#include <sfutil/sfutil.h>
 #include "area.h"
 
 
@@ -16,7 +16,7 @@ private:
     size_t m_active_area = 0;
 
 public:
-    void load_from_folder(const std::string& folder, size_t initial_area);
+    void load_from_dir(const std::filesystem::path& folder, size_t initial_area);
 
     Area& get_active_area() { return m_areas[m_active_area]; }
     size_t get_active_area_index() const { return m_active_area; };

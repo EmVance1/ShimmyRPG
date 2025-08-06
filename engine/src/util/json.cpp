@@ -1,22 +1,25 @@
 #include "pch.h"
 #include "json.h"
+#include <corecrt_wstdio.h>
 #include <rapidjson/error/en.h>
 
 
-sf::Vector2f json_to_vector2f(const rapidjson::Value& arr) {
+namespace shmy { namespace json {
+
+sf::Vector2f into_vector2f(const rapidjson::Value& arr) {
     return sf::Vector2f(arr.GetArray()[0].GetFloat(), arr.GetArray()[1].GetFloat());
 }
 
-sf::Vector2i json_to_vector2i(const rapidjson::Value& arr) {
+sf::Vector2i into_vector2i(const rapidjson::Value& arr) {
     return sf::Vector2i(arr.GetArray()[0].GetInt(), arr.GetArray()[1].GetInt());
 }
 
-sf::Vector2u json_to_vector2u(const rapidjson::Value& arr) {
+sf::Vector2u into_vector2u(const rapidjson::Value& arr) {
     return sf::Vector2u(arr.GetArray()[0].GetUint(), arr.GetArray()[1].GetUint());
 }
 
 
-sf::FloatRect json_to_floatrect(const rapidjson::Value& arr) {
+sf::FloatRect into_floatrect(const rapidjson::Value& arr) {
     return sf::FloatRect(
         { arr.GetArray()[0].GetFloat(),
           arr.GetArray()[1].GetFloat() },
@@ -25,7 +28,7 @@ sf::FloatRect json_to_floatrect(const rapidjson::Value& arr) {
     );
 }
 
-sf::IntRect json_to_intrect(const rapidjson::Value& arr) {
+sf::IntRect into_intrect(const rapidjson::Value& arr) {
     return sf::IntRect(
         { arr.GetArray()[0].GetInt(),
           arr.GetArray()[1].GetInt() },
@@ -35,7 +38,7 @@ sf::IntRect json_to_intrect(const rapidjson::Value& arr) {
 }
 
 
-sf::Color json_to_color(const rapidjson::Value& arr) {
+sf::Color into_color(const rapidjson::Value& arr) {
     if (arr.GetArray().Size() == 3) {
         return sf::Color((uint8_t)arr.GetArray()[0].GetUint(),
                          (uint8_t)arr.GetArray()[1].GetUint(),
@@ -49,9 +52,19 @@ sf::Color json_to_color(const rapidjson::Value& arr) {
 }
 
 
-rapidjson::Document load_json_from_file(const std::string& filename) {
-    FILE* fp = nullptr;
-    fopen_s(&fp, filename.c_str(), "rb");
+#ifdef SHMY_WINDOWS
+#define os_fopen(filename, mode) _wfopen(filename.c_str(), L##mode);
+#else
+#define os_fopen(filename, mode) fopen((const char*)filename.u8string().c_str(), mode);
+#endif
+
+rapidjson::Document load_from_file(const std::fs::path& filename) {
+    FILE* fp = os_fopen(filename, "rb");
+    if (!fp) {
+        std::cerr << "failed to open json document: " << filename.string() << '\n';
+        exit(1);
+    }
+
     char readBuffer[65536];
     rapidjson::FileReadStream is(fp, readBuffer, sizeof(readBuffer));
     rapidjson::Document doc;
@@ -67,4 +80,54 @@ rapidjson::Document load_json_from_file(const std::string& filename) {
     fclose(fp);
     return doc;
 }
+
+
+#ifdef DEBUG
+
+const char* debug_get_str(const rapidjson::Value& object, const char* name) {
+    if (!object.HasMember(name)) {
+        throw std::invalid_argument(std::string("invalid json access - object has no member '") + name + "");
+    }
+    const auto& e = object[name];
+    if (!e.IsString()) {
+        throw std::invalid_argument(std::string("invalid json access - object member '") + name + "' is not of expected type");
+    }
+    return e.GetString();
+}
+size_t debug_get_strlen(const rapidjson::Value& object, const char* name) {
+    if (!object.HasMember(name)) {
+        throw std::invalid_argument(std::string("invalid json access - object has no member '") + name + "'");
+    }
+    const auto& e = object[name];
+    if (!e.IsString()) {
+        throw std::invalid_argument(std::string("invalid json access - object member '") + name + "' is not of expected type");
+    }
+    return e.GetStringLength();
+}
+bool debug_get_bool(const rapidjson::Value& object, const char* name) {
+    if (!object.HasMember(name)) {
+        throw std::invalid_argument(std::string("invalid json access - object has no member '") + name + "'");
+    }
+    const auto& e = object[name];
+    if (!e.IsBool()) {
+        throw std::invalid_argument(std::string("invalid json access - object member '") + name + "' is not of expected type");
+    }
+    return e.GetBool();
+}
+bool debug_is_null(const rapidjson::Value& object, const char* name) {
+    if (!object.HasMember(name)) {
+        throw std::invalid_argument(std::string("invalid json access - object has no member '") + name + "'");
+    }
+    return object[name].IsNull();
+}
+const rapidjson::Value& debug_get(const rapidjson::Value& object, const char* name) {
+    if (!object.HasMember(name)) {
+        throw std::invalid_argument(std::string("invalid json access - object has no member '") + name + "'");
+    }
+    return object[name];
+}
+
+#endif
+
+} }
 

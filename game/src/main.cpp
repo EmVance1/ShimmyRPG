@@ -3,9 +3,9 @@
 #include "time/deltatime.h"
 #include "world/region.h"
 #include "world/area.h"
-#include "io/load_flags.h"
-#include "io/env.h"
+#include "util/env.h"
 #include "util/str.h"
+#include "io/load_flags.h"
 
 
 #ifdef DEBUG
@@ -18,7 +18,11 @@
 #endif
 
 
-int main() {
+int main(int argc, char** argv) {
+    if (argc == 3 && std::string(argv[1]) == "gen" && std::string(argv[2]) == "template") {
+        // load project template
+    }
+
     auto window = sf::RenderWindow(VIDEO_MODE, "Shimmy", SCREEN_MODE);
     window.setVerticalSyncEnabled(true);
     window.setPosition({0, 0});
@@ -31,14 +35,15 @@ int main() {
     auto region = Region();
     auto region_folder = std::string("");
     {
-        auto startup_file = std::ifstream("startup.txt");
-        auto startup_env = std::string("");
+        auto startup_file = std::ifstream(".startup");
+        auto startup_env = std::string();
         startup_file >> startup_env;
-        auto tokens = split_string(startup_env, ':');
-        shmy::env::set(tokens[0] + '/');
-        region_folder = tokens[1] + '/';
-        load_flags(shmy::env::get() + "flags");
-        region.load_from_folder(shmy::env::get() + region_folder, std::atoi(tokens[2].c_str()));
+        auto tokens = shmy::str::split(startup_env, ':');
+        shmy::env::init(tokens[0]);
+        shmy::env::set_pkg(tokens[1]);
+        region_folder = tokens[2];
+        shmy::flags::load_from_dir(shmy::env::pkg_full() / "flags");
+        region.load_from_dir(region_folder, std::atoi(tokens[3].c_str()));
     }
 
     // auto& pixelate = target.loadShaderFromFile("res/shaders/pixelate.frag");
@@ -53,12 +58,12 @@ int main() {
     // glitch.setUniform("u_dist", 3);
     // glitch.setUniform("u_resolution", (sf::Vector2f)window.getSize());
 
-    const auto font = sf::Font("calibri.ttf");
+    const auto font = sf::Font(shmy::env::app_dir() / "calibri.ttf");
     auto fps_draw = sf::Text(font, "0", 25);
     fps_draw.setPosition({ 10, 10 });
     fps_draw.setFillColor(sf::Color::White);
 
-    const auto cursor_tex = sf::Texture(shmy::env::get() + "textures/cursor.png");
+    const auto cursor_tex = sf::Texture(shmy::env::pkg_full() / "textures/cursor.png");
     auto cursor = sf::Sprite(cursor_tex);
     cursor.setOrigin({ 4, 3 });
 
@@ -77,9 +82,9 @@ int main() {
             } else if (const auto kyp = event->getIf<sf::Event::KeyPressed>()) {
                 if (kyp->code == sf::Keyboard::Key::R && kyp->control) {
                     FlagTable::clear();
-                    load_flags(shmy::env::get() + "flags");
+                    shmy::flags::load_from_dir(shmy::env::pkg_full() / "flags");
                     const auto temp = region.get_active_area_index();
-                    region.load_from_folder(shmy::env::get() + region_folder, temp);
+                    region.load_from_dir(region_folder, temp);
                 }
             }
 

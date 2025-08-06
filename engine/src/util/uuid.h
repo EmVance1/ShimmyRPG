@@ -4,6 +4,8 @@
 #include <sstream>
 
 
+namespace shmy {
+
 class Uuid {
 public:
     static std::string generate_v4() {
@@ -39,3 +41,4 @@ public:
     }
 };
 
+}

@@ -2,7 +2,9 @@
 #include "../str.h"
 
 
-std::vector<std::string> split_string(const std::string& str, char delimiter) {
+namespace shmy { namespace str {
+
+std::vector<std::string> split(const std::string& str, char delimiter) {
     auto result = std::vector<std::string>();
     size_t last = 0;
     bool dont = false;
@@ -25,7 +27,33 @@ std::vector<std::string> split_string(const std::string& str, char delimiter) {
     return result;
 }
 
-std::string trim_string(const std::string& str) {
+std::vector<std::string> tok(const std::string& str, char delimiter) {
+    auto result = std::vector<std::string>();
+    size_t last = 0;
+    bool dont = false;
+
+    for (size_t i = 0; i < str.size(); i++) {
+        if (str[i] == delimiter) {
+            if (last != i - last) {
+                result.push_back(str.substr(last, i - last));
+            }
+            if (i + 1 < str.size()) {
+                last = i + 1;
+            } else {
+                dont = true;
+            }
+        }
+    }
+
+    if (!dont) {
+        result.push_back(str.substr(last, str.size() - last));
+    }
+
+    return result;
+}
+
+
+std::string trim(const std::string& str) {
     size_t begin = 0;
     while (begin < str.size() && std::isspace(str[begin])) {
         begin++;
@@ -41,3 +69,4 @@ std::string trim_string(const std::string& str) {
     }
 }
 
+} }

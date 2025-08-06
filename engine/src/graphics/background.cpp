@@ -1,8 +1,10 @@
 #include "pch.h"
 #include "background.h"
 #include "util/json.h"
-#include "io/env.h"
+#include "util/env.h"
 
+
+namespace shmy {
 
 AsyncBackground::AsyncBackground(AsyncBackground&& other)
     : m_tiles(std::move(other.m_tiles)), m_pool(), m_margin(other.m_margin)
@@ -13,8 +15,8 @@ void AsyncBackground::load_from_json(const rapidjson::Value& value, float margin
     m_tiles.reserve(value.GetArray().Size());
     for (const auto& pair : value.GetArray()) {
         m_tiles.emplace_back(
-            shmy::env::get() + pair["file"].GetString(),
-            json_to_floatrect(pair["bounds"])
+            shmy::env::pkg_full() / pair["file"].GetString(),
+            shmy::json::into_floatrect(pair["bounds"])
         );
     }
 
@@ -97,3 +99,4 @@ void AsyncBackground::draw(sf::RenderTarget& target, sf::RenderStates states) co
     }
 }
 
+}

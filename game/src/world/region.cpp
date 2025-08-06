@@ -2,30 +2,30 @@
 #include "region.h"
 #include "util/str.h"
 #include "util/json.h"
+#include "util/env.h"
 #include "graphics/filters.h"
 #include "time/deltatime.h"
-#include "io/env.h"
 
 
 #define OUTLINE_WIDTH 5
 
 
-void Region::load_from_folder(const std::string& folder, size_t initial_area) {
+void Region::load_from_dir(const std::fs::path& folder, size_t initial_area) {
     m_textures.clear();
     m_alphamaps.clear();
     m_areas.clear();
 
-    const auto doc = load_json_from_file(folder + "region.json");
+    const auto doc = shmy::json::load_from_file(shmy::env::pkg_full() / folder / "region.json");
 
-    m_id = folder;
+    m_id = folder.string();
     m_active_area = initial_area;
 
     for (const auto& [k, v] : doc["textures"].GetObject()) {
         const auto name = std::string(k.GetString());
-        const auto texfile = shmy::env::get() + v["file"].GetString();
+        const auto texfile = shmy::env::pkg_full() / v["file"].GetString();
         const auto outline = v["outlined"].IsTrue();
         const auto smooth  = v["smooth"].IsTrue();
-        const auto dims    = json_to_vector2u(v["dims"]);
+        const auto dims    = shmy::json::into_vector2u(v["dims"]);
 
         const auto img = sf::Image(texfile);
         m_alphamaps[name + "_map"].loadFromImage(
@@ -40,11 +40,11 @@ void Region::load_from_folder(const std::string& folder, size_t initial_area) {
         m_atlases[name + "_outline"].setSmooth(smooth);
     }
 
-    m_guistyle.load_from_folder(shmy::env::get() + "gui/" + doc["gui_style"].GetString() + "/");
+    m_guistyle.load_from_dir(shmy::env::pkg_full() / "gui" / doc["gui_style"].GetString());
 
     const auto& areas = doc["areas"].GetArray();
     m_areas.reserve(areas.Size());
-    const auto prefabs = load_json_from_file(shmy::env::get() + "prefabs.json");
+    const auto prefabs = shmy::json::load_from_file(shmy::env::pkg_full() / "prefabs.json");
     for (const auto& area : areas) {
         m_areas.emplace_back(area.GetString(), this);
     }
@@ -52,14 +52,14 @@ void Region::load_from_folder(const std::string& folder, size_t initial_area) {
     for (const auto& area : areas) {
 #ifdef DEBUG
         try {
-            const auto area_doc = load_json_from_file(folder + area.GetString() + ".json");
+            const auto area_doc = shmy::json::load_from_file(shmy::env::pkg_full() / folder / (std::string(area.GetString()) + ".json"));
             m_areas[i].init(prefabs, area_doc);
         } catch (const std::exception& e) {
             std::cerr << "error loading area '" << m_areas[i].id << "': " << e.what() << "\n";
             exit(1);
         }
 #else
-        const auto area_doc = load_json_from_file(folder + area.GetString() + ".json");;
+        const auto area_doc = shmy::json::load_from_file(shmy::env::pkg_full() / folder / (std::string(area.GetString()) + ".json"));
         m_areas[i].init(prefabs, area_doc);
 #endif
         if (i != m_active_area) {

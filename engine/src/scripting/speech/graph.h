@@ -2,8 +2,9 @@
 #include <unordered_map>
 #include <variant>
 #include <string>
+#include <filesystem>
 #include "flags.h"
-#include "flag_expr.h"
+#include "../flag_expr.h"
 
 
 namespace shmy { namespace speech {
@@ -30,7 +31,7 @@ struct Vertex {
 using Graph = std::unordered_map<std::string, Vertex>;
 
 
-Graph load_from_file(const std::string& filename);
+Graph load_from_file(const std::filesystem::path& filename);
 Graph load_from_string(const std::string& str);
 Graph load_from_line(const std::string& speaker, const std::string& line);
 

@@ -57,8 +57,7 @@ void CinematicMode::handle_event(const sf::Event& event) {
             dia_gui->set_enabled(false);
             dia_gui->set_visible(false);
             if (const auto fu = p_area->dialogue.get_followup()) {
-                auto& s = p_area->scripts.emplace_back(*p_area);
-                s.load_from_file(fu.value());
+                auto& s = p_area->scripts.emplace_back(p_area->lua_vm, fu.value(), "shmy");
                 s.start();
             }
         }

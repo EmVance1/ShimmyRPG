@@ -4,11 +4,14 @@
     "pch": "pch.h",
     "dependencies": [
         "../../_Libs/SFML-3:static",
+        "../../_Libs/luajit",
         "../../sfutil",
         "../../navmesh",
         "thread_pool",
-        "rapidjson"
+        "rapidjson",
+        "utfcpp"
     ],
+    "defines": [ "SHMY_WINDOWS" ],
 
     "include-public": "src/"
 }

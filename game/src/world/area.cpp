@@ -1,13 +1,13 @@
 #include "pch.h"
 #include "area.h"
 #include "util/str.h"
+#include "util/env.h"
+#include "gui/gui.h"
 #include "sorting.h"
 #include "time/deltatime.h"
 #include "region.h"
 #include "objects/trigger.h"
 #include "scripting/lua/script.h"
-#include "gui/gui.h"
-#include "io/env.h"
 
 
 static std::mt19937 RNG{ std::random_device()() };
@@ -27,20 +27,19 @@ void Area::update_motionguide() {
 }
 
 void Area::handle_trigger(const Trigger& trigger) {
-    FlagTable::Once = FlagTable::has_flag(trigger.once_id);
+    FlagTable::Never = !FlagTable::has_flag(trigger.once_id);
     if (!trigger.condition.evaluate()) { return; }
-    if (FlagTable::Once) { FlagTable::set_flag(trigger.once_id, 1, false); }
+    FlagTable::set_flag(trigger.once_id, 1, false);
 
     switch (trigger.action.index()) {
     case 0: {
         const auto loadscript = std::get<BeginScript>(trigger.action);
-        auto& s = scripts.emplace_back(*this);
-        s.load_from_file(shmy::env::get() + loadscript.filename);
+        auto& s = scripts.emplace_back(lua_vm, shmy::env::pkg_full() / loadscript.filename, "shmy");
         s.start();
         break; }
     case 1: {
         const auto loaddia = std::get<BeginDialogue>(trigger.action);
-        begin_dialogue(shmy::speech::load_from_file(shmy::env::get() + loaddia.filename), loaddia.filename);
+        begin_dialogue(shmy::speech::load_from_file(shmy::env::pkg_full() / loaddia.filename), loaddia.filename);
         set_mode(GameMode::Dialogue);
         break; }
     case 2: {

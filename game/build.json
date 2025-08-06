@@ -9,6 +9,10 @@
         "../../navmesh",
         "../engine",
         "thread_pool",
-        "rapidjson"
-    ]
+        "rapidjson",
+        "utfcpp"
+    ],
+    "defines": [ "SHMY_WINDOWS" ],
+
+    "linker-options": [ "Userenv.lib" ]
 }

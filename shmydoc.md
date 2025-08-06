@@ -10,7 +10,7 @@ v00 = Shimmy: [ "Greetings traveller. Please have a seat." ] => {
     ?(Player_Origin == Twinvayne) "Shimmy my old friend." => v13,
 }
 ```
-The basic structure of a node declaration is: "{vertex name} = {entity ID}: \[ {lines},+ \] => {outcome}" where 'outcome' is most often a list of player responses and the next vertex they each lead to, as shown above. The name of a vertex can be any alphanumeric string, but for simplicity I will be using numbered IDs in this tutorial. The entity ID may also be replaced by the 'Narrator' keyword.
+The basic structure of a node declaration is: "{vertex name} = {entity ID}: \[ {lines},+ \] => {outcome}" where 'outcome' is most often a list of player responses and the next vertex they each lead to, as shown above. The name of a vertex can be any string of the characters a-z, a-Z, 0-9 or _. Double quote '"' strings however, may be any unicode (utf-8) string. For simplicity, I will be using numbered IDs in this tutorial. The entity ID may also be replaced by the 'Narrator' keyword.
 You may notice that the first response not only progresses the dialogue to vertex 'v10', but also appears to modify the flag 'Shimmy_Approval'. Any player response may Add, Sub, or Set any number of flags through a comma separated list of key-modifier pairs.
 The 4th response demonstrates how a response may only be conditionally available. The parentheses may contain arbitrarily complex boolean expressions of flag ids, integer constants and boolean constants. Additionally, any non-zero integer result is interpreted as true.
 

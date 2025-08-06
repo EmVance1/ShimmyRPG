@@ -1,3 +1,4 @@
+#define _CRT_SECURE_NO_WARNINGS
 #include <SFML/Graphics.hpp>
 #include <SFML/Window.hpp>
 #include <SFML/System.hpp>
@@ -22,10 +23,19 @@
 #include <functional>
 #include <stdexcept>
 #include <random>
+#include <filesystem>
+namespace std { namespace fs = filesystem; }
+#ifdef SHMY_WINDOWS
+#define PATH_NORM(p) p
+#else
+#define PATH_NORM(p) p.u8string()
+#endif
 
 #include <rapidjson/rapidjson.h>
 #include <rapidjson/filereadstream.h>
 #include <rapidjson/document.h>
 
-#include <thread_pool/thread_pool.h>
+#define UTF_CPP_CPLUSPLUS 202002L // C++20
+#include <utf8.h>
 
+#include <thread_pool/thread_pool.h>

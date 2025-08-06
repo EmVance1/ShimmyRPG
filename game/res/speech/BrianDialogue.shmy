@@ -1,10 +1,11 @@
 
-entry(default) = BrianPrime: [ "Lovely spot this, don't you think?" ] => exit
-
 entry(ShimmyIntroScene_IsActive & once) = BrianPrime: [ "Oh hello there. Fancy a game of cards?" ] => {
     "Love to." => v01,
     "If that's what counts for fun around here." => v02,
 }
+
+entry(default) = BrianPrime: [ "Lovely spot this, don't you think?" ] => exit
+
 
 v01 = BrianPrime: [ "Good on ye." ] => game
 v02 = BrianPrime: [ "You need to open yourself up to new experiences friend." ] => game

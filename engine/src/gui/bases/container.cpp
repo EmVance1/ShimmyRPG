@@ -20,7 +20,7 @@ void Container::add_widget(const std::string& name, const std::shared_ptr<Widget
 }
 
 void Container::add_widget(const std::shared_ptr<Widget>& widget, bool inherit_style) {
-    add_widget(Uuid::generate_v4(), widget, inherit_style);
+    add_widget(shmy::Uuid::generate_v4(), widget, inherit_style);
 }
 
 

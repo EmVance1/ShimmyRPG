@@ -1,6 +1,8 @@
 #pragma once
-#include <string>
+#include <filesystem>
 
+namespace shmy { namespace flags {
 
-void load_flags(const std::string& dir);
+void load_from_dir(const std::filesystem::path& dir);
 
+} }

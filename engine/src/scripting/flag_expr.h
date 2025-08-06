@@ -1,12 +1,12 @@
 #pragma once
 #include <string>
-#include <memory>
 
 
 namespace shmy {
 
 struct FlagExpr {
-    enum class Type {
+private:
+    enum class Operation {
         Or,
         And,
         Eq,
@@ -17,114 +17,59 @@ struct FlagExpr {
         Ge,
         Not,
 
-        Value,
+        Number,
         Identifier,
 
-        Default,
         Once,
         Random,
     };
 
-    std::unique_ptr<FlagExpr> left;
-    std::unique_ptr<FlagExpr> right;
-    FlagExpr::Type op;
-    std::string name;
-    uint32_t value;
+    FlagExpr* lhs = nullptr;
+    FlagExpr* rhs = nullptr;
+    Operation op = Operation::Number;
+    uint32_t num = 0;
+    std::string ident = "";
 
-    FlagExpr()
-        : left(nullptr), right(nullptr), op(FlagExpr::Type::Value), name(""), value(0)
-    {}
-    FlagExpr(const FlagExpr& other)
-        : left(other.left ? std::make_unique<FlagExpr>(*other.left) : nullptr),
-        right(other.right ? std::make_unique<FlagExpr>(*other.right) : nullptr),
-        op(other.op), name(other.name), value(other.value)
-    {}
-    FlagExpr(FlagExpr&& other)
-        : left(std::move(other.left)), right(std::move(other.right)), op(other.op), name(std::move(other.name)), value(other.value)
-    {}
-    FlagExpr(FlagExpr&& _left, FlagExpr&& _right, FlagExpr::Type _op)
-        : left(std::make_unique<FlagExpr>(std::move(_left))), right(std::make_unique<FlagExpr>(std::move(_right))), op(_op)
-    {}
-    FlagExpr(FlagExpr&& _val, FlagExpr::Type _op)
-        : left(std::make_unique<FlagExpr>(std::move(_val))), right(nullptr), op(_op)
-    {}
-    FlagExpr(std::string&& _val, FlagExpr::Type _op)
-        : left(nullptr), right(nullptr), op(_op), name(std::move(_val)), value(0)
-    {}
-    FlagExpr(uint32_t _val, FlagExpr::Type _op)
-        : left(nullptr), right(nullptr), op(_op), name(""), value(_val)
-    {}
-    FlagExpr(std::string&& _id, uint32_t _mod, FlagExpr::Type _op)
-        : left(nullptr), right(nullptr), op(_op), name(std::move(_id)), value(_mod)
-    {}
+private:
+    static FlagExpr binary(FlagExpr&& lhs, FlagExpr&& rhs, Operation op);
+    static FlagExpr unary(FlagExpr&& lhs, Operation op);
+    FlagExpr(uint32_t num, Operation op);
+    FlagExpr(std::string&& ident, Operation op);
+    FlagExpr(std::string&& id, uint32_t mod, Operation op);
 
-    FlagExpr& operator=(const FlagExpr& other) {
-        left = other.left ? std::make_unique<FlagExpr>(*other.left) : nullptr;
-        right = other.right ? std::make_unique<FlagExpr>(*other.right) : nullptr;
-        op = other.op;
-        name = other.name;
-        value = other.value;
-        return *this;
-    }
-    FlagExpr& operator=(FlagExpr&& other) {
-        left = std::move(other.left);
-        right = std::move(other.right);
-        op = other.op;
-        name = std::move(other.name);
-        value = other.value;
-        return *this;
-    }
+public:
+    FlagExpr() = default;
+    FlagExpr(const FlagExpr& other);
+    FlagExpr(FlagExpr&& other);
+    ~FlagExpr();
 
-    static FlagExpr Or(FlagExpr&& left, FlagExpr&& right) {
-        return FlagExpr{ std::move(left), std::move(right), FlagExpr::Type::Or };
-    }
-    static FlagExpr And(FlagExpr&& left, FlagExpr&& right) {
-        return FlagExpr{ std::move(left), std::move(right), FlagExpr::Type::And };
-    }
-    static FlagExpr Eq(FlagExpr&& left, FlagExpr&& right) {
-        return FlagExpr{ std::move(left), std::move(right), FlagExpr::Type::Eq };
-    }
-    static FlagExpr Ne(FlagExpr&& left, FlagExpr&& right) {
-        return FlagExpr{ std::move(left), std::move(right), FlagExpr::Type::Ne };
-    }
-    static FlagExpr Lt(FlagExpr&& left, FlagExpr&& right) {
-        return FlagExpr{ std::move(left), std::move(right), FlagExpr::Type::Lt };
-    }
-    static FlagExpr Gt(FlagExpr&& left, FlagExpr&& right) {
-        return FlagExpr{ std::move(left), std::move(right), FlagExpr::Type::Gt };
-    }
-    static FlagExpr Le(FlagExpr&& left, FlagExpr&& right) {
-        return FlagExpr{ std::move(left), std::move(right), FlagExpr::Type::Le };
-    }
-    static FlagExpr Ge(FlagExpr&& left, FlagExpr&& right) {
-        return FlagExpr{ std::move(left), std::move(right), FlagExpr::Type::Ge };
-    }
-    static FlagExpr Not(FlagExpr&& val) {
-        return FlagExpr{ std::move(val), FlagExpr::Type::Not };
-    }
-    static FlagExpr Value(uint32_t val) {
-        return FlagExpr{ val, FlagExpr::Type::Value };
-    }
-    static FlagExpr Identifier(std::string&& val) {
-        return FlagExpr{ std::move(val), FlagExpr::Type::Identifier };
-    }
+    FlagExpr& operator=(const FlagExpr& other);
+    FlagExpr& operator=(FlagExpr&& other);
 
-    static FlagExpr Default() {
-        return FlagExpr{ "", FlagExpr::Type::Default };
-    }
-    static FlagExpr Once() {
-        return FlagExpr{ "", FlagExpr::Type::Once };
-    }
-    static FlagExpr Random(std::string&& id, uint32_t mod) {
-        return FlagExpr{ std::move(id), mod, FlagExpr::Type::Random };
-    }
+    static FlagExpr Or(FlagExpr&& lhs, FlagExpr&& rhs);
+    static FlagExpr And(FlagExpr&& lhs, FlagExpr&& rhs);
+    static FlagExpr Eq(FlagExpr&& lhs, FlagExpr&& rhs);
+    static FlagExpr Ne(FlagExpr&& lhs, FlagExpr&& rhs);
+    static FlagExpr Lt(FlagExpr&& lhs, FlagExpr&& rhs);
+    static FlagExpr Gt(FlagExpr&& lhs, FlagExpr&& rhs);
+    static FlagExpr Le(FlagExpr&& lhs, FlagExpr&& rhs);
+    static FlagExpr Ge(FlagExpr&& lhs, FlagExpr&& rhs);
+    static FlagExpr Not(FlagExpr&& val);
+    static FlagExpr Number(uint32_t num);
+    static FlagExpr Identifier(std::string&& ident);
 
-    static FlagExpr True()  { return FlagExpr::Value(1); }
-    static FlagExpr False() { return FlagExpr::Value(0); }
+    static FlagExpr True();
+    static FlagExpr False();
+
+    static FlagExpr Once();
+    static FlagExpr Random(std::string&& id, uint32_t mod);
+
+    static FlagExpr from_string(const std::string& expr);
 
     int evaluate() const;
 
-    static FlagExpr from_string(const std::string& expr);
+    friend bool operator==(const FlagExpr& a, const FlagExpr& b);
+    friend std::ostream& operator<<(std::ostream& stream, const FlagExpr& value);
 };
 
 bool operator==(const FlagExpr& a, const FlagExpr& b);

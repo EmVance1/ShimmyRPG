@@ -7,37 +7,37 @@
 namespace gui {
 
 Style::Style() {
-    auto _ = font.openFromFile("res/calibri.ttf");
+    // auto _ = font.openFromFile("calibri.ttf");
 }
 
-Style::Style(const std::string& filename) {
-    load_from_folder(filename);
+Style::Style(const std::filesystem::path& dir) {
+    load_from_dir(dir);
 }
 
 
-bool Style::load_from_folder(const std::string& filename) {
-    auto src = read_to_string(filename + "style.json");
+bool Style::load_from_dir(const std::filesystem::path& dir) {
+    auto src = shmy::str::read_to_string(dir / "style.json");
     rapidjson::Document doc;
     doc.Parse(src.data());
 
-    background_color_1 = json_to_color(doc["background_color_1"].GetArray());
-    background_color_2 = json_to_color(doc["background_color_2"].GetArray());
-    background_color_3 = json_to_color(doc["background_color_3"].GetArray());
-    outline_color_1 = json_to_color(doc["outline_color_1"].GetArray());
-    outline_color_2 = json_to_color(doc["outline_color_2"].GetArray());
-    outline_color_3 = json_to_color(doc["outline_color_3"].GetArray());
-    text_color_1 = json_to_color(doc["text_color_1"].GetArray());
-    text_color_2 = json_to_color(doc["text_color_2"].GetArray());
-    text_color_3 = json_to_color(doc["text_color_3"].GetArray());
+    background_color_1 = shmy::json::into_color(doc["background_color_1"].GetArray());
+    background_color_2 = shmy::json::into_color(doc["background_color_2"].GetArray());
+    background_color_3 = shmy::json::into_color(doc["background_color_3"].GetArray());
+    outline_color_1 = shmy::json::into_color(doc["outline_color_1"].GetArray());
+    outline_color_2 = shmy::json::into_color(doc["outline_color_2"].GetArray());
+    outline_color_3 = shmy::json::into_color(doc["outline_color_3"].GetArray());
+    text_color_1 = shmy::json::into_color(doc["text_color_1"].GetArray());
+    text_color_2 = shmy::json::into_color(doc["text_color_2"].GetArray());
+    text_color_3 = shmy::json::into_color(doc["text_color_3"].GetArray());
     outline_width = doc["outline_width"].GetFloat();
-    default_cell = json_to_intrect(doc["default_cell"].GetArray());
+    default_cell = shmy::json::into_intrect(doc["default_cell"].GetArray());
     if (doc["textured"].IsTrue()) {
-        const auto b = background_texture.loadFromFile(filename + "atlas.png");
+        const auto b = background_texture.loadFromFile(dir / "atlas.png");
         background_texture.setSmooth(true);
         textured = true;
-        return b && font.openFromFile(filename + doc["font"].GetString());
+        return b && font.openFromFile(dir / doc["font"].GetString());
     }
-    return font.openFromFile(filename + doc["font"].GetString());
+    return font.openFromFile(dir / doc["font"].GetString());
 }
 
 

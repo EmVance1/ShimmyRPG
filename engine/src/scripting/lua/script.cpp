@@ -2,59 +2,34 @@
 #include "script.h"
 #include "init.h"
 #include "time/deltatime.h"
-#include "world/area.h"
-#include "objects/entity.h"
+#include "util/str.h"
 
 
-static void check_permutations(uint32_t funcs, lua::Script::AsyncCallback* coroutines) {
-    if (!(funcs & (1 << (uint32_t)lua::Script::Callback::OnStart)) && !coroutines[(size_t)lua::Script::Callback::OnStart].resumable &&
-        !(funcs & (1 << (uint32_t)lua::Script::Callback::OnUpdate)) && !coroutines[(size_t)lua::Script::Callback::OnUpdate].resumable &&
-        !(funcs & (1 << (uint32_t)lua::Script::Callback::OnCreate)) &&
-        !(funcs & (1 << (uint32_t)lua::Script::Callback::OnExit))) {
-        std::cerr << "lua parse error - script does not define any event handlers\n";
-        exit(1);
-    }
-    if ((funcs & (1 << (uint32_t)lua::Script::Callback::OnStart)) && coroutines[(size_t)lua::Script::Callback::OnStart].resumable) {
-        std::cerr << "lua parse error - 'OnStart' event handler is multiply defined\n";
-        exit(1);
-    }
-    if ((funcs & (1 << (uint32_t)lua::Script::Callback::OnUpdate)) && coroutines[(size_t)lua::Script::Callback::OnUpdate].resumable) {
-        std::cerr << "lua parse error - 'OnUpdate' event handler is multiply defined\n";
-        exit(1);
-    }
-}
+namespace shmy { namespace lua {
 
-static int block_globals(lua_State* L) {
-    const char* key = lua_tostring(L, 2);
-    luaL_error(L, "attempted to access unsafe or nonexistent global: %s", key);
-    return 0;
-}
-
-
-namespace lua {
-
-Script::Script(Area& parent_area) : p_parent_area(&parent_area), p_L(p_parent_area->lua_vm) {}
-
-Script::Script(Area& parent_area, const std::string& filename)
-    : p_parent_area(&parent_area), p_L(p_parent_area->lua_vm)
-{
-    load_from_file(filename);
-}
-
-
-void Script::load_from_file(const std::string& filename) {
 #ifdef DEBUG
-    if (luaL_loadfile(p_L, filename.c_str()) != LUA_OK) {
-        std::cerr << "lua parse error - " << lua_tostring(p_L, -1) << "\n";
-        exit(1);
+#define LUA_CHECK(f, pre) if (f != LUA_OK) { \
+        std::cerr << pre << " - " << lua_tostring(p_L, -1) << "\n"; \
+        exit(1); \
     }
 #else
-    luaL_loadfile(p_L, filename.c_str());
+#define LUA_CHECK(f) f
 #endif
 
+
+static void check_permutations(uint32_t funcs, Script::AsyncCallback* coroutines);
+static int block_globals(lua_State* L);
+
+
+Script::Script(lua_State* L, const std::fs::path& filename, const char* api) : p_L(L) {
+    {
+        const auto file = shmy::str::read_to_string(filename);
+        LUA_CHECK(luaL_loadstring(p_L, file.c_str()), "lua parse error");
+    }
+
     lua_newtable(p_L); // chunk, env
-    lua_getglobal(p_L, "shmy");
-    lua_setfield(p_L, -2, "shmy");
+    lua_getglobal(p_L, api);
+    lua_setfield(p_L, -2, api);
     lua_getglobal(p_L, "math");
     lua_setfield(p_L, -2, "math");
     lua_getglobal(p_L, "string");
@@ -92,13 +67,8 @@ void Script::load_from_file(const std::string& filename) {
     lua_setfenv(p_L, -3);   // chunk, env
 
     m_env = luaL_ref(p_L, LUA_REGISTRYINDEX);
-    lua_pushvalue(p_L, -1); // chunk, chunk
-    m_chunk = luaL_ref(p_L, LUA_REGISTRYINDEX);
 
-    if (lua_pcall(p_L, 0, 0, 0) != LUA_OK) {
-        std::cerr << "lua pcall error - " << lua_tostring(p_L, -1) << "\n";
-        exit(1);
-    }
+    LUA_CHECK(lua_pcall(p_L, 0, 0, 0), "lua pcall error");
 
     lua_rawgeti(p_L, LUA_REGISTRYINDEX, m_env);
 
@@ -109,45 +79,25 @@ void Script::load_from_file(const std::string& filename) {
 #endif
 
     lua_pushlightuserdata(p_L, this);
-    lua_setfield(p_L, LUA_REGISTRYINDEX, "script");
+    lua_setfield(p_L, LUA_REGISTRYINDEX, "_script");
 
     if ((m_funcs & (1 << (uint32_t)Callback::OnCreate))) {
         lua_getfield(p_L, -1, "OnCreate");
-#ifdef DEBUG
-        if (lua_pcall(p_L, 0, 0, 0) != LUA_OK) {
-            std::cerr << "lua pcall error - " << lua_tostring(p_L, -1) << "\n";
-            exit(1);
-        }
-#else
-        lua_call(p_L, 0, 0);
-#endif
+        LUA_CHECK(lua_pcall(p_L, 0, 0, 0), "lua pcall error");
     }
     lua_pop(p_L, 1);
 }
 
-
-Entity& Script::lookup_entity(const std::string& id) {
-    return p_parent_area->entities.at(p_parent_area->script_name_LUT.at(id));
+Script::~Script() {
+    terminate();
 }
-
-const Entity& Script::lookup_entity(const std::string& id) const {
-    return p_parent_area->entities.at(p_parent_area->script_name_LUT.at(id));
-}
-
 
 
 void Script::start() {
     if ((m_funcs & (1 << (uint32_t)Callback::OnStart))) {
         lua_rawgeti(p_L, LUA_REGISTRYINDEX, m_env);
         lua_getfield(p_L, -1, "OnStart");
-#ifdef DEBUG
-        if (lua_pcall(p_L, 0, 0, 0) != LUA_OK) {
-            std::cerr << "lua pcall error - " << lua_tostring(p_L, -1) << "\n";
-            exit(1);
-        }
-#else
-        lua_call(p_L, 0, 0);
-#endif
+        LUA_CHECK(lua_pcall(p_L, 0, 0, 0), "lua pcall error");
         lua_pop(p_L, 1);
     }
 
@@ -159,8 +109,8 @@ void Script::start() {
                 async_start.resumable = true;
                 async_start.delay = static_cast<float>(lua_tonumber(async_start.thread, -1));
                 lua_pop(async_start.thread, nresults);
-#ifdef DEBUG
             } else {
+#ifdef DEBUG
                 std::cerr << "lua coroutine error - (internal) coroutine.yield nresults != 1\n";
                 exit(1);
 #endif
@@ -183,14 +133,7 @@ void Script::terminate() {
     if ((m_funcs & (1 << (uint32_t)Callback::OnExit))) {
         lua_rawgeti(p_L, LUA_REGISTRYINDEX, m_env);
         lua_getfield(p_L, -1, "OnExit");
-#ifdef DEBUG
-        if (lua_pcall(p_L, 0, 0, 0) != LUA_OK) {
-            std::cerr << "lua pcall error - " << lua_tostring(p_L, -1) << "\n";
-            exit(1);
-        }
-#else
-        lua_call(p_L, 0, 0);
-#endif
+        LUA_CHECK(lua_pcall(p_L, 0, 0, 0), "lua pcall error");
         lua_pop(p_L, 1);
     }
     p_L = nullptr;
@@ -204,7 +147,6 @@ void Script::update() {
     if (!p_L) { return; }
     if (m_terminate) {
         terminate();
-        return;
     }
 
     const auto deltatime = Time::deltatime();
@@ -213,14 +155,7 @@ void Script::update() {
         lua_rawgeti(p_L, LUA_REGISTRYINDEX, m_env);
         lua_getfield(p_L, -1, "OnUpdate");
         lua_pushnumber(p_L, deltatime);
-#ifdef DEBUG
-        if (lua_pcall(p_L, 1, 0, 0) != LUA_OK) {
-            std::cerr << "lua pcall error - " << lua_tostring(p_L, -1) << "\n";
-            exit(1);
-        }
-#else
-        lua_call(p_L, 1, 0);
-#endif
+        LUA_CHECK(lua_pcall(p_L, 1, 0, 0), "lua pcall error");
         lua_pop(p_L, 1);
     }
 
@@ -234,8 +169,8 @@ void Script::update() {
                     async_start.resumable = true;
                     async_start.delay = static_cast<float>(lua_tonumber(async_start.thread, -1));
                     lua_pop(async_start.thread, nresults);
-#ifdef DEBUG
                 } else {
+#ifdef DEBUG
                     std::cerr << "lua coroutine error - (internal) coroutine.yield nresults != 1\n";
                     exit(1);
 #endif
@@ -265,8 +200,8 @@ void Script::update() {
                     async_update.resumable = true;
                     async_update.delay = static_cast<float>(lua_tonumber(async_update.thread, -1));
                     lua_pop(async_update.thread, nresults);
-#ifdef DEBUG
                 } else {
+#ifdef DEBUG
                     std::cerr << "lua coroutine error - (internal) coroutine.yield nresults != 1\n";
                     exit(1);
 #endif
@@ -286,4 +221,30 @@ void Script::update() {
     }
 }
 
+
+
+static void check_permutations(uint32_t funcs, Script::AsyncCallback* coroutines) {
+    if (!(funcs & (1 << (uint32_t)Script::Callback::OnStart))  && !coroutines[(size_t)Script::Callback::OnStart].resumable &&
+        !(funcs & (1 << (uint32_t)Script::Callback::OnUpdate)) && !coroutines[(size_t)Script::Callback::OnUpdate].resumable &&
+        !(funcs & (1 << (uint32_t)Script::Callback::OnCreate)) &&
+        !(funcs & (1 << (uint32_t)Script::Callback::OnExit))) {
+        std::cerr << "lua parse error - script does not define any event handlers\n";
+        exit(1);
+    }
+    if ((funcs & (1 << (uint32_t)Script::Callback::OnStart)) && coroutines[(size_t)Script::Callback::OnStart].resumable) {
+        std::cerr << "lua parse error - 'OnStart' event handler is multiply defined\n";
+        exit(1);
+    }
+    if ((funcs & (1 << (uint32_t)Script::Callback::OnUpdate)) && coroutines[(size_t)Script::Callback::OnUpdate].resumable) {
+        std::cerr << "lua parse error - 'OnUpdate' event handler is multiply defined\n";
+        exit(1);
+    }
 }
+
+static int block_globals(lua_State* L) {
+    const char* key = lua_tostring(L, 2);
+    luaL_error(L, "attempted to access unsafe or nonexistent global: %s", key);
+    return 0;
+}
+
+} }

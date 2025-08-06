@@ -20,6 +20,6 @@
     "text_color_3": [ 0, 0, 0 ],
     "outline_width": 1,
     "default_cell": [ 0, 0, 1, 1 ],
-    "font": "baskerville.ttf",
+    "font": "calibri.ttf",
     "textured": true
 }
