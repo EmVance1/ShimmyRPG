@@ -25,7 +25,7 @@
 #include <random>
 #include <filesystem>
 namespace std { namespace fs = filesystem; }
-#ifdef SHMY_WINDOWS
+#ifdef _WIN32
 #define PATH_NORM(p) p
 #else
 #define PATH_NORM(p) p.u8string()

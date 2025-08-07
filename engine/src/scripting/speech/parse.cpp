@@ -112,8 +112,7 @@ static Outcome parse_outcome(Lexer& lexer) {
         auto text = std::string("");
         next = lexer.next();
         switch (next->type) {
-        case TokenType::Question:
-                   unwrap_token(lexer.next(), TokenType::OpenParen);
+        case TokenType::OpenParen:
             conditions = parse_flag_expr(lexer);
             text = unwrap_token(lexer.next(), TokenType::StringLiteral);
             break;

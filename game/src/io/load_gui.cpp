@@ -6,11 +6,13 @@
 
 
 void Area::load_gui() {
+    const auto viewport = render_settings->viewport;
+
     gui.set_style(p_region->get_style());
-    gui.set_size(sf::Vector2f(window->getSize()));
+    gui.set_size(sf::Vector2f(viewport));
     gui.set_background_color(sf::Color::Transparent);
     {
-        auto label = gui::Text::create(gui::Position::topcenter({0.f, 50.f}), sf::Vector2f(300, 35), p_region->get_style(), area_label);
+        auto label = gui::Text::create(gui::Position::topcenter({0.f, 50.f}), sf::Vector2f(300, 35), p_region->get_style(), story_id);
         label->set_text_alignment(gui::Alignment::Center);
         label->set_text_padding(0.f);
         gui.add_widget("area_label", label);
@@ -40,7 +42,7 @@ void Area::load_gui() {
     {
         auto dialogue_gui = gui::Panel::create(
                 gui::Position::bottomcenter({0.f, -250.f}),
-                sf::Vector2f((float)window->getSize().x - 800.f, 100.f),
+                sf::Vector2f((float)viewport.x - 800.f, 100.f),
                 p_region->get_style());
         dialogue_gui->set_enabled(false);
         dialogue_gui->set_visible(false);
@@ -57,14 +59,14 @@ void Area::load_gui() {
 
         auto line = gui::Text::create(
                 gui::Position::topright({0.f, 0.f}),
-                sf::Vector2f((float)window->getSize().x - 800.f, 100.f),
+                sf::Vector2f((float)viewport.x - 800.f, 100.f),
                 p_region->get_style(), "");
         line->set_text_padding(10.f);
         dialogue_gui->add_widget("lines", line);
 
         auto choice = gui::ButtonList::create(
                 gui::Position::bottomright({0.f, 0.f}),
-                sf::Vector2f((float)window->getSize().x - 800.f, 50.f),
+                sf::Vector2f((float)viewport.x - 800.f, 50.f),
                 p_region->get_style()
             );
         choice->set_enabled(false);
@@ -75,7 +77,7 @@ void Area::load_gui() {
     {
         auto combat_gui = gui::Panel::create(
                 gui::Position::bottomcenter({0.f, -50.f}),
-                sf::Vector2f((float)window->getSize().x - 800.f, 150.f),
+                sf::Vector2f((float)viewport.x - 800.f, 150.f),
                 p_region->get_style());
         combat_gui->set_enabled(false);
         combat_gui->set_visible(false);

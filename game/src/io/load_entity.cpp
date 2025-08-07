@@ -75,15 +75,19 @@ void Area::load_prefab(const rapidjson::Value& prefabs, const rapidjson::Value& 
     if (prefab.HasMember("trait_scriptable")) {
         const auto& ids = JSON_GET(prefab, "trait_scriptable");
         const auto script = JSON_GET_STR(ids, "script_id");
-        script_name_LUT[script] = e_id;
-        story_name_LUT[script] = JSON_GET_STR(ids, "story_id");
+        const auto story = JSON_GET_STR(ids, "story_id");
+        script_to_uuid[script] = e_id;
+        story_to_uuid[story] = e_id;
         entity.set_script_id(script);
+        entity.set_story_id(story);
     } else if (value.HasMember("trait_scriptable")) {
         const auto& ids = JSON_GET(value, "trait_scriptable");
         const auto script = JSON_GET_STR(ids, "script_id");
-        script_name_LUT[script] = e_id;
-        story_name_LUT[script] = JSON_GET_STR(ids, "story_id");
+        const auto story = JSON_GET_STR(ids, "story_id");
+        script_to_uuid[script] = e_id;
+        story_to_uuid[story] = e_id;
         entity.set_script_id(script);
+        entity.set_story_id(story);
     }
 
     // DIALOGUE ===============================================
@@ -170,9 +174,11 @@ void Area::load_entity(const rapidjson::Value& prefabs, const rapidjson::Value& 
     if (value.HasMember("trait_scriptable")) {
         const auto& ids = JSON_GET(value, "trait_scriptable");
         const auto script = JSON_GET_STR(ids, "script_id");
-        script_name_LUT[script] = e_id;
-        story_name_LUT[script] = JSON_GET_STR(ids, "story_id");
+        const auto story = JSON_GET_STR(ids, "story_id");
+        script_to_uuid[script] = e_id;
+        story_to_uuid[story] = e_id;
         entity.set_script_id(script);
+        entity.set_story_id(story);
     }
 
     // MOVEMENT ===============================================

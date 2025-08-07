@@ -1,8 +1,9 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 #include "scripting/speech/graph.h"
-#include "game/game_mode.h"
 
+
+enum class GameMode;
 
 class Dialogue {
 public:

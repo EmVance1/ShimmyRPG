@@ -9,14 +9,14 @@
     ],
     "triggers": [
         {
-            "//": "shimmy front door",
-            "rect": [ 750, 345, 120, 30 ],
-            "action": { "GotoArea": { "index": 0, "spawnpos": [ 365, 555 ], "suppress_triggers": true } }
+            // shimmy front door
+            "rect": [ 755, 345, 125, 30 ],
+            "action": { "GotoArea": { "index": 0, "spawnpos": [ 320, 540 ] } }
         }
     ],
     "entities": [
         {
-            "texture": "player_placeholder", "position": { "world": [ 350, 450 ] }, "tags": [ "player" ],
+            "texture": "player_placeholder", "position": { "world": [ 750, 500 ] }, "tags": [ "player" ],
             "trait_scriptable": { "script_id": "player", "story_id": "-" },
             "trait_movement": { "speed": 2.5 }
         },

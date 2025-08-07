@@ -33,7 +33,7 @@ void NormalMode::speak_action(const std::string& target, const std::string& spee
             p_area->begin_dialogue(shmy::speech::load_from_file(shmy::env::pkg_full() / speech), speech);
             p_area->set_mode(GameMode::Dialogue);
         } else {
-            p_area->begin_dialogue(shmy::speech::load_from_line(t.get_script_id(), speech), t.get_script_id());
+            p_area->begin_dialogue(shmy::speech::load_from_line(t.script_id(), speech), t.script_id());
             p_area->set_mode(GameMode::Dialogue);
         }
     } else {
@@ -58,7 +58,7 @@ void NormalMode::handle_event(const sf::Event& event) {
 
     if (auto mbp = event.getIf<sf::Event::MouseButtonPressed>()) {
         if (mbp->button == sf::Mouse::Button::Left) {
-            const auto mapped = Area::window->mapPixelToCoords(mbp->position, p_area->camera);
+            const auto mapped = p_area->camera.mapPixelToWorld(mbp->position, p_area->render_settings->viewport);
             const auto iso = p_area->iso_to_cart.transformPoint(mapped);
             auto& player = p_area->get_player();
             player.get_tracker().start();
@@ -82,10 +82,10 @@ void NormalMode::handle_event(const sf::Event& event) {
                     for (const auto& action : e->get_actions()) {
                         const auto act = action.to_string();
                         if (action.index() == ContextAction::ActionID::MoveTo) {
-                            const auto& id = e->get_id();
+                            const auto& id = e->id();
                             ctx_menu->add_button(act, [&, id](){ move_to_action(id); });
                         } else if (action.index() == ContextAction::ActionID::Speak) {
-                            const auto& id = e->get_id();
+                            const auto& id = e->id();
                             const auto& sp = e->get_dialogue();
                             ctx_menu->add_button(act, [&, id, sp](){ speak_action(id, sp); });
                         } else {
@@ -97,7 +97,7 @@ void NormalMode::handle_event(const sf::Event& event) {
             }
         }
     } else if (auto mmv = event.getIf<sf::Event::MouseMoved>()) {
-        const auto mapped = Area::window->mapPixelToCoords(mmv->position, p_area->camera);
+        const auto mapped = p_area->camera.mapPixelToWorld(mmv->position, p_area->render_settings->viewport);
         for (Entity* e : p_area->sorted_entities) {
             e->set_hovered(false);
         }
@@ -107,7 +107,7 @@ void NormalMode::handle_event(const sf::Event& event) {
             top->set_hovered(true);
             if (top->is_character()) {
                 tt->set_position(gui::Position::topleft(sf::Vector2f(mmv->position) - sf::Vector2f(0.f, tt->get_size().y)));
-                tt->set_label(p_area->story_name_LUT.at(top->get_script_id()));
+                tt->set_label(top->story_id());
                 tt->set_visible(true);
             }
         }
@@ -130,7 +130,7 @@ void NormalMode::handle_event(const sf::Event& event) {
         p_area->zoom *= (scrl->delta > 0) ? 0.98f : 1.02f;
         p_area->zoom_target = p_area->zoom;
         const auto begin = p_area->get_player().get_sprite().getPosition();
-        p_area->camera.setSize(p_area->zoom * (sf::Vector2f)p_area->window->getSize());
+        p_area->camera.setSize(p_area->zoom * (sf::Vector2f)p_area->render_settings->viewport);
         const auto end = p_area->get_player().get_sprite().getPosition();
         p_area->camera.move(begin - end);
     }
@@ -158,7 +158,7 @@ void NormalMode::update() {
 
     for (auto& t : p_area->triggers) {
         if (p_area->get_player().get_trigger_collider().intersects(t.bounds)) {
-            if (!p_area->suppress_triggers && !t.cooldown) {
+            if (!t.cooldown) {
                 p_area->handle_trigger(t);
             }
             t.cooldown = true;
@@ -166,7 +166,6 @@ void NormalMode::update() {
             t.cooldown = false;
         }
     }
-    p_area->suppress_triggers = false;
     p_area->suppress_portals = false;
 
     // p_area->gui.update();

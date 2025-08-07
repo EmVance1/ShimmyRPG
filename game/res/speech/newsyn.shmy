@@ -11,12 +11,12 @@ v01 = BrianPrime: [ "Good on ye." ] => game
 v02 = BrianPrime: [ "You need to open yourself up to new experiences friend." ] => game
 
 game = BrianPrime: [ "Why don't you pick a card, any card." ] => {
-    (rng_pick3 == 0) "*Pick higher up*"  => vWin0,
-    (rng_pick  == 0) "*Pick lower down*" => vLoss0,
-    (rng_pick  == 1) "*Pick higher up*"  => vLoss0,
-    (rng_pick  == 1) "*Pick lower down*" => vDraw0,
-    (rng_pick  == 2) "*Pick higher up*"  => vDraw0,
-    (rng_pick  == 2) "*Pick lower down*" => vWin0,
+    (card_pick:rng(3) == 0) "*Pick higher up*"  => vWin0,
+    (card_pick        == 0) "*Pick lower down*" => vLoss0,
+    (card_pick        == 1) "*Pick higher up*"  => vLoss0,
+    (card_pick        == 1) "*Pick lower down*" => vDraw0,
+    (card_pick        == 2) "*Pick higher up*"  => vDraw0,
+    (card_pick        == 2) "*Pick lower down*" => vWin0,
 }
 
 vWin0 = Narrator: [ "*You draw an ace.*" ] => vWin1

@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "json.h"
-#include <corecrt_wstdio.h>
+#include <rapidjson/reader.h>
 #include <rapidjson/error/en.h>
 
 
@@ -52,7 +52,7 @@ sf::Color into_color(const rapidjson::Value& arr) {
 }
 
 
-#ifdef SHMY_WINDOWS
+#ifdef _WIN32
 #define os_fopen(filename, mode) _wfopen(filename.c_str(), L##mode);
 #else
 #define os_fopen(filename, mode) fopen((const char*)filename.u8string().c_str(), mode);
@@ -69,13 +69,15 @@ rapidjson::Document load_from_file(const std::fs::path& filename) {
     rapidjson::FileReadStream is(fp, readBuffer, sizeof(readBuffer));
     rapidjson::Document doc;
 #ifdef DEBUG
-    rapidjson::ParseResult ok = doc.ParseStream(is);
+    constexpr auto FLAGS = rapidjson::kParseValidateEncodingFlag|rapidjson::kParseTrailingCommasFlag|rapidjson::kParseCommentsFlag;
+    rapidjson::ParseResult ok = doc.ParseStream<FLAGS>(is);
     if (!ok) {
         throw std::invalid_argument(std::string("invalid json document - ")
                 + rapidjson::GetParseError_En(ok.Code()) + " (" + std::to_string(ok.Offset()) + ")");
     }
 #else
-    doc.ParseStream(is);
+    constexpr auto FLAGS = rapidjson::kParseTrailingCommasFlag|rapidjson::kParseCommentsFlag;
+    doc.ParseStream<FLAGS>(is);
 #endif
     fclose(fp);
     return doc;

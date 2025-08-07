@@ -1,6 +1,6 @@
 #pragma once
 #include <SFML/Graphics.hpp>
-#include <navmesh/types.h>
+#include <navmesh/lib.h>
 
 
 namespace nav {
@@ -18,7 +18,7 @@ public:
     constexpr static float MAX_PENALTY = 100000.f;
 
 private:
-    const nav::NavMesh* mesh = nullptr;
+    const nav::Mesh* mesh = nullptr;
     nav::Path path;
     size_t path_index = 0;
     float path_prog = 0.f;
@@ -29,7 +29,7 @@ private:
     bool override_stop = false;
 
 public:
-    PathTracker(const nav::NavMesh* _mesh) : mesh(_mesh) {}
+    PathTracker(const nav::Mesh* _mesh) : mesh(_mesh) {}
 
     void set_speed(float _speed) { speed = _speed; }
     float get_speed() const { return speed; }

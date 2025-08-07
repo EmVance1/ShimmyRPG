@@ -11,7 +11,7 @@ struct BeginScript   { std::string filename; };
 struct BeginDialogue { std::string filename; };
 struct Popup         { std::string message; };
 struct GotoRegion    { std::string filename; };
-struct GotoArea      { size_t index; sf::Vector2f spawnpos; bool suppress_triggers; std::string lock_id; };
+struct GotoArea      { size_t index; sf::Vector2f spawnpos; std::string lock_id; };
 struct CameraZoom    { float target; };
 struct ChangeFlag    { std::string name; FlagModifier mod; };
 using TriggerAction = std::variant<BeginScript, BeginDialogue, Popup, GotoRegion, GotoArea, CameraZoom, ChangeFlag>;

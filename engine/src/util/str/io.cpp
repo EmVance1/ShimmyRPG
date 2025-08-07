@@ -11,7 +11,16 @@ std::string read_to_string(const std::fs::path& filename) {
     f.seekg(0, std::ios::beg);
     auto buffer = std::make_unique<char[]>(size);
     f.read(buffer.get(), size);
+#ifdef DEBUG
+    const auto res = std::string(buffer.get(), size);
+    if (!utf8::is_valid(res)) {
+        std::cout << "encoding error - file " << filename << " was not valid utf-8\n";
+        exit(1);
+    }
+    return res;
+#else
     return std::string(buffer.get(), size);
+#endif
 }
 
 void write_to_file(const std::fs::path& filename, const std::string& content) {

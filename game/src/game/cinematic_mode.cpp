@@ -7,23 +7,23 @@
 
 
 void CinematicMode::handle_event(const sf::Event& event) {
-    if (p_area->dialogue.get_state() == Dialogue::State::Player) {
+    if (dialogue.get_state() == Dialogue::State::Player) {
         p_area->gui.handle_event(event);
     } else {
         if (auto kyp = event.getIf<sf::Event::KeyPressed>()) {
-            if (kyp->code == sf::Keyboard::Key::Space && p_area->dialogue.is_playing()) {
-                p_area->dialogue.advance();
+            if (kyp->code == sf::Keyboard::Key::Space && dialogue.is_playing()) {
+                dialogue.advance();
             }
         } else if (auto mbp = event.getIf<sf::Event::MouseButtonPressed>()) {
-            if (mbp->button == sf::Mouse::Button::Left && p_area->dialogue.is_playing()) {
-                p_area->dialogue.advance();
+            if (mbp->button == sf::Mouse::Button::Left && dialogue.is_playing()) {
+                dialogue.advance();
             }
         }
     }
 
-    if (p_area->dialogue.apply_advance()) {
-        if (p_area->dialogue.is_playing()) {
-            const auto elem = p_area->dialogue.get_current_element();
+    if (dialogue.apply_advance()) {
+        if (dialogue.is_playing()) {
+            const auto elem = dialogue.get_current_element();
             if (auto line = std::get_if<Dialogue::Line>(&elem)) {
                 auto choice_gui = dia_gui->get_widget("choices");
                 choice_gui->set_enabled(false);
@@ -32,7 +32,7 @@ void CinematicMode::handle_event(const sf::Event& event) {
                 if (line->speaker == "Narrator") {
                     std::dynamic_pointer_cast<gui::TextWidget>(speaker_gui)->set_label("Narrator");
                 } else {
-                    std::dynamic_pointer_cast<gui::TextWidget>(speaker_gui)->set_label(p_area->story_name_LUT[line->speaker]);
+                    std::dynamic_pointer_cast<gui::TextWidget>(speaker_gui)->set_label(p_area->get_entity_by_script_id(line->speaker).story_id());
                 }
                 auto line_gui = dia_gui->get_widget("lines");
                 line_gui->set_visible(true);
@@ -45,7 +45,7 @@ void CinematicMode::handle_event(const sf::Event& event) {
                 choice_gui->set_visible(true);
                 for (const auto& c : *choice) {
                     size_t i = c.index;
-                    auto b = choice_gui->add_button(c.line, [&, i](){ p_area->dialogue.advance(i); });
+                    auto b = choice_gui->add_button(c.line, [&, i](){ dialogue.advance(i); });
                     b->set_text_padding(10.f);
                 }
             }
@@ -53,10 +53,10 @@ void CinematicMode::handle_event(const sf::Event& event) {
             auto choice_gui = dia_gui->get_widget("choices");
             choice_gui->set_enabled(false);
             choice_gui->set_visible(false);
-            p_area->set_mode(p_area->dialogue.get_init_mode());
+            p_area->set_mode(dialogue.get_init_mode());
             dia_gui->set_enabled(false);
             dia_gui->set_visible(false);
-            if (const auto fu = p_area->dialogue.get_followup()) {
+            if (const auto fu = dialogue.get_followup()) {
                 auto& s = p_area->scripts.emplace_back(p_area->lua_vm, fu.value(), "shmy");
                 s.start();
             }
@@ -70,7 +70,7 @@ void CinematicMode::update() {
             e.update(p_area->cart_to_iso);
         }
     }
-    if (!p_area->dialogue.is_playing()) {
+    if (!dialogue.is_playing()) {
         for (auto& s : p_area->scripts) {
             s.update();
         }

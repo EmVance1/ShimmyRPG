@@ -9,7 +9,7 @@
 namespace shmy {
 
 class AsyncBackground : public sf::Drawable {
-public:
+private:
     enum class LoadState { UNLOADED, LOADING, LOADED, INTERRUPTED };
 
 private:
@@ -40,6 +40,7 @@ private:
 
 public:
     AsyncBackground() = default;
+    AsyncBackground(const AsyncBackground& other);
     AsyncBackground(AsyncBackground&& other);
 
     void load_from_json(const rapidjson::Value& value, float margin);

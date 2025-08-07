@@ -105,7 +105,7 @@ static int l_entity_get(lua_State* L) {
     const auto entity = lua_tostring(L, 1);
     lua_getfield(L, LUA_REGISTRYINDEX, "_area");
     const auto area = static_cast<Area*>(lua_touserdata(L, -1));
-    create_entity_table(L, &area->entities.at(area->script_name_LUT.at(entity)));
+    create_entity_table(L, &area->entities.at(area->script_to_uuid.at(entity)));
 
     return 1;
 }
@@ -366,7 +366,7 @@ static int l_set_overlay(lua_State* L) {
     const auto col = lua_tocolor(L, 1);
     lua_getfield(L, LUA_REGISTRYINDEX, "_area");
     const auto area = static_cast<Area*>(lua_touserdata(L, -1));
-    area->overlaycolor = col;
+    area->render_settings->overlay = col;
 
     return 0;
 }
@@ -375,13 +375,11 @@ static int l_set_overlay(lua_State* L) {
 static int l_goto_area(lua_State* L) {
     const auto idx = lua_tointeger(L, 1);
     const auto spawnpos = lua_tovec2f(L, 2);
-    const auto sup = lua_toboolean(L, 3);
     lua_getfield(L, LUA_REGISTRYINDEX, "_area");
     const auto area = static_cast<Area*>(lua_touserdata(L, -1));
     const auto& cti = area->cart_to_iso;
     area->p_region->set_active_area(idx);
     area->p_region->get_active_area().get_player().set_position(spawnpos, cti);
-    area->p_region->get_active_area().suppress_triggers = sup;
     area->p_region->get_active_area().suppress_portals = true;
 
     return 0;

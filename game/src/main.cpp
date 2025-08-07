@@ -1,5 +1,4 @@
 #include "pch.h"
-#include <sfutil/sfutil.h>
 #include "time/deltatime.h"
 #include "world/region.h"
 #include "world/area.h"
@@ -24,13 +23,16 @@ int main(int argc, char** argv) {
     }
 
     auto window = sf::RenderWindow(VIDEO_MODE, "Shimmy", SCREEN_MODE);
-    window.setVerticalSyncEnabled(true);
+    // window.setVerticalSyncEnabled(true);
+    window.setMouseCursorVisible(false);
     window.setPosition({0, 0});
-    Area::window = &window;
     gui::Widget::WIN_SIZE = window.getSize();
 
-    auto target = sfu::PostFx();
+    auto target = sf::RenderTexture();
     auto _ = target.resize(window.getSize());
+
+    auto render_settings = RenderSettings((sf::Vector2i)target.getSize());
+    Area::render_settings = &render_settings;
 
     auto region = Region();
     auto region_folder = std::string("");
@@ -46,17 +48,19 @@ int main(int argc, char** argv) {
         region.load_from_dir(region_folder, std::atoi(tokens[3].c_str()));
     }
 
-    // auto& pixelate = target.loadShaderFromFile("res/shaders/pixelate.frag");
-    // pixelate.setUniform("u_resolution", (sf::Vector2f)window.getSize());
+    /*
+    auto& pixelate = render_settings.shaders.emplace_back(std::fs::path("res/shaders/pixelate.frag"), sf::Shader::Type::Fragment);
+    pixelate.setUniform("u_resolution", (sf::Vector2f)window.getSize());
 
-    // target.loadShaderFromFile("res/shaders/poster.frag");
+    render_settings.shaders.emplace_back(std::fs::path("res/shaders/poster.frag"), sf::Shader::Type::Fragment);
 
-    // auto& CRT = target.loadShaderFromFile("res/shaders/CRT.frag");
-    // CRT.setUniform("u_curvature", sf::Vector2f(4.f, 4.f));
+    auto& CRT = render_settings.shaders.emplace_back(std::fs::path("res/shaders/CRT.frag"), sf::Shader::Type::Fragment);
+    CRT.setUniform("u_curvature", sf::Vector2f(4.f, 4.f));
 
-    // auto& glitch = target.loadShaderFromFile("res/shaders/glitch.frag");
-    // glitch.setUniform("u_dist", 3);
-    // glitch.setUniform("u_resolution", (sf::Vector2f)window.getSize());
+    auto& glitch = render_settings.shaders.emplace_back(std::fs::path("res/shaders/glitch.frag"), sf::Shader::Type::Fragment);
+    glitch.setUniform("u_dist", 3);
+    glitch.setUniform("u_resolution", (sf::Vector2f)window.getSize());
+    */
 
     const auto font = sf::Font(shmy::env::app_dir() / "calibri.ttf");
     auto fps_draw = sf::Text(font, "0", 25);
@@ -66,8 +70,6 @@ int main(int argc, char** argv) {
     const auto cursor_tex = sf::Texture(shmy::env::pkg_full() / "textures/cursor.png");
     auto cursor = sf::Sprite(cursor_tex);
     cursor.setOrigin({ 4, 3 });
-
-    window.setMouseCursorVisible(false);
 
     Time::reset();
 
@@ -98,12 +100,27 @@ int main(int argc, char** argv) {
         target.clear(sf::Color::Black);
         region.get_active_area().render_world(target);
 
-        target.postFxDisplay();
+
+        const auto viewcache = target.getView();
+        target.setView(target.getDefaultView());
+        target.display();
+        for (const auto& shader : render_settings.shaders) {
+            auto tex = sf::Texture(target.getTexture());
+            const auto buff = sf::Sprite(tex);
+            target.clear();
+            target.draw(buff, &shader);
+            target.display();
+        }
+        target.setView(viewcache);
+
+
         auto target_sp = sf::Sprite(target.getTexture());
-        target_sp.setColor(region.get_active_area().overlaycolor);
+        target_sp.setTextureRect((sf::IntRect)render_settings.crop);
+        target_sp.setPosition((sf::Vector2f)render_settings.crop.position);
+        target_sp.setColor(render_settings.overlay);
         window.draw(target_sp);
 
-        /*
+
         target.clear(sf::Color::Transparent);
         region.get_active_area().render_overlays(target);
         target.setView(target.getDefaultView());
@@ -112,17 +129,10 @@ int main(int argc, char** argv) {
         target.draw(cursor);
         target.draw(fps_draw);
 
-        target.postFxDisplay();
+        target.display();
         target_sp = sf::Sprite(target.getTexture());
         window.draw(target_sp);
-        */
 
-        region.get_active_area().render_overlays(window);
-        window.setView(window.getDefaultView());
-        const auto mouse = sf::Mouse::getPosition(window);
-        cursor.setPosition(sf::Vector2f(mouse));
-        window.draw(cursor);
-        window.draw(fps_draw);
 
         window.display();
     }

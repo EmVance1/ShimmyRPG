@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "dialogue.h"
 #include "flags.h"
+#include "game/game_mode.h"
 
 
 namespace dia = shmy::speech;

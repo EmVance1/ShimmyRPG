@@ -1,6 +1,7 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 #include "gui/gui.h"
+#include "game/dialogue.h"
 
 
 struct Area;
@@ -11,6 +12,7 @@ private:
 
 public:
     std::shared_ptr<gui::Panel> dia_gui;
+    Dialogue dialogue;
 
 public:
     CinematicMode() = default;

@@ -50,7 +50,7 @@ void set_pkg(const std::fs::path& pkg) {
 } }
 
 
-#ifdef SHMY_WINDOWS
+#ifdef _WIN32
 #include <Windows.h>
 #include <userenv.h>
 #include <shlobj.h>

@@ -42,9 +42,8 @@ void CombatMode::handle_event(const sf::Event& event) {
             if (active_is_playable()) {
                 auto& active = get_active();
                 if (!active.is_hovered() && active.get_stats().movement > 0.1f) {
-                    const auto mapped = Area::window->mapPixelToCoords(mbp->position, p_area->camera);
+                    const auto mapped = p_area->camera.mapPixelToWorld(mbp->position, p_area->render_settings->viewport);
                     const auto iso = p_area->iso_to_cart.transformPoint(mapped);
-
                     active.get_tracker().start();
                     if (active.get_tracker().set_target_position(iso)) {
                         const auto len = active.get_tracker().get_active_path_length();
@@ -59,9 +58,8 @@ void CombatMode::handle_event(const sf::Event& event) {
             }
         }
     } else if (auto mmv = event.getIf<sf::Event::MouseMoved>()) {
-        const auto mapped = Area::window->mapPixelToCoords(mmv->position, p_area->camera);
+        const auto mapped = p_area->camera.mapPixelToWorld(mbp->position, p_area->render_settings->viewport);
         const auto iso = p_area->iso_to_cart.transformPoint(mapped);
-
         for (Entity* e : p_area->sorted_entities) {
             e->set_hovered(false);
         }
@@ -71,7 +69,7 @@ void CombatMode::handle_event(const sf::Event& event) {
             top->set_hovered(true);
             if (top->is_character()) {
                 tt->set_position(gui::Position::topleft(sf::Vector2f(mmv->position) - sf::Vector2f(0.f, tt->get_size().y)));
-                tt->set_label(p_area->story_name_LUT.at(top->get_script_id()));
+                tt->set_label(top->story_id());
                 tt->set_visible(true);
             }
         }
@@ -112,7 +110,7 @@ void CombatMode::update() {
         advance_turn = false;
 
         if (active_is_playable()) {
-            atk_gui->get_widget<gui::Text>("current_actor")->set_label(p_area->story_name_LUT[get_active().get_script_id()]);
+            atk_gui->get_widget<gui::Text>("current_actor")->set_label(get_active().story_id());
             atk_gui->set_visible(true);
             atk_gui->set_enabled(true);
         } else {

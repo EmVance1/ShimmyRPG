@@ -6,7 +6,7 @@
 
 struct Area;
 
-class AreaDebugView {
+class AreaDebugger {
 private:
     std::vector<sf::Vertex> m_pathfinder;
     std::vector<sf::RectangleShape> m_triggers;

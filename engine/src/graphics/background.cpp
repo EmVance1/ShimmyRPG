@@ -6,8 +6,20 @@
 
 namespace shmy {
 
+AsyncBackground::AsyncBackground(const AsyncBackground& other)
+    : m_margin(other.m_margin)
+{
+    m_tiles.reserve(other.m_tiles.size());
+    for (const auto& tile : other.m_tiles) {
+        m_tiles.emplace_back(
+            tile.filename,
+            tile.bounds
+        );
+    }
+}
+
 AsyncBackground::AsyncBackground(AsyncBackground&& other)
-    : m_tiles(std::move(other.m_tiles)), m_pool(), m_margin(other.m_margin)
+    : m_tiles(std::move(other.m_tiles)), m_margin(other.m_margin)
 {}
 
 

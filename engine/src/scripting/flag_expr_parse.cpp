@@ -124,6 +124,24 @@ static FlagExpr parse_cmp(Lexer& lexer, Token& next) {
     }
 }
 
+/*
+static std::pair<FlagExpr, bool> parse_post(Lexer& lexer, Token& next, FlagExpr&& inner) {
+    switch (next.type) {
+    case TokenType::Colon:
+        next = *lexer.next();
+        if (next.type == TokenType::Identifier) {
+            auto name = next.val;
+            next = *lexer.next();
+            return FlagExpr::Assign(std::move(inner), FlagExpr::Func());
+        } else {
+            throw std::exception("error parsing assign expression");
+        }
+    default:
+        throw std::exception("error parsing postfix expression");
+    }
+}
+*/
+
 static FlagExpr parse_unit(Lexer& lexer, Token& next) {
     switch (next.type) {
     case TokenType::IntLiteral: {
@@ -140,6 +158,14 @@ static FlagExpr parse_unit(Lexer& lexer, Token& next) {
         } else if (id.starts_with("rng_")) {
             return parse_random(id);
         } else {
+            /*
+            auto [exp, found] = parse_post(lexer, next, FlagExpr::Identifier(std::move(id)));
+            while (found) {
+                auto [e2, f2] = parse_post(lexer, next, std::move(exp));
+                exp = std::move(e2);
+                found = f2;
+            }
+            */
             return FlagExpr::Identifier(std::move(id));
         }
         break; }

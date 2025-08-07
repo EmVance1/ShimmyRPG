@@ -23,7 +23,7 @@
 #include <random>
 #include <filesystem>
 namespace std { namespace fs = filesystem; }
-#ifdef SHMY_WINDOWS
+#ifdef _WIN32
 #define PATH_NORM(p) p
 #else
 #define PATH_NORM(p) p.u8string()
@@ -47,6 +47,4 @@ namespace std { namespace fs = filesystem; }
 #include <utf8.h>
 
 #include <sfutil/sfutil.h>
-
-namespace std { namespace fs = filesystem; }
 

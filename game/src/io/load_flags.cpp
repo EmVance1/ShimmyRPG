@@ -5,7 +5,7 @@
 
 namespace shmy { namespace flags {
 
-static void load_file(const std::fs::path& filename, const std::string& prefix) {
+static void load_file(const std::fs::path& filename, const std::fs::path& prefix) {
     auto file = std::ifstream(PATH_NORM(filename));
     auto line = std::string("");
     bool err = false;
@@ -15,33 +15,33 @@ static void load_file(const std::fs::path& filename, const std::string& prefix) 
             continue;
         }
         auto stream = std::stringstream(line);
-        auto f = std::string("");
-        auto v = std::string("");
-        stream >> f >> v;
-        if (f == "true" || f == "false" || f == "inf" || f == "default") {
-            std::cerr << "runtime error: flag init error - '" << f << "' is a reserved value and cannot be overriden\n";
+        auto key = std::string("");
+        auto val = std::string("");
+        stream >> key >> val;
+        if (key == "true" || key == "false" || key == "inf" || key == "default") {
+            std::cerr << "runtime error: flag init error - '" << key << "' is a reserved value and cannot be overriden\n";
             err = true;
             continue;
         }
-        if (f.starts_with("rng")) {
+        if (key.starts_with("rng")) {
             std::cerr << "runtime error: flag init error - 'rng' prefix is reserved for temporary internal flags\n";
             err = true;
             continue;
         }
-        if (f.starts_with("once")) {
+        if (key.starts_with("once")) {
             std::cerr << "runtime error: flag init error - 'once' prefix is reserved for temporary internal flags\n";
             err = true;
             continue;
         }
         if (prefix != "Global") {
-            f = prefix + "_" + f;
+            key = prefix.string() + "_" + key;
         }
-        if (v == "true") {
-            FlagTable::set_flag(f, 1, false);
-        } else if (v == "false") {
-            FlagTable::set_flag(f, 0, false);
+        if (val == "true") {
+            FlagTable::set_flag(key, 1, false);
+        } else if (val == "false") {
+            FlagTable::set_flag(key, 0, false);
         } else {
-            FlagTable::set_flag(f, std::atoi(v.c_str()), false);
+            FlagTable::set_flag(key, std::atoi(val.c_str()), false);
         }
     }
 
@@ -52,11 +52,10 @@ static void load_file(const std::fs::path& filename, const std::string& prefix) 
 void load_from_dir(const std::fs::path& dir) {
     FlagTable::set_flag("true", 1, false);
     FlagTable::set_flag("false", 0, false);
-    FlagTable::set_flag("inf", UINT32_MAX, false);
-    FlagTable::set_flag("default", 1, false);
+    FlagTable::set_flag("inf", UINT64_MAX, false);
 
     for (const auto& f : std::fs::directory_iterator(dir)) {
-        load_file(f.path().generic_string(), f.path().stem().generic_string());
+        load_file(f.path(), f.path().stem());
     }
 }
 

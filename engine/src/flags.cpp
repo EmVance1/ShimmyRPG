@@ -31,7 +31,7 @@ std::ostream& operator<<(std::ostream& stream, const FlagModifier& p) {
 }
 
 
-std::unordered_map<std::string, uint32_t> FlagTable::cache;
+std::unordered_map<std::string, uint64_t> FlagTable::cache;
 
 
 void FlagTable::change_flag(const std::string& key, const FlagModifier& mod) {
@@ -77,7 +77,7 @@ void FlagTable::change_flag(const std::string& key, const FlagModifier& mod) {
     }
 }
 
-void FlagTable::set_flag(const std::string& key, uint32_t val, bool strict) {
+void FlagTable::set_flag(const std::string& key, uint64_t val, bool strict) {
     if (strict) {
 #ifdef DEBUG
         if (!has_flag(key)) {
@@ -91,7 +91,7 @@ void FlagTable::set_flag(const std::string& key, uint32_t val, bool strict) {
     }
 }
 
-uint32_t FlagTable::get_flag(const std::string& key, bool strict) {
+uint64_t FlagTable::get_flag(const std::string& key, bool strict) {
     if (strict) {
 #ifdef DEBUG
         if (!has_flag(key)) {

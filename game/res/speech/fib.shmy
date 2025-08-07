@@ -14,28 +14,28 @@ entry(default) = ShimmyPrime: [ "" ] => {
 }
 
 loop = ShimmyPrime: [ "loop" ] => {
-    ?(i <  5)"" => dup{ sum_a: Set(0), sum_b: Set(0), i: Add(1), dup_state: Set(0), prop_state: Set(0), dup_temp: Set(0) },
-    ?(i == 5)"" => exit,
+    (i <  5)"" => dup{ sum_a: Set(0), sum_b: Set(0), i: Add(1), dup_state: Set(0), prop_state: Set(0), dup_temp: Set(0) },
+    (i == 5)"" => exit,
 }
 
 dup = ShimmyPrime: [ "dup" ] => {
-    ?(dup_state == 0 & a >  0)       "" => dup{ a: Sub(1), sum_a: Add(1) },
-    ?(dup_state == 0 & a == 0)       "" => dup{ dup_state: Set(1) },
-    ?(dup_state == 1 & b >  0)       "" => dup{ b: Sub(1), dup_temp: Add(1), sum_b: Add(1) },
-    ?(dup_state == 1 & b == 0)       "" => dup{ dup_state: Set(2) },
-    ?(dup_state == 2 & dup_temp >  0)"" => dup{ dup_temp: Sub(1), b: Add(1) },
-    ?(dup_state == 2 & dup_temp == 0)"" => sum,
+    (dup_state == 0 & a >  0)       "" => dup{ a: Sub(1), sum_a: Add(1) },
+    (dup_state == 0 & a == 0)       "" => dup{ dup_state: Set(1) },
+    (dup_state == 1 & b >  0)       "" => dup{ b: Sub(1), dup_temp: Add(1), sum_b: Add(1) },
+    (dup_state == 1 & b == 0)       "" => dup{ dup_state: Set(2) },
+    (dup_state == 2 & dup_temp >  0)"" => dup{ dup_temp: Sub(1), b: Add(1) },
+    (dup_state == 2 & dup_temp == 0)"" => sum,
 }
 
 sum = ShimmyPrime: [ "sum" ] => {
-    ?(sum_a >  0)"" => sum{ sum_a: Sub(1), sum_b: Add(1) },
-    ?(sum_a == 0)"" => prop{ a: Set(0) },
+    (sum_a >  0)"" => sum{ sum_a: Sub(1), sum_b: Add(1) },
+    (sum_a == 0)"" => prop{ a: Set(0) },
 }
 
 prop = ShimmyPrime: [ "prop" ] => {
-    ?(prop_state == 0 & b >  0)    "" => prop{ b: Sub(1), a: Add(1) },
-    ?(prop_state == 0 & b == 0)    "" => prop{ prop_state: Set(1) },
-    ?(prop_state == 1 & sum_b >  0)"" => prop{ sum_b: Sub(1), b: Add(1) },
-    ?(prop_state == 1 & sum_b == 0)"" => loop,
+    (prop_state == 0 & b >  0)    "" => prop{ b: Sub(1), a: Add(1) },
+    (prop_state == 0 & b == 0)    "" => prop{ prop_state: Set(1) },
+    (prop_state == 1 & sum_b >  0)"" => prop{ sum_b: Sub(1), b: Add(1) },
+    (prop_state == 1 & sum_b == 0)"" => loop,
 }
 

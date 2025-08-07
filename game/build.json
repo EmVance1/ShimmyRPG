@@ -12,7 +12,6 @@
         "rapidjson",
         "utfcpp"
     ],
-    "defines": [ "SHMY_WINDOWS" ],
 
     "linker-options": [ "Userenv.lib" ]
 }

@@ -10,26 +10,17 @@
 #include "objects/trigger.h"
 
 
-const sf::RenderWindow* Area::window = nullptr;
 void init_engine_api(lua_State* L);
 
 
 Area::Area(const std::string& _id, Region* parent_region)
-    : p_region(parent_region), id(_id), overlaycolor(sf::Color::White),
-    camera(sf::FloatRect({0, 0}, (sf::Vector2f)window->getSize())),
-    gui(gui::Position::topleft({0, 0}), sf::Vector2f(window->getSize()), parent_region->get_style())
+    : p_region(parent_region), id(_id),
+    camera(sf::FloatRect({0, 0}, (sf::Vector2f)render_settings->viewport)),
+    gui(gui::Position::topleft({0, 0}), sf::Vector2f(render_settings->viewport), parent_region->get_style())
 {
     motionguide_square.setFillColor(sf::Color::Transparent);
     motionguide_square.setOutlineColor(sf::Color::Cyan);
     motionguide_square.setOutlineThickness(1);
-
-    const auto winsize = window->getSize();
-    cinemabar_top.setPosition({0, -150.f});
-    cinemabar_top.setSize({(float)winsize.x, 150});
-    cinemabar_top.setFillColor(sf::Color::Black);
-    cinemabar_bot.setPosition({0, (float)winsize.y});
-    cinemabar_bot.setSize({(float)winsize.x, 150});
-    cinemabar_bot.setFillColor(sf::Color::Black);
 
     lua_vm = luaL_newstate();
     luaL_openlibs(lua_vm);
@@ -51,10 +42,10 @@ Area::~Area() {
 void Area::init(const rapidjson::Value& prefabs, const rapidjson::Document& doc) {
     const auto& meta = JSON_GET(doc, "world");
 
-    area_label = std::string(JSON_GET_STR(meta, "label"));
+    story_id = std::string(JSON_GET_STR(meta, "label"));
     topleft = shmy::json::into_vector2f(JSON_GET_ARRAY(meta, "topleft"));
-    scale = JSON_GET_FLOAT(meta, "scale");
-    pathfinder = nav::NavMesh::read_file((shmy::env::pkg_full() / p_region->m_id / id).concat(".nav").string(), scale);
+    const auto scale = JSON_GET_FLOAT(meta, "scale");
+    pathfinder = nav::Mesh::read_file((shmy::env::pkg_full() / p_region->m_id / id).concat(".nav"), scale);
 
     cart_to_iso = cartesian_to_isometric(topleft);
     iso_to_cart = isometric_to_cartesian(topleft);
@@ -63,7 +54,7 @@ void Area::init(const rapidjson::Value& prefabs, const rapidjson::Document& doc)
     motionguide_square.setOrigin({ scale, scale });
 
     if (meta.HasMember("zoom")) {
-        camera.setSize(meta["zoom"].GetFloat() * (sf::Vector2f)window->getSize());
+        camera.setSize(meta["zoom"].GetFloat() * (sf::Vector2f)render_settings->viewport);
     }
 
     background.load_from_json(JSON_GET(doc, "background"), 0.5f);
@@ -95,7 +86,6 @@ void Area::init(const rapidjson::Value& prefabs, const rapidjson::Document& doc)
             t.action = GotoArea{
                 JSON_GET_UINT64(act, "index"),
                 shmy::json::into_vector2f(JSON_GET(act, "spawnpos")),
-                JSON_IS_TRUE(act, "suppress_triggers"),
                 act.HasMember("lock_id") ? JSON_GET_STR(act, "lock_id") : "false"
             };
         } else if (action.HasMember("CameraZoom")) {

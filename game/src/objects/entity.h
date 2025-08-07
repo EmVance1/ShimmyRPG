@@ -2,7 +2,7 @@
 #include <SFML/Graphics.hpp>
 #include <sfutil/sfutil.h>
 #include "motion/tracker.h"
-#include "navmesh/types.h"
+#include "navmesh/lib.h"
 #include "sfutil/animation.h"
 #include "util/vechash.h"
 #include "action.h"
@@ -36,6 +36,7 @@ class Entity {
 private:
     std::string m_id;
     std::string m_script_id;
+    std::string m_story_id;
     bool m_is_offstage = false;
     bool m_is_ghost = false;
 
@@ -67,10 +68,10 @@ public:
            const sfu::TextureAtlas& texture,
            const sfu::TextureAtlas& outline,
            const sfu::AlphaMap& bitmap,
-           const nav::NavMesh* pathfinder,
+           const nav::Mesh* pathfinder,
            bool character);
 
-    const std::string& get_id() const;
+    const std::string& id() const;
     const sfu::AnimatedSprite& get_sprite() const;
     const sfu::AnimatedSprite& get_outline_sprite() const;
     sf::FloatRect get_AABB() const;
@@ -85,7 +86,10 @@ public:
     SortBoundary get_sorting_boundary() const;
 
     void set_script_id(const std::string& id) { m_script_id = id; }
-    const std::string& get_script_id() const { return m_script_id; }
+    const std::string& script_id() const { return m_script_id; }
+
+    void set_story_id(const std::string& id) { m_story_id = id; }
+    const std::string& story_id() const { return m_story_id; }
 
     void set_dialogue(const std::string& filename);
     const std::string& get_dialogue() const;

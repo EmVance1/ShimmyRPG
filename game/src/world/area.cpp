@@ -2,7 +2,6 @@
 #include "area.h"
 #include "util/str.h"
 #include "util/env.h"
-#include "gui/gui.h"
 #include "sorting.h"
 #include "time/deltatime.h"
 #include "region.h"
@@ -11,6 +10,7 @@
 
 
 static std::mt19937 RNG{ std::random_device()() };
+RenderSettings* Area::render_settings = nullptr;
 
 
 Entity& Area::get_player() {
@@ -19,6 +19,22 @@ Entity& Area::get_player() {
 
 const Entity& Area::get_player() const {
     return entities.at(player_id);
+}
+
+Entity& Area::get_entity_by_script_id(const std::string& _id) {
+    return entities.at(script_to_uuid.at(_id));
+}
+
+const Entity& Area::get_entity_by_script_id(const std::string& _id) const {
+    return entities.at(script_to_uuid.at(_id));
+}
+
+Entity& Area::get_entity_by_story_id(const std::string& _id) {
+    return entities.at(story_to_uuid.at(_id));
+}
+
+const Entity& Area::get_entity_by_story_id(const std::string& _id) const {
+    return entities.at(story_to_uuid.at(_id));
 }
 
 
@@ -64,7 +80,6 @@ void Area::handle_trigger(const Trigger& trigger) {
         } else {
             p_region->set_active_area(gotoarea.index);
             p_region->get_active_area().get_player().set_position(gotoarea.spawnpos, cart_to_iso);
-            p_region->get_active_area().suppress_triggers = gotoarea.suppress_triggers;
             p_region->get_active_area().suppress_portals = true;
         }
         break; }
@@ -80,8 +95,8 @@ void Area::handle_trigger(const Trigger& trigger) {
 }
 
 void Area::begin_dialogue(shmy::speech::Graph&& graph, const std::string& dia_id) {
-    dialogue.begin(std::move(graph), gamemode, dia_id);
-    const auto line = std::get<Dialogue::Line>(dialogue.get_current_element());
+    cinematic_mode.dialogue.begin(std::move(graph), gamemode, dia_id);
+    const auto line = std::get<Dialogue::Line>(cinematic_mode.dialogue.get_current_element());
     auto dia_gui = gui.get_widget<gui::Panel>("dialogue");
     dia_gui->set_enabled(true);
     dia_gui->set_visible(true);
@@ -89,7 +104,7 @@ void Area::begin_dialogue(shmy::speech::Graph&& graph, const std::string& dia_id
     if (line.speaker == "Narrator") {
         speaker_gui->set_label("Narrator");
     } else {
-        speaker_gui->set_label(story_name_LUT[line.speaker]);
+        speaker_gui->set_label(get_entity_by_script_id(line.speaker).story_id());
     }
     auto line_gui = dia_gui->get_widget<gui::TextWidget>("lines");
     line_gui->set_label(line.line);
@@ -150,11 +165,9 @@ end_loop: ;
 
 void Area::set_mode(GameMode mode) {
     if (mode == GameMode::Cinematic && gamemode != GameMode::Cinematic) {
-        cinematic_timer = 1.5f;
         get_player().get_tracker().stop();
         queued = {};
     } else if (mode != GameMode::Cinematic && gamemode == GameMode::Cinematic) {
-        cinematic_timer = 1.5f;
         get_player().get_tracker().start();
     } else if (mode == GameMode::Dialogue && gamemode != GameMode::Dialogue) {
         get_player().get_tracker().stop();
@@ -227,30 +240,28 @@ void Area::update() {
     const auto g = FlagTable::get_flag("Player_Coin", true);
     gui.get_widget<gui::Panel>("gold_counter")->get_widget<gui::Text>("goldtxt")->set_label(std::to_string(g));
 
-    if (cinematic_timer > 0.f) {
-        cinematic_timer -= Time::deltatime();
-        if (gamemode == GameMode::Cinematic) {
-            cinemabar_top.move(sf::Vector2f(0.f,  80.f * cinematic_timer * Time::deltatime()));
-            cinemabar_bot.move(sf::Vector2f(0.f, -80.f * cinematic_timer * Time::deltatime()));
-        } else {
-            cinemabar_top.move(sf::Vector2f(0.f, -80.f * cinematic_timer * Time::deltatime()));
-            cinemabar_bot.move(sf::Vector2f(0.f,  80.f * cinematic_timer * Time::deltatime()));
-        }
+    const auto crop_thresh = 100.f;
+    if (gamemode == GameMode::Cinematic && render_settings->crop.position.y <= crop_thresh) {
+        render_settings->crop.position.y += (crop_thresh + 10.f - render_settings->crop.position.y) * Time::deltatime();
+        render_settings->crop.size.y -= 2 * (crop_thresh + 10.f - render_settings->crop.position.y) * Time::deltatime();
+    } else if (gamemode != GameMode::Cinematic && render_settings->crop.position.y >= 0.f) {
+        render_settings->crop.position.y -= (render_settings->crop.position.y + 10.f) * Time::deltatime();
+        render_settings->crop.size.y += 2 * (render_settings->crop.position.y + 10.f) * Time::deltatime();
     }
 
     if (zoom < zoom_target) {
         zoom += Time::deltatime() * 0.5f;
-        camera.setSize(zoom * (sf::Vector2f)window->getSize());
+        camera.setSize(zoom * (sf::Vector2f)render_settings->viewport);
         if (zoom >= zoom_target) {
             zoom = zoom_target;
-            camera.setSize(zoom * (sf::Vector2f)window->getSize());
+            camera.setSize(zoom * (sf::Vector2f)render_settings->viewport);
         }
     } else if (zoom > zoom_target) {
         zoom -= Time::deltatime() * 0.5f;
-        camera.setSize(zoom * (sf::Vector2f)window->getSize());
+        camera.setSize(zoom * (sf::Vector2f)render_settings->viewport);
         if (zoom <= zoom_target) {
             zoom = zoom_target;
-            camera.setSize(zoom * (sf::Vector2f)window->getSize());
+            camera.setSize(zoom * (sf::Vector2f)render_settings->viewport);
         }
     }
 
@@ -293,8 +304,6 @@ void Area::render_overlays(sf::RenderTarget& target) {
 #endif
 
     target.setView(target.getDefaultView());
-    target.draw(cinemabar_top);
-    target.draw(cinemabar_bot);
     target.draw(gui);
 }
 

@@ -16,7 +16,7 @@ v00 = ShimmyPrime: [ "Right away." ]                      => brian
 v01 = ShimmyPrime: [ "Yer not a fekin dryshite are ye?" ] => {
     "Fine. Whisky."           => v10{ Player_Alcohol: Add(2) },
     "I said water."           => v11,
-    ?(PlayerOrigin == Twinvayne) "[Twinvayne Local] I know better than to trust your drinks, Shimmy" => v12{},
+    (PlayerOrigin == Twinvayne) "[Twinvayne Local] I know better than to trust your drinks, Shimmy" => v12{},
 }
 v02 = ShimmyPrime: [ "Well... Since yez ask... Got here my special brew. Gots to be strong enough for it though." ] => {
     "Sure I am. (4 silver)"              => v20{ Player_Alcohol: Add(4), Player_Coin: Sub(4) },

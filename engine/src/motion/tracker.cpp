@@ -161,14 +161,15 @@ void PathTracker::progress() {
     }
     const auto diff = nav::into_sf(path[path_index + 1]) - position;
     const auto dist = diff.length();
-    if (dist < speed) {
+    const auto actual = speed * Time::deltatime() * 60.f;
+    if (dist < actual) {
         path_index++;
         position = nav::into_sf(path[path_index]);
         const auto dir = diff * (1.f / dist);
-        position += dir * (speed - dist);
+        position += dir * (actual - dist);
     } else {
         const auto dir = diff * (1.f / dist);
-        position += dir * speed;
+        position += dir * actual;
     }
 }
 

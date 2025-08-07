@@ -31,7 +31,7 @@ Entity::Entity(
         const sfu::TextureAtlas& texture,
         const sfu::TextureAtlas& outline,
         const sfu::AlphaMap& bitmap,
-        const nav::NavMesh* pathfinder,
+        const nav::Mesh* pathfinder,
         bool is_character
     ) :
     m_id(id),
@@ -58,7 +58,7 @@ Entity::Entity(
 }
 
 
-const std::string& Entity::get_id() const {
+const std::string& Entity::id() const {
     return m_id;
 }
 

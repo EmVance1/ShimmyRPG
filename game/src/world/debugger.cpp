@@ -7,7 +7,7 @@
 #include "region.h"
 
 
-void AreaDebugView::init(const Area* area) {
+void AreaDebugger::init(const Area* area) {
     p_area = area;
 
     for (const auto tri : area->pathfinder.triangles) {
@@ -54,7 +54,7 @@ void AreaDebugView::init(const Area* area) {
 }
 
 
-void AreaDebugView::update() {
+void AreaDebugger::update() {
     size_t i = 0;
     size_t j = 0;
     for (const auto& [_, e] : p_area->entities) {
@@ -80,7 +80,7 @@ void AreaDebugView::update() {
     m_motionguide_line.setCount(p_area->get_player().get_tracker().get_inverse_index() + 1);
 }
 
-void AreaDebugView::handle_event(const sf::Event& event) {
+void AreaDebugger::handle_event(const sf::Event& event) {
     if (event.is<sf::Event::MouseMoved>()) {
         auto path = std::vector<sf::Vector2f>();
         for (const auto& p : p_area->get_player().get_tracker().get_active_path()) { path.push_back({ p.x, p.y }); }
@@ -94,7 +94,7 @@ void AreaDebugView::handle_event(const sf::Event& event) {
     }
 }
 
-void AreaDebugView::render_map(sf::RenderTarget& target) const {
+void AreaDebugger::render_map(sf::RenderTarget& target) const {
     auto states = sf::RenderStates();
     states.transform = p_area->cart_to_iso;
     target.draw(m_pathfinder.data(), m_pathfinder.size(), sf::PrimitiveType::Triangles, states);
@@ -104,7 +104,7 @@ void AreaDebugView::render_map(sf::RenderTarget& target) const {
     }
 }
 
-void AreaDebugView::render(sf::RenderTarget& target) const {
+void AreaDebugger::render(sf::RenderTarget& target) const {
     for (const auto& t : m_triggers) {
         target.draw(t, p_area->cart_to_iso);
     }
