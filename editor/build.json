@@ -2,5 +2,10 @@
     "project": "editor",
     "cpp": "c++20",
     "pch": "pch.h",
-    "dependencies": [ "../../_Libs/SFML-3:static", "../../_Libs/imgui", "../../sfutil", "nlohmannjson" ]
+    "dependencies": [
+        "../../_Libs/SFML-3:static",
+        "../../_Libs/imgui",
+        "../../sfutil",
+        "../deps/nlohmannjson"
+    ]
 }

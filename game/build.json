@@ -1,6 +1,6 @@
 {
     "project": "Shimmy",
-    "cpp": "c++20",
+    "cpp": "C++20",
     "pch": "pch.h",
     "dependencies": [
         "../../_Libs/SFML-3:static",
@@ -8,9 +8,9 @@
         "../../sfutil",
         "../../navmesh",
         "../engine",
-        "thread_pool",
-        "rapidjson",
-        "utfcpp"
+        "../deps/thread_pool",
+        "../deps/rapidjson",
+        "../deps/utfcpp"
     ],
 
     "linker-options": [ "Userenv.lib" ]

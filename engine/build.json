@@ -1,15 +1,15 @@
 {
     "project": "ShimmyEn",
-    "cpp": "c++20",
+    "cpp": "C++20",
     "pch": "pch.h",
     "dependencies": [
         "../../_Libs/SFML-3:static",
         "../../_Libs/luajit",
         "../../sfutil",
         "../../navmesh",
-        "thread_pool",
-        "rapidjson",
-        "utfcpp"
+        "../deps/thread_pool",
+        "../deps/rapidjson",
+        "../deps/utfcpp"
     ],
 
     "include-public": "src/"
