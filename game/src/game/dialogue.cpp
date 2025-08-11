@@ -41,7 +41,7 @@ void Dialogue::advance(size_t index) {
     m_unapplied = true;
     switch (m_state) {
     case State::Empty: case State::EmptyWithFollowup:
-        throw std::exception("no active dialogue");
+        throw std::invalid_argument("no active dialogue");
     case State::Player: {
         const auto& options = std::get<std::vector<dia::Response>>(current_vertex().outcome);
         const auto& response = options[index];
@@ -85,7 +85,7 @@ bool Dialogue::apply_advance() {
 Dialogue::Element Dialogue::get_current_element() const {
     switch (m_state) {
     case State::Empty: case State::EmptyWithFollowup:
-        throw std::exception("no active dialogue");
+        throw std::invalid_argument("no active dialogue");
     case State::Player: {
         const auto& options = std::get<std::vector<dia::Response>>(current_vertex().outcome);
         auto vec = std::vector<Choice>();

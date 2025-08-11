@@ -1,6 +1,6 @@
 #pragma once
 #include <SFML/Graphics.hpp>
-#include <lua/lua.hpp>
+#include <luajit-2.1/lua.hpp>
 
 
 void lua_pushvec2f(lua_State* L, const sf::Vector2f& vec);

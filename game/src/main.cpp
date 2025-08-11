@@ -48,19 +48,17 @@ int main(int argc, char** argv) {
         region.load_from_dir(region_folder, std::atoi(tokens[3].c_str()));
     }
 
-    /*
-    auto& pixelate = render_settings.shaders.emplace_back(std::fs::path("res/shaders/pixelate.frag"), sf::Shader::Type::Fragment);
-    pixelate.setUniform("u_resolution", (sf::Vector2f)window.getSize());
+    // auto& pixelate = render_settings.shaders.emplace_back(std::fs::path("res/shaders/pixelate.frag"), sf::Shader::Type::Fragment);
+    // pixelate.setUniform("u_resolution", (sf::Vector2f)window.getSize());
 
-    render_settings.shaders.emplace_back(std::fs::path("res/shaders/poster.frag"), sf::Shader::Type::Fragment);
+    // render_settings.shaders.emplace_back(std::fs::path("res/shaders/poster.frag"), sf::Shader::Type::Fragment);
 
-    auto& CRT = render_settings.shaders.emplace_back(std::fs::path("res/shaders/CRT.frag"), sf::Shader::Type::Fragment);
-    CRT.setUniform("u_curvature", sf::Vector2f(4.f, 4.f));
+    // auto& CRT = render_settings.shaders.emplace_back(std::fs::path("res/shaders/CRT.frag"), sf::Shader::Type::Fragment);
+    // CRT.setUniform("u_curvature", sf::Vector2f(2.f, 2.f));
 
-    auto& glitch = render_settings.shaders.emplace_back(std::fs::path("res/shaders/glitch.frag"), sf::Shader::Type::Fragment);
-    glitch.setUniform("u_dist", 3);
-    glitch.setUniform("u_resolution", (sf::Vector2f)window.getSize());
-    */
+    // auto& glitch = render_settings.shaders.emplace_back(std::fs::path("res/shaders/glitch.frag"), sf::Shader::Type::Fragment);
+    // glitch.setUniform("u_dist", 3);
+    // glitch.setUniform("u_resolution", (sf::Vector2f)window.getSize());
 
     const auto font = sf::Font(shmy::env::app_dir() / "calibri.ttf");
     auto fps_draw = sf::Text(font, "0", 25);
@@ -118,7 +116,9 @@ int main(int argc, char** argv) {
         target_sp.setTextureRect((sf::IntRect)render_settings.crop);
         target_sp.setPosition((sf::Vector2f)render_settings.crop.position);
         target_sp.setColor(render_settings.overlay);
+        // window.setView(sf::View({960, 540}, { 1600, 900 }));
         window.draw(target_sp);
+        // window.setView(window.getDefaultView());
 
 
         target.clear(sf::Color::Transparent);

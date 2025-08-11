@@ -21,7 +21,7 @@ rapidjson::Document load_from_file(const std::filesystem::path& filename);
 #ifdef DEBUG
 
 template<typename T>
-const T& debug_get_number(const rapidjson::Value& object, const char* name) {
+T debug_get_number(const rapidjson::Value& object, const char* name) {
     if (!object.HasMember(name)) {
         throw std::invalid_argument(std::string("invalid json access - object has no member '") + name + "'");
     }

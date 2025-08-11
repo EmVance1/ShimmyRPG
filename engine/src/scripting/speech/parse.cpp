@@ -44,12 +44,12 @@ static std::string span_to_str(size_t row, size_t col) {
 
 static std::string unwrap_token(const std::optional<Token>& value, TokenType expect) {
     return (value.has_value() && value->type == expect) ? value->val :
-        throw std::invalid_argument(std::string("token unwrapped to wrong type - ") + span_to_str(value->row, value->col));
+        throw std::runtime_error(std::string("token unwrapped to wrong type - ") + span_to_str(value->row, value->col));
 }
 
 static std::string unwrap_token(const std::optional<Token>& value, int expect) {
     return (value.has_value() && (uint32_t)value->type & expect) ? value->val :
-        throw std::invalid_argument(std::string("token unwrapped to wrong type - ") + span_to_str(value->row, value->col));
+        throw std::runtime_error(std::string("token unwrapped to wrong type - ") + span_to_str(value->row, value->col));
 }
 
 static std::optional<VertexTuple> parse_vertex(Lexer& lexer, size_t& entrycount) {
@@ -74,13 +74,13 @@ static std::optional<VertexTuple> parse_vertex(Lexer& lexer, size_t& entrycount)
         switch (next->type) {
         case TokenType::StringLiteral: lines.push_back(next->val); break;
         case TokenType::CloseBracket:  goto after_loop1;
-        default: throw std::invalid_argument(std::string("token unwrapped to wrong type - ") + span_to_str(next->row, next->col));
+        default: throw std::runtime_error(std::string("token unwrapped to wrong type - ") + span_to_str(next->row, next->col));
         };
         next = lexer.next();
         switch (next->type) {
         case TokenType::CloseBracket: goto after_loop1;
         case TokenType::Comma: break;
-        default: throw std::invalid_argument(std::string("token unwrapped to wrong type - ") + span_to_str(next->row, next->col));
+        default: throw std::runtime_error(std::string("token unwrapped to wrong type - ") + span_to_str(next->row, next->col));
         }
     }
 after_loop1:
@@ -103,7 +103,7 @@ static Outcome parse_outcome(Lexer& lexer) {
             return Goto(next->val);
         }
     case TokenType::OpenBrace: break;
-    default: throw std::invalid_argument(std::string("token unwrapped to wrong type - ") + span_to_str(next->row, next->col));
+    default: throw std::runtime_error(std::string("token unwrapped to wrong type - ") + span_to_str(next->row, next->col));
     }
 
     auto responses = std::vector<Response>();
@@ -118,7 +118,7 @@ static Outcome parse_outcome(Lexer& lexer) {
             break;
         case TokenType::StringLiteral: text = next->val; break;
         case TokenType::CloseBrace: goto after_loop2;
-        default: throw std::invalid_argument(std::string("token unwrapped to wrong type - ") + span_to_str(next->row, next->col));
+        default: throw std::runtime_error(std::string("token unwrapped to wrong type - ") + span_to_str(next->row, next->col));
         };
 
                           unwrap_token(lexer.next(), TokenType::Arrow);
@@ -128,7 +128,7 @@ static Outcome parse_outcome(Lexer& lexer) {
         switch (next->type) {
         case TokenType::Comma: goto this_one;
         case TokenType::OpenBrace: break;
-        default: throw std::invalid_argument(std::string("token unwrapped to wrong type - ") + span_to_str(next->row, next->col));
+        default: throw std::runtime_error(std::string("token unwrapped to wrong type - ") + span_to_str(next->row, next->col));
         }
         while (true) {
             auto key = std::string("");
@@ -136,7 +136,7 @@ static Outcome parse_outcome(Lexer& lexer) {
             switch (next->type) {
             case TokenType::Identifier: key = next->val; break;
             case TokenType::CloseBrace: goto after_loop3;
-            default: throw std::invalid_argument(std::string("token unwrapped to wrong type - ") + span_to_str(next->row, next->col));
+            default: throw std::runtime_error(std::string("token unwrapped to wrong type - ") + span_to_str(next->row, next->col));
             }
                              unwrap_token(lexer.next(), TokenType::Colon);
             const auto flg = unwrap_token(lexer.next(), TokenType::Identifier);
@@ -151,14 +151,14 @@ static Outcome parse_outcome(Lexer& lexer) {
             } else if (flg == "Sub") {
                 modifier = FlagSub{ std::atoi(val.c_str()), p_set_strict };
             } else {
-                throw std::invalid_argument(std::string("token unwrapped to wrong type - ") + span_to_str(next->row, next->col));
+                throw std::runtime_error(std::string("token unwrapped to wrong type - ") + span_to_str(next->row, next->col));
             };
             flags[key] = modifier;
             next = lexer.next();
             switch (next->type) {
             case TokenType::CloseBrace: goto after_loop3;
             case TokenType::Comma: break;
-            default: throw std::invalid_argument(std::string("token unwrapped to wrong type - ") + span_to_str(next->row, next->col));
+            default: throw std::runtime_error(std::string("token unwrapped to wrong type - ") + span_to_str(next->row, next->col));
             }
         }
 after_loop3:
@@ -167,7 +167,7 @@ after_loop3:
         switch (next->type) {
         case TokenType::CloseBrace: goto after_loop2;
         case TokenType::Comma: break;
-        default: throw std::invalid_argument(std::string("token unwrapped to wrong type - ") + span_to_str(next->row, next->col));
+        default: throw std::runtime_error(std::string("token unwrapped to wrong type - ") + span_to_str(next->row, next->col));
         }
 
 this_one:

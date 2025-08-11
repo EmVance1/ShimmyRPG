@@ -1,5 +1,5 @@
 #pragma once
-#include <lua/lua.hpp>
+#include <luajit-2.1/lua.hpp>
 #include <cstdint>
 #include "script.h"
 

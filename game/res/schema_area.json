@@ -1,0 +1,166 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://example.com/product.schema.json",
+    "title": "Area",
+    "description": "A definition of an area in the world",
+    "type": "object",
+    "properties": {
+        "world": {
+            "description": "Basic info about the area",
+            "type": "object",
+            "properties": {
+                "label": {
+                    "type": "string"
+                },
+                "topleft": {
+                    "$ref": "vec2"
+                },
+                "scale": {
+                    "type": "number"
+                }
+            },
+            "required": [ "label", "topleft", "scale" ]
+        },
+        "background": {
+            "description": "Background tile textures and their bounds",
+            "type": "array"
+            "items": { "$ref": "#/$defs/tile" }
+        },
+        "triggers": {
+            "description": "Triggers and the actions they invoke",
+            "type": "array",
+            "items": { "$ref": "#/$defs/trigger" }
+        },
+        "entities": {
+            "description": "Entities that inhabit the scene",
+            "type": "array",
+            "items": { "$ref": "#/$defs/entity" }
+        }
+    },
+    "required": [ "world", "background", "triggers", "entities" ],
+
+    "$defs": {
+        "vec2": {
+            "description": "2D real numbered vector",
+            "type": "array",
+            "prefixItems": [
+                { "type": "number" },
+                { "type": "number" }
+            ]
+        },
+        "tile": {
+            "description": "Bounds and texture of a tile.",
+            "type": "object",
+            "required": [ "file", "bounds" ],
+            "properties": {
+                "file": {
+                    "type": "string"
+                },
+                "bounds": {
+                    "type": "array",
+                    "prefixItems": [
+                        { "type": "number" },
+                        { "type": "number" },
+                        { "type": "number" },
+                        { "type": "number" }
+                    ]
+                }
+            }
+        },
+        "trigger": {
+            "description": "Bounds, action and conditions of a trigger.",
+            "type": "object",
+            "required": [ "rect", "action" ],
+            "properties": {
+                "rect": {
+                    "description": "Bounding box of the trigger.",
+                    "type": "array",
+                    "prefixItems": [
+                        { "type": "number" },
+                        { "type": "number" },
+                        { "type": "number" },
+                        { "type": "number" }
+                    ]
+                },
+                "action": {
+                    "GotoArea": { "index": 1, "spawnpos": [ 810, 360 ] }
+                },
+                "condition": {
+                    "description": "Decides whether the trigger goes off.",
+                    "type": "string"
+                }
+            }
+        },
+        "entity": {
+            "type": "object",
+            "required": [ "texture", "position", "tags" ],
+            "properties": {
+                "texture": {
+                    "description": "Named texture from the region array."
+                    "type": "string",
+                },
+                "position": {
+                    "description": "The world/iso position of the entity.",
+                    "type": "object",
+                    "properties": {
+                        "world": {
+                            "$ref": "vec2",
+                        },
+                        "iso": {
+                            "$ref": "vec2",
+                        }
+                    }
+                },
+                "tags": {
+                    "description": "Tag properties.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+
+                "trait_scriptable": {
+                    "description": "If and how the entity is scriptable.",
+                    "type": "object",
+                    "properties": {
+                        "script_id": {
+                            "type": "string"
+                        },
+                        "story_id": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [ "script_id", "story_id" ]
+                },
+                "trait_movement": {
+                    "description": "If and how the entity can move.",
+                    "type": "object",
+                    "properties": {
+                        "speed": {
+                            "type": "number"
+                        }
+                    },
+                    "required": [ "speed" ]
+                },
+                "trait_speech": {
+                    "description": "If and how the entity can speak.",
+                    "type": "object",
+                    "properties": {
+                        "file": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [ "file" ]
+                },
+                "trait_customsort": {
+                    "description": "How the entity gets z-sorted.",
+                    "type": "array",
+                    "prefixItems": [
+                        { "$ref": "#/$defs/vec2" },
+                        { "$ref": "#/$defs/vec2" }
+                    ]
+                }
+            }
+        }
+    }
+}

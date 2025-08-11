@@ -13,7 +13,7 @@ namespace shmy { namespace lua {
         exit(1); \
     }
 #else
-#define LUA_CHECK(f) f
+#define LUA_CHECK(f, pre) f
 #endif
 
 

@@ -11,7 +11,7 @@ private:
 public:
     LexerError(const std::string& str) : m_str(str) {}
 
-    const char* what() const override { return m_str.c_str(); }
+    const char* what() const noexcept override { return m_str.c_str(); }
 };
 
 

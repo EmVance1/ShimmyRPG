@@ -27,6 +27,6 @@ public:
     void update_all();
 
     friend struct Area;
-    friend class AreaDebugView;
+    friend class AreaDebugger;
 };
 

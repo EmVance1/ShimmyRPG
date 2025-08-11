@@ -58,7 +58,7 @@ void CombatMode::handle_event(const sf::Event& event) {
             }
         }
     } else if (auto mmv = event.getIf<sf::Event::MouseMoved>()) {
-        const auto mapped = p_area->camera.mapPixelToWorld(mbp->position, p_area->render_settings->viewport);
+        const auto mapped = p_area->camera.mapPixelToWorld(mmv->position, p_area->render_settings->viewport);
         const auto iso = p_area->iso_to_cart.transformPoint(mapped);
         for (Entity* e : p_area->sorted_entities) {
             e->set_hovered(false);

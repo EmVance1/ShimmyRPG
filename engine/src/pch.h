@@ -1,8 +1,7 @@
 #define _CRT_SECURE_NO_WARNINGS
-#include <SFML/Graphics.hpp>
-#include <SFML/Window.hpp>
-#include <SFML/System.hpp>
-#include <SFML/Audio.hpp>
+#include <cstdlib>
+#include <cstdio>
+#include <cstdint>
 
 #include <unordered_map>
 #include <unordered_set>
@@ -28,8 +27,15 @@ namespace std { namespace fs = filesystem; }
 #ifdef _WIN32
 #define PATH_NORM(p) p
 #else
-#define PATH_NORM(p) p.u8string()
+#define PATH_NORM(p) p.string()
 #endif
+
+#include <SFML/Graphics.hpp>
+#include <SFML/Window.hpp>
+#include <SFML/System.hpp>
+#include <SFML/Audio.hpp>
+
+#include <luajit-2.1/lua.hpp>
 
 #include <rapidjson/rapidjson.h>
 #include <rapidjson/filereadstream.h>

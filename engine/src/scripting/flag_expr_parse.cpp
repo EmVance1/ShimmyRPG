@@ -39,7 +39,7 @@ static FlagExpr parse_or(Lexer& lexer, Token& next) {
         case TokenType::CloseParen:
             return a;
         default:
-            throw std::exception("error parsing 'or' expression");
+            throw std::runtime_error("error parsing 'or' expression");
         }
     }
 }
@@ -59,7 +59,7 @@ static FlagExpr parse_and(Lexer& lexer, Token& next) {
         case TokenType::CloseParen:
             return a;
         default:
-            throw std::exception("error parsing 'and' expression");
+            throw std::runtime_error("error parsing 'and' expression");
         }
     }
 }
@@ -84,7 +84,7 @@ static FlagExpr parse_eq(Lexer& lexer, Token& next) {
         case TokenType::CloseParen:
             return a;
         default:
-            throw std::exception("error parsing 'eq' expression");
+            throw std::runtime_error("error parsing 'eq' expression");
         }
     }
 }
@@ -119,7 +119,7 @@ static FlagExpr parse_cmp(Lexer& lexer, Token& next) {
         case TokenType::CloseParen:
             return a;
         default:
-            throw std::exception("error parsing 'cmp' expression");
+            throw std::runtime_error("error parsing 'cmp' expression");
         }
     }
 }
@@ -134,10 +134,10 @@ static std::pair<FlagExpr, bool> parse_post(Lexer& lexer, Token& next, FlagExpr&
             next = *lexer.next();
             return FlagExpr::Assign(std::move(inner), FlagExpr::Func());
         } else {
-            throw std::exception("error parsing assign expression");
+            throw std::runtime_error("error parsing assign expression");
         }
     default:
-        throw std::exception("error parsing postfix expression");
+        throw std::runtime_error("error parsing postfix expression");
     }
 }
 */
@@ -180,11 +180,11 @@ static FlagExpr parse_unit(Lexer& lexer, Token& next) {
             next = *lexer.next();
             return exp;
         } else {
-            throw std::exception("should be unreachable");
+            throw std::runtime_error("should be unreachable");
         }
         break; }
     default:
-        throw std::exception("error parsing unary expression");
+        throw std::runtime_error("error parsing unary expression");
     }
 }
 

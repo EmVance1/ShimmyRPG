@@ -6,12 +6,10 @@
         "../engine",
         "../../sfutil",
         "../../navmesh",
-        "../../_Libs/SFML-3:static",
+        "../../_Libs/SFML-3:dynamic",
         "../../_Libs/luajit",
         "../deps/thread_pool",
         "../deps/rapidjson",
         "../deps/utfcpp"
-    ],
-
-    "linker-options": [ "Userenv.lib" ]
+    ]
 }

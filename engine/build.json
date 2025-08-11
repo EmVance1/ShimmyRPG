@@ -1,6 +1,6 @@
 {
     "project": "ShimmyEn",
-    "cpp": "C++20",
+    "lang": "C++20",
     "pch": "pch.h",
     "dependencies": [
         "../../_Libs/SFML-3:static",

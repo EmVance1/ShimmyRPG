@@ -3,7 +3,7 @@
 #include <rapidjson/document.h>
 #include <sfutil/camera.h>
 #include <navmesh/lib.h>
-#include <lua/lua.hpp>
+#include <luajit-2.1/lua.hpp>
 #include <unordered_map>
 #include "graphics/background.h"
 #include "scripting/lua/script.h"
