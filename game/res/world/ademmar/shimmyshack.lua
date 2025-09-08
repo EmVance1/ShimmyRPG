@@ -3,7 +3,7 @@ Position = {
     WORLD = 0,
     ISO = 1,
 
-    world = function(pos) return { x=pos[1], y=pos[2], mode=Position.WORLD } end
+    world = function(pos) return { x=pos[1], y=pos[2], mode=Position.WORLD } end,
     iso =   function(pos) return { x=pos[1], y=pos[2], mode=Position.ISO } end
 }
 

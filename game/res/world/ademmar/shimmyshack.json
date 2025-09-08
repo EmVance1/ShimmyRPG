@@ -9,24 +9,24 @@
     ],
     "triggers": [
         {
-            "//": "front door",
+            // front door
             "rect": [ 265, 535, 120, 30 ],
             "action": { "GotoArea": { "index": 1, "spawnpos": [ 810, 360 ] } },
             "condition": "!Ademmar_CurfewInPlace"
         },
         {
-            "//": "welcome cutscene",
+            // welcome cutscene
             "rect": [ 140, 0, 394, 380 ],
             "action": { "BeginScript": "scripts/ShimmyIntroScene.lua" },
             "condition": "ShimmyIntroScene_IsActive & once"
         },
         {
-            "//": "behind bar",
+            // behind bar
             "rect": [ 192, 0, 342, 100 ],
             "action": { "BeginDialogue": "speech/ShimmyBehindBar.shmy" }
         },
         {
-            "//": "curfew blocker",
+            // curfew blocker
             "rect": [ 265, 535, 120, 30 ],
             "action": { "Popup": "There is a curfew in place. It is unwise to go outside." },
             "condition": "Ademmar_CurfewInPlace"

@@ -14,7 +14,7 @@ void init_engine_api(lua_State* L);
 
 
 Area::Area(const std::string& _id, Region* parent_region)
-    : p_region(parent_region), id(_id),
+    : p_region(parent_region), id(_id), lua_vm("shmy"),
     camera(sf::FloatRect({0, 0}, (sf::Vector2f)render_settings->viewport)),
     gui(gui::Position::topleft({0, 0}), sf::Vector2f(render_settings->viewport), parent_region->get_style())
 {
@@ -22,20 +22,14 @@ Area::Area(const std::string& _id, Region* parent_region)
     motionguide_square.setOutlineColor(sf::Color::Cyan);
     motionguide_square.setOutlineThickness(1);
 
-    lua_vm = luaL_newstate();
-    luaL_openlibs(lua_vm);
-    init_engine_api(lua_vm);
-    lua_pushlightuserdata(lua_vm, this);
-    lua_setfield(lua_vm, LUA_REGISTRYINDEX, "_area");
+    init_engine_api(lua_vm.get_state());
+    lua_pushlightuserdata(lua_vm.get_state(), this);
+    lua_setfield(lua_vm.get_state(), LUA_REGISTRYINDEX, "_area");
 }
 
-Area::Area(Area&& other) : gui(std::move(other.gui)) {
+Area::Area(Area&& other) : lua_vm(std::move(other.lua_vm)), gui(std::move(other.gui)) {
     std::cout << "Area objects should never be copied or moved\n";
-    exit(1);
-}
-
-Area::~Area() {
-    lua_close(lua_vm);
+    abort();
 }
 
 
@@ -122,7 +116,7 @@ void Area::init(const rapidjson::Value& prefabs, const rapidjson::Document& doc)
     combat_mode.init(this);
     sleep_mode.init(this);
 
-#ifdef DEBUG
+#ifdef VANGO_DEBUG
     debugger.init(this);
 #endif
 }

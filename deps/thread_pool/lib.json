@@ -1,5 +1,0 @@
-{
-    "library": "thread_pool",
-    "lang" : "C++20",
-    "include": "include/"
-}

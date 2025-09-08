@@ -40,7 +40,7 @@ void Area::load_prefab(const rapidjson::Value& prefabs, const rapidjson::Value& 
             entity.get_tags().emplace(tag.GetString());
         }
     }
-#ifdef DEBUG
+#ifdef VANGO_DEBUG
     if (!prefab.HasMember("tags") && !prefab.HasMember("tags")) {
         throw std::invalid_argument(std::string("invalid json access - object has no member 'tags'\n"));
     }

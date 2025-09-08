@@ -45,7 +45,7 @@ struct Scene {
     CombatMode combat_mode;
     SleepMode sleep_mode;
 
-#ifdef DEBUG
+#ifdef VANGO_DEBUG
     SceneDebugger debugger;
 #endif
 

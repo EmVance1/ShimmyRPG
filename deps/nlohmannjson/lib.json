@@ -1,5 +1,0 @@
-{
-    "library": "nlohmannjson",
-    "lang" : "C++17",
-    "include": "include"
-}

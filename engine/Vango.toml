@@ -1,0 +1,20 @@
+[package]
+name = "ShimmyEn"
+version = "0.1.0"
+kind = "staticlib"
+lang = "C++20"
+
+include-pub = "src"
+pch = "pch.h"
+
+warn-level = "high"
+
+[dependencies]
+SFML    = { path="../../_Libs/SFML-3" }
+LuaJIT  = { path="../../_Libs/luajit" }
+SFUtil  = { path="../../sfutil" }
+NavMesh = { path="../../navmesh" }
+thread_pool = { headers="../deps/thread_pool/include" }
+rapidjson   = { headers="../deps/rapidjson/include" }
+utfcpp      = { headers="../deps/utfcpp/source" }
+

@@ -1,8 +1,8 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 #include <sfutil/sfutil.h>
+#include <navmesh/lib.h>
 #include "motion/tracker.h"
-#include "navmesh/lib.h"
 #include "sfutil/animation.h"
 #include "util/vechash.h"
 #include "action.h"
@@ -27,7 +27,6 @@ struct SortBoundary {
         } else {
             return std::min(left.y, left.y) <=> std::min(b.left.y, b.right.y);
         }
-        return std::partial_ordering::equivalent;
     }
 };
 

@@ -40,7 +40,13 @@ void Region::load_from_dir(const std::fs::path& folder, size_t initial_area) {
         m_atlases[name + "_outline"].setSmooth(smooth);
     }
 
+#ifdef _WIN32
     m_guistyle.load_from_dir(shmy::env::pkg_full() / "gui" / doc["gui_style"].GetString());
+#else
+    std::cout << "1 - areas: " << m_areas.size() << ", active: " << m_active_area << ", passed in: " << initial_area << "\n";
+    // m_guistyle.load_from_dir(shmy::env::pkg_full() / "gui" / doc["gui_style"].GetString());
+    std::cout << "2 - areas: " << m_areas.size() << ", active: " << m_active_area << ", passed in: " << initial_area << "\n";
+#endif
 
     const auto& areas = doc["areas"].GetArray();
     m_areas.reserve(areas.Size());
@@ -48,9 +54,10 @@ void Region::load_from_dir(const std::fs::path& folder, size_t initial_area) {
     for (const auto& area : areas) {
         m_areas.emplace_back(area.GetString(), this);
     }
+
     size_t i = 0;
     for (const auto& area : areas) {
-#ifdef DEBUG
+#ifdef VANGO_DEBUG
         try {
             const auto area_doc = shmy::json::load_from_file(shmy::env::pkg_full() / folder / (std::string(area.GetString()) + ".json"));
             m_areas[i].init(prefabs, area_doc);
@@ -70,6 +77,7 @@ void Region::load_from_dir(const std::fs::path& folder, size_t initial_area) {
 }
 
 void Region::set_active_area(size_t index) {
+    std::cout << "called set_active_area\n";
     Time::stop();
     const auto mode = m_areas[m_active_area].gamemode;
     m_areas[m_active_area].set_mode(GameMode::Sleep);

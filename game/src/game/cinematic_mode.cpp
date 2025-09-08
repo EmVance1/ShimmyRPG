@@ -57,7 +57,7 @@ void CinematicMode::handle_event(const sf::Event& event) {
             dia_gui->set_enabled(false);
             dia_gui->set_visible(false);
             if (const auto fu = dialogue.get_followup()) {
-                auto& s = p_area->scripts.emplace_back(p_area->lua_vm, fu.value(), "shmy");
+                auto& s = p_area->lua_vm.spawn_script(fu.value());
                 s.start();
             }
         }
@@ -71,9 +71,7 @@ void CinematicMode::update() {
         }
     }
     if (!dialogue.is_playing()) {
-        for (auto& s : p_area->scripts) {
-            s.update();
-        }
+        p_area->lua_vm.update();
     }
 
     // p_area->camera.update(Time::deltatime());

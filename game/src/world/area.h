@@ -6,6 +6,7 @@
 #include <luajit-2.1/lua.hpp>
 #include <unordered_map>
 #include "graphics/background.h"
+#include "scripting/lua/runtime.h"
 #include "scripting/lua/script.h"
 #include "gui/panel.h"
 #include "objects/entity.h"
@@ -50,8 +51,7 @@ struct Area {
     std::vector<Entity*> sorted_entities;
     std::string player_id = "";
 
-    lua_State* lua_vm;
-    std::vector<shmy::lua::Script> scripts;
+    shmy::lua::Runtime lua_vm;
 
     std::vector<Trigger> triggers;
     bool suppress_portals = false;
@@ -68,14 +68,13 @@ struct Area {
     CombatMode combat_mode;
     SleepMode sleep_mode;
 
-#ifdef DEBUG
+#ifdef VANGO_DEBUG
     AreaDebugger debugger;
 #endif
 
     Area(const std::string& id, Region* parent_region);
     Area(const Area& other) = delete;
     Area(Area&& other);
-    ~Area();
 
     void load_prefab(const rapidjson::Value& prefabs, const rapidjson::Value& value, const std::string& name);
     void load_entity(const rapidjson::Value& prefabs, const rapidjson::Value& value);

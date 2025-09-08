@@ -8,7 +8,7 @@ namespace gui {
 
 class Widget : public sf::Drawable, public std::enable_shared_from_this<Widget> {
 public:
-    static sf::Vector2u WIN_SIZE;
+    static sf::Vector2u VIEWPORT_SIZE;
 
 private:
     sf::RectangleShape m_background;
@@ -30,14 +30,14 @@ protected:
         if (p_container) {
             return m_position.get_absolute_topleft(p_container->get_bounds(), m_bounds.size);
         } else {
-            return m_position.get_absolute_topleft(sf::FloatRect({0, 0}, sf::Vector2f(WIN_SIZE)), m_bounds.size);
+            return m_position.get_absolute_topleft(sf::FloatRect({0, 0}, sf::Vector2f(VIEWPORT_SIZE)), m_bounds.size);
         }
     }
     sf::Vector2f compute_relative_position() {
         if (p_container) {
             return m_position.get_relative_topleft(p_container->get_bounds(), m_bounds.size);
         } else {
-            return m_position.get_relative_topleft(sf::FloatRect({0, 0}, sf::Vector2f(WIN_SIZE)), m_bounds.size);
+            return m_position.get_relative_topleft(sf::FloatRect({0, 0}, sf::Vector2f(VIEWPORT_SIZE)), m_bounds.size);
         }
     }
     void update_position() {

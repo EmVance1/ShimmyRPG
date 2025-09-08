@@ -2,5 +2,5 @@
 #include "widget.h"
 
 
-sf::Vector2u gui::Widget::WIN_SIZE;
+sf::Vector2u gui::Widget::VIEWPORT_SIZE;
 

@@ -16,9 +16,7 @@ Style::Style(const std::filesystem::path& dir) {
 
 
 bool Style::load_from_dir(const std::filesystem::path& dir) {
-    auto src = shmy::str::read_to_string(dir / "style.json");
-    rapidjson::Document doc;
-    doc.Parse(src.data());
+    const auto doc = shmy::json::load_from_file(dir / "style.json");
 
     background_color_1 = shmy::json::into_color(doc["background_color_1"].GetArray());
     background_color_2 = shmy::json::into_color(doc["background_color_2"].GetArray());

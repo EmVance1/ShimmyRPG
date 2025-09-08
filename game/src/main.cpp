@@ -7,11 +7,9 @@
 #include "io/load_flags.h"
 
 
-#ifdef DEBUG
-    #define VIDEO_MODE sf::VideoMode({1920, 1080})
+#ifdef VANGO_DEBUG
     #define SCREEN_MODE sf::Style::Default
 #else
-    #define VIDEO_MODE sf::VideoMode({ 1920, 1080 }).isValid() ? sf::VideoMode({ 1920, 1080 }) : sf::VideoMode::getDesktopMode()
     // #define SCREEN_MODE sf::Style::Default
     #define SCREEN_MODE sf::State::Fullscreen
 #endif
@@ -22,14 +20,33 @@ int main(int argc, char** argv) {
         // load project template
     }
 
-    auto window = sf::RenderWindow(VIDEO_MODE, "Shimmy", SCREEN_MODE);
+    const auto video_mode = sf::VideoMode::getDesktopMode();
+    auto window = sf::RenderWindow(video_mode, "Shimmy", SCREEN_MODE);
     // window.setVerticalSyncEnabled(true);
     window.setMouseCursorVisible(false);
     window.setPosition({0, 0});
-    gui::Widget::WIN_SIZE = window.getSize();
+
+    const auto font = sf::Font("res/calibri.ttf");
+
+    auto render_view = window.getDefaultView();
+    /*
+    auto render_view = sf::View(sf::FloatRect{ { 0.f, 0.f }, { 1920.f, 1080.f } });
+    const float aspectratio = (float)video_mode.size.x / (float)video_mode.size.y;
+    if (aspectratio < 16.f / 9.f) {
+        const float ratio = ((float)video_mode.size.x / (16.f / 9.f)) / (float)video_mode.size.y;
+        render_view.setViewport(sf::FloatRect{ { 0.f, 0.5f * (1.f - ratio) }, { 1.f, ratio } });
+    } else if (aspectratio > 16.f / 9.f) {
+        const float ratio = ((float)video_mode.size.y / (9.f / 16.f)) / (float)video_mode.size.x;
+        render_view.setViewport(sf::FloatRect{ { 0.5f * (1.f - ratio), 0.f }, { ratio, 1.f } });
+    }
+    */
+
+    gui::Widget::VIEWPORT_SIZE = (sf::Vector2u)render_view.getSize();
+    // gui::Widget::VIEWPORT_SIZE = window.getSize();
+
 
     auto target = sf::RenderTexture();
-    auto _ = target.resize(window.getSize());
+    std::ignore = target.resize(window.getSize());
 
     auto render_settings = RenderSettings((sf::Vector2i)target.getSize());
     Area::render_settings = &render_settings;
@@ -40,12 +57,13 @@ int main(int argc, char** argv) {
         auto startup_file = std::ifstream(".startup");
         auto startup_env = std::string();
         startup_file >> startup_env;
-        auto tokens = shmy::str::split(startup_env, ':');
+        const auto tokens = shmy::str::split(startup_env, ':');
         shmy::env::init(tokens[0]);
         shmy::env::set_pkg(tokens[1]);
         region_folder = tokens[2];
         shmy::flags::load_from_dir(shmy::env::pkg_full() / "flags");
-        region.load_from_dir(region_folder, std::atoi(tokens[3].c_str()));
+        const auto starting_area = tokens[3];
+        region.load_from_dir(region_folder, std::atoi(starting_area.c_str()));
     }
 
     // auto& pixelate = render_settings.shaders.emplace_back(std::fs::path("res/shaders/pixelate.frag"), sf::Shader::Type::Fragment);
@@ -60,7 +78,7 @@ int main(int argc, char** argv) {
     // glitch.setUniform("u_dist", 3);
     // glitch.setUniform("u_resolution", (sf::Vector2f)window.getSize());
 
-    const auto font = sf::Font(shmy::env::app_dir() / "calibri.ttf");
+    // const auto font = sf::Font(shmy::env::app_dir() / "calibri.ttf");
     auto fps_draw = sf::Text(font, "0", 25);
     fps_draw.setPosition({ 10, 10 });
     fps_draw.setFillColor(sf::Color::White);
@@ -100,7 +118,7 @@ int main(int argc, char** argv) {
 
 
         const auto viewcache = target.getView();
-        target.setView(target.getDefaultView());
+        target.setView(render_view);
         target.display();
         for (const auto& shader : render_settings.shaders) {
             auto tex = sf::Texture(target.getTexture());
@@ -123,7 +141,7 @@ int main(int argc, char** argv) {
 
         target.clear(sf::Color::Transparent);
         region.get_active_area().render_overlays(target);
-        target.setView(target.getDefaultView());
+        target.setView(render_view);
         const auto mouse = sf::Mouse::getPosition(window);
         cursor.setPosition(sf::Vector2f(mouse));
         target.draw(cursor);

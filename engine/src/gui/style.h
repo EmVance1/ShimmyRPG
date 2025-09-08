@@ -21,14 +21,16 @@ struct Style {
     sf::Color text_color_1 = sf::Color(0, 0, 0);
     sf::Color text_color_2 = sf::Color(120, 120, 120);
     sf::Color text_color_3 = sf::Color(255, 255, 255);
-    sf::Texture background_texture;
     sf::IntRect default_cell = sf::IntRect({ 0, 0 },{ 1, 1 });
     bool textured = false;
     float outline_width = 0.f;
+    sf::Texture background_texture;
     sf::Font font;
 
     Style();
     Style(const std::filesystem::path& dir);
+    Style(const Style&) = delete;
+    Style(Style&&) = delete;
 
     bool load_from_dir(const std::filesystem::path& dir);
 };

@@ -31,15 +31,20 @@ private:
     bool m_terminate = false;
 
 private:
+    Script(lua_State* L, const std::filesystem::path& filename, const char* api);
+
     void terminate();
 
 public:
-    Script(lua_State* L, const std::filesystem::path& filename, const char* api);
+    Script(const Script&) = delete;
+    Script(Script&& other);
     ~Script();
 
     void start();
     void update();
     void mark_for_termination();
+
+    friend class Runtime;
 };
 
 } }

@@ -162,7 +162,9 @@ static int l_entity_set_voicebank(lua_State* L) {
     lua_gettable(L, 1);
     const auto entity = (Entity*)lua_touserdata(L, -1);
     const auto voicebank = lua_tointeger(L, 2);
+    (void)entity; (void)voicebank;
     // entity->set_voicebank(voicebank);
+    //
     return 0;
 }
 
@@ -324,7 +326,7 @@ static int l_yield_combat(lua_State* L) {
     return 0;
 }
 
-#ifdef DEBUG
+#ifdef VANGO_DEBUG
 static int l_yield_dialogue(lua_State* L) {
     const auto filename = lua_tostring(L, 1);
     try {

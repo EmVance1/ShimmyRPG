@@ -1,5 +1,0 @@
-{
-    "library": "rapidjson",
-    "lang" : "C++11",
-    "include": "include"
-}

@@ -50,7 +50,7 @@ void Area::handle_trigger(const Trigger& trigger) {
     switch (trigger.action.index()) {
     case 0: {
         const auto loadscript = std::get<BeginScript>(trigger.action);
-        auto& s = scripts.emplace_back(lua_vm, shmy::env::pkg_full() / loadscript.filename, "shmy");
+        auto& s = lua_vm.spawn_script(shmy::env::pkg_full() / loadscript.filename);
         s.start();
         break; }
     case 1: {
@@ -208,7 +208,7 @@ void Area::handle_event(const sf::Event& event) {
         break;
     }
 
-#ifdef DEBUG
+#ifdef VANGO_DEBUG
     debugger.handle_event(event);
 #endif
 }
@@ -267,7 +267,7 @@ void Area::update() {
 
     gui.update();
 
-#ifdef DEBUG
+#ifdef VANGO_DEBUG
     debugger.update();
 #endif
 }
@@ -278,7 +278,7 @@ void Area::render_world(sf::RenderTarget& target) {
     target.clear(sf::Color(10, 10, 10));
     target.draw(background);
 
-#ifdef DEBUG
+#ifdef VANGO_DEBUG
     debugger.render_map(target);
 #endif
 
@@ -298,7 +298,7 @@ void Area::render_world(sf::RenderTarget& target) {
 }
 
 void Area::render_overlays(sf::RenderTarget& target) {
-#ifdef DEBUG
+#ifdef VANGO_DEBUG
     target.setView(camera);
     debugger.render(target);
 #endif

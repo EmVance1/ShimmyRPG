@@ -143,9 +143,7 @@ void NormalMode::update() {
             e.update(p_area->cart_to_iso);
         }
     }
-    for (auto& s : p_area->scripts) {
-        s.update();
-    }
+    p_area->lua_vm.update();
 
     if (p_area->queued.has_value() && !p_area->get_player().get_tracker().is_moving()) {
         const auto act = std::get<SpeakAction>(p_area->queued->get_inner());

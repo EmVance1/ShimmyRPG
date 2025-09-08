@@ -1,0 +1,12 @@
+[package]
+name = "editor"
+version = "0.1.0"
+lang = "C++20"
+pch = "pch.h"
+
+[dependencies]
+SFML { path="../../_Libs/SFML-3" },
+ImGUI { path="../../_Libs/imgui" },
+SFUtil { path="../../sfutil" },
+nlohmannjson { headers="../deps/nlohmannjson/include" }
+

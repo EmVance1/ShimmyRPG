@@ -101,9 +101,12 @@ void PathTracker::trim_path_walked(float dist) {
 void PathTracker::clamp_path_radial(float dist) {
     if (path.empty()) { return; }
 
+    (void)dist;
+
     std::cout << "BROKEN; FIX OR DONT USE\n";
     exit(1);
 
+    /*
     const auto first = path.front();
 
     for (size_t j = 0; j < path.size(); j++) {
@@ -123,6 +126,7 @@ void PathTracker::clamp_path_radial(float dist) {
             }
         }
     }
+    */
 }
 
 void PathTracker::clamp_path_walked(float dist) {

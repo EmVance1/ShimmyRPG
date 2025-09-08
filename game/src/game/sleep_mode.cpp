@@ -10,8 +10,6 @@ void SleepMode::update() {
     for (auto& [_, e] : p_area->entities) {
         e.update(p_area->cart_to_iso);
     }
-    for (auto& s : p_area->scripts) {
-        s.update();
-    }
+    p_area->lua_vm.update();
 }
 

@@ -37,7 +37,7 @@ std::unordered_map<std::string, uint64_t> FlagTable::cache;
 void FlagTable::change_flag(const std::string& key, const FlagModifier& mod) {
     if (const auto add = std::get_if<FlagAdd>(&mod)) {
         if (add->strict) {
-#ifdef DEBUG
+#ifdef VANGO_DEBUG
         if (!has_flag(key)) {
             std::cerr << "runtime error: flag table does not contain key '" << key << "'\n";
             exit(1);
@@ -49,7 +49,7 @@ void FlagTable::change_flag(const std::string& key, const FlagModifier& mod) {
         }
     } else if (const auto sub = std::get_if<FlagSub>(&mod)) {
         if (sub->strict) {
-#ifdef DEBUG
+#ifdef VANGO_DEBUG
         if (!has_flag(key)) {
             std::cerr << "runtime error: flag table does not contain key '" << key << "'\n";
             exit(1);
@@ -64,7 +64,7 @@ void FlagTable::change_flag(const std::string& key, const FlagModifier& mod) {
     } else {
         const auto set = std::get<FlagSet>(mod);
         if (set.strict) {
-#ifdef DEBUG
+#ifdef VANGO_DEBUG
         if (!has_flag(key)) {
             std::cerr << "runtime error: flag table does not contain key '" << key << "'\n";
             exit(1);
@@ -79,7 +79,7 @@ void FlagTable::change_flag(const std::string& key, const FlagModifier& mod) {
 
 void FlagTable::set_flag(const std::string& key, uint64_t val, bool strict) {
     if (strict) {
-#ifdef DEBUG
+#ifdef VANGO_DEBUG
         if (!has_flag(key)) {
             std::cerr << "runtime error: flag table does not contain key '" << key << "'\n";
             exit(1);
@@ -93,7 +93,7 @@ void FlagTable::set_flag(const std::string& key, uint64_t val, bool strict) {
 
 uint64_t FlagTable::get_flag(const std::string& key, bool strict) {
     if (strict) {
-#ifdef DEBUG
+#ifdef VANGO_DEBUG
         if (!has_flag(key)) {
             std::cerr << "runtime error: flag table does not contain key '" << key << "'\n";
             exit(1);

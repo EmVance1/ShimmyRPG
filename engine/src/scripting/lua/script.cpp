@@ -7,7 +7,7 @@
 
 namespace shmy { namespace lua {
 
-#ifdef DEBUG
+#ifdef VANGO_DEBUG
 #define LUA_CHECK(f, pre) if (f != LUA_OK) { \
         std::cerr << pre << " - " << lua_tostring(p_L, -1) << "\n"; \
         exit(1); \
@@ -74,7 +74,7 @@ Script::Script(lua_State* L, const std::fs::path& filename, const char* api) : p
 
     init_handlers(p_L, m_funcs);
     init_coroutines(p_L, m_coroutines, m_env);
-#ifdef DEBUG
+#ifdef VANGO_DEBUG
     check_permutations(m_funcs, m_coroutines);
 #endif
 
@@ -88,12 +88,24 @@ Script::Script(lua_State* L, const std::fs::path& filename, const char* api) : p
     lua_pop(p_L, 1);
 }
 
+Script::Script(Script&& other)
+    : p_L(other.p_L),
+    m_env(other.m_env),
+    m_funcs(other.m_funcs),
+    m_terminate(other.m_terminate)
+{
+    m_coroutines[0] = other.m_coroutines[0];
+    m_coroutines[1] = other.m_coroutines[1];
+    other.p_L = nullptr;
+}
+
 Script::~Script() {
     terminate();
 }
 
 
 void Script::start() {
+    if (!p_L) { return; }
     if ((m_funcs & (1 << (uint32_t)Callback::OnStart))) {
         lua_rawgeti(p_L, LUA_REGISTRYINDEX, m_env);
         lua_getfield(p_L, -1, "OnStart");
@@ -110,7 +122,7 @@ void Script::start() {
                 async_start.delay = static_cast<float>(lua_tonumber(async_start.thread, -1));
                 lua_pop(async_start.thread, nresults);
             } else {
-#ifdef DEBUG
+#ifdef VANGO_DEBUG
                 std::cerr << "lua coroutine error - (internal) coroutine.yield nresults != 1\n";
                 exit(1);
 #endif
@@ -120,7 +132,7 @@ void Script::start() {
             async_start.thread = nullptr;
             async_start.resumable = false;
             break;
-#ifdef DEBUG
+#ifdef VANGO_DEBUG
         case LUA_ERRRUN:
             std::cerr << "lua coroutine error - " << lua_tostring(async_start.thread, -1) << "\n";
             exit(1);
@@ -130,6 +142,7 @@ void Script::start() {
 }
 
 void Script::terminate() {
+    if (!p_L) { return; }
     if ((m_funcs & (1 << (uint32_t)Callback::OnExit))) {
         lua_rawgeti(p_L, LUA_REGISTRYINDEX, m_env);
         lua_getfield(p_L, -1, "OnExit");
@@ -170,7 +183,7 @@ void Script::update() {
                     async_start.delay = static_cast<float>(lua_tonumber(async_start.thread, -1));
                     lua_pop(async_start.thread, nresults);
                 } else {
-#ifdef DEBUG
+#ifdef VANGO_DEBUG
                     std::cerr << "lua coroutine error - (internal) coroutine.yield nresults != 1\n";
                     exit(1);
 #endif
@@ -180,7 +193,7 @@ void Script::update() {
                 async_start.thread = nullptr;
                 async_start.resumable = false;
                 break;
-#ifdef DEBUG
+#ifdef VANGO_DEBUG
             case LUA_ERRRUN:
                 std::cerr << "lua coroutine error - " << lua_tostring(async_start.thread, -1) << "\n";
                 exit(1);
@@ -201,7 +214,7 @@ void Script::update() {
                     async_update.delay = static_cast<float>(lua_tonumber(async_update.thread, -1));
                     lua_pop(async_update.thread, nresults);
                 } else {
-#ifdef DEBUG
+#ifdef VANGO_DEBUG
                     std::cerr << "lua coroutine error - (internal) coroutine.yield nresults != 1\n";
                     exit(1);
 #endif
@@ -211,7 +224,7 @@ void Script::update() {
                 async_update.thread = nullptr;
                 async_update.resumable = false;
                 break;
-#ifdef DEBUG
+#ifdef VANGO_DEBUG
             case LUA_ERRRUN:
                 std::cerr << "lua coroutine error - " << lua_tostring(async_update.thread, -1) << "\n";
                 exit(1);

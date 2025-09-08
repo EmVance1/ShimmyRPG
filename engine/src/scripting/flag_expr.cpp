@@ -137,7 +137,7 @@ int FlagExpr::evaluate() const {
     case Operation::Number:
         return num;
     case Operation::Identifier:
-        return FlagTable::get_flag(ident, true);
+        return (int)FlagTable::get_flag(ident, true);
     case Operation::Once:
         return (int)FlagTable::Never;
     case Operation::Random:
@@ -145,7 +145,7 @@ int FlagExpr::evaluate() const {
             auto dist = std::uniform_int_distribution<uint32_t>(1, num);
             FlagTable::set_flag(ident, dist(RNG) - 1, false);
         }
-        return FlagTable::get_flag(ident, true);
+        return (int)FlagTable::get_flag(ident, true);
     }
     return 0;
 }
