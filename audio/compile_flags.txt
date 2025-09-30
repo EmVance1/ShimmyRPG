@@ -1,0 +1,17 @@
+-std=c++17
+-xc++
+-Wall
+-DUNICODE
+-D_UNICODE
+-DVANGO_DEBUG
+-DVANGO_PKG_NAME="shmaudio"
+-DVANGO_PKG_VERSION="0.1.0"
+-DVANGO_PKG_VERSION_MAJOR=0
+-DVANGO_PKG_VERSION_MINOR=1
+-DVANGO_PKG_VERSION_PATCH=0
+-I../libs/miniaudio
+-I../../_Libs/libogg\include
+-I../../_Libs/vorbis\include
+-Isrc
+-Iinclude
+-IC:\Users\ayv20\rust\vango\vango-win\testframework

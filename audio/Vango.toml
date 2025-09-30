@@ -1,0 +1,11 @@
+[package]
+name = "shmaudio"
+version = "0.1.0"
+lang = "C++17"
+kind = "staticlib"
+
+[dependencies]
+miniaudio = { headers="../libs/miniaudio" }
+libogg    = { path="../../_Libs/libogg" }
+libvorbis = { path="../../_Libs/vorbis" }
+
