@@ -39,12 +39,13 @@ const Entity& Area::get_entity_by_story_id(const std::string& _id) const {
 
 
 void Area::update_motionguide() {
-    motionguide_square.setPosition(get_player().get_tracker().get_target_position());
+    const auto vec = get_player().get_tracker().get_target_position();
+    motionguide_square.setPosition({ vec.x, vec.y });
 }
 
 void Area::handle_trigger(const Trigger& trigger) {
     FlagTable::Never = !FlagTable::has_flag(trigger.once_id);
-    if (!trigger.condition.evaluate()) { return; }
+    if (!trigger.condition.evaluate(FlagTable::callback)) { return; }
     FlagTable::set_flag(trigger.once_id, 1, false);
 
     switch (trigger.action.index()) {

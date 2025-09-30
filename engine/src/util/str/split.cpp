@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "../str.h"
+#include "util/str.h"
 
 
 namespace shmy { namespace str {

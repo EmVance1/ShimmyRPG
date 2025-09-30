@@ -84,7 +84,7 @@ void Entity::set_animation(size_t index) {
 }
 
 void Entity::set_position(const sf::Vector2f& position, const sf::Transform& cart_to_iso) {
-    m_tracker.set_position(position);
+    m_tracker.set_position({ position.x, position.y });
     m_sprite.setPosition(cart_to_iso.transformPoint(position));
     m_outline_sprite.setPosition(m_sprite.getPosition());
     m_collider.position = position;
@@ -149,10 +149,11 @@ void Entity::set_hovered(bool hovered) {
 
 void Entity::update(const sf::Transform& cart_to_iso) {
     if (m_is_character) {
-        m_tracker.progress();
-        m_sprite.setPosition(cart_to_iso.transformPoint(m_tracker.get_position()));
+        m_tracker.update(Time::deltatime());
+        const auto pos = m_tracker.get_position();
+        m_sprite.setPosition(cart_to_iso.transformPoint({pos.x, pos.y}));
         m_outline_sprite.setPosition(m_sprite.getPosition());
-        m_collider.position = m_tracker.get_position();
+        m_collider.position = { pos.x, pos.y };
     }
     m_sprite.update(Time::deltatime());
 }

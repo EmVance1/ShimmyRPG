@@ -4,25 +4,22 @@
 #include <string>
 #include <filesystem>
 #include "flags.h"
-#include "../flag_expr.h"
+#include "../expr.h"
 
 
 namespace shmy { namespace speech {
 
 struct Response {
-    FlagExpr conditions;
     std::string text;
     std::string edge;
-    std::unordered_map<std::string, FlagModifier> flags;
+    Expr conditions;
+    Expr modifiers;
 };
-struct Goto { std::string vertex; };
-struct Exit {};
-struct ExitInto { std::string script; };
-
-using Outcome = std::variant<std::vector<Response>, Goto, Exit, ExitInto>;
+struct Goto { std::string next; bool is_exit; };
+using Outcome = std::variant<std::vector<Response>, Goto>;
 
 struct Vertex {
-    FlagExpr conditions;
+    Expr conditions;
     std::string speaker;
     std::vector<std::string> lines;
     Outcome outcome;
@@ -39,7 +36,5 @@ Graph load_from_line(const std::string& speaker, const std::string& line);
 bool operator==(const Vertex& a, const Vertex& b);
 bool operator==(const Response& a, const Response& b);
 bool operator==(const Goto& a, const Goto& b);
-bool operator==(const Exit& a, const Exit& b);
-bool operator==(const ExitInto& a, const ExitInto& b);
 
 } }

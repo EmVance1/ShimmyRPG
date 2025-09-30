@@ -1,17 +1,12 @@
 #pragma once
-#include <iostream>
-#include <variant>
 #include <unordered_map>
+#include <variant>
+#include <string>
 
 
-struct FlagAdd{ int64_t dif; bool strict; };
-struct FlagSub{ int64_t dif; bool strict; };
+struct FlagAdd{ int64_t val; bool strict; };
 struct FlagSet{ int64_t val; bool strict; };
-using FlagModifier = std::variant<FlagAdd, FlagSub, FlagSet>;
-
-
-bool operator==(const FlagModifier& a, const FlagModifier& b);
-std::ostream& operator<<(std::ostream& stream, const FlagModifier& p);
+using FlagModifier = std::variant<FlagAdd, FlagSet>;
 
 
 class FlagTable {
@@ -19,9 +14,11 @@ private:
     static std::unordered_map<std::string, uint64_t> cache;
 
 public:
-    inline static bool Never = false;
+    inline static uint64_t Never = 0;
 
     static void clear() { cache.clear(); }
+
+    static uint64_t* callback(const char* key, bool strict);
 
     static void change_flag(const std::string& key, const FlagModifier& mod);
     static void set_flag(const std::string& key, uint64_t val, bool strict);

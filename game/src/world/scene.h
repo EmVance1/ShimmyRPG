@@ -1,9 +1,9 @@
 #pragma once
 #include <SFML/Graphics.hpp>
-#include <lua/lua.hpp>
+#include <luajit-2.1/lua.hpp>
 #include <string>
 #include <vector>
-#include <navmesh/types.h>
+#include <navmesh/lib.h>
 #include <sfutil/camera.h>
 #include "graphics/background.h"
 #include "scripting/lua/script.h"
@@ -12,17 +12,26 @@
 #include "objects/entity.h"
 
 
+struct RenderSettings {
+    const sf::Vector2i viewport;
+    std::vector<sf::Shader> shaders;
+    sf::FloatRect crop;
+    sf::Color overlay;
+
+    RenderSettings(const sf::Vector2i& _viewport)
+        : viewport(_viewport), crop({0, 0}, (sf::Vector2f)viewport), overlay(sf::Color::White)
+    {}
+};
+
 class Region;
 
 struct Scene {
-    static const sf::RenderWindow* window;
+    static RenderSettings* render_settings;
 
     Region* p_region;
-    std::string id;
-    std::string area_label;
 
     shmy::AsyncBackground background;
-    nav::NavMesh pathfinder;
+    nav::Mesh pathfinder;
     sf::Vector2f topleft;
     float scale;
 
@@ -37,17 +46,6 @@ struct Scene {
     std::vector<Trigger> triggers;
 
     sfu::Camera camera;
-    gui::Panel gui;
-
-    GameMode gamemode = GameMode::Normal;
-    NormalMode normal_mode;
-    CinematicMode cinematic_mode;
-    CombatMode combat_mode;
-    SleepMode sleep_mode;
-
-#ifdef VANGO_DEBUG
-    SceneDebugger debugger;
-#endif
 
     Scene(const std::string& id, Region* parent_region);
     Scene(const Scene& other) = delete;
@@ -56,10 +54,8 @@ struct Scene {
 
     void load_prefab(const rapidjson::Value& prefabs, const rapidjson::Value& value, const std::string& name);
     void load_entity(const rapidjson::Value& prefabs, const rapidjson::Value& value);
-    void load_gui();
 
     void init(const rapidjson::Value& prefabs, const rapidjson::Document& doc);
-    void set_mode(GameMode mode);
 
     Entity& get_player();
     const Entity& get_player() const;
@@ -77,7 +73,6 @@ struct Scene {
 
     void handle_event(const sf::Event& event);
     void update();
-    void render_world(sf::RenderTarget& target);
-    void render_overlays(sf::RenderTarget& target);
+    void render(sf::RenderTarget& target);
 };
 

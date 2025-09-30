@@ -6,12 +6,6 @@
 
 namespace dia = shmy::speech;
 
-static void set_response_flags(const std::unordered_map<std::string, FlagModifier>& flags) {
-    for (const auto& [k, v] : flags) {
-        FlagTable::change_flag(k, v);
-    }
-}
-
 
 void Dialogue::begin(dia::Graph&& graph, GameMode init_mode, const std::string& id) {
     m_id = id;
@@ -21,14 +15,14 @@ void Dialogue::begin(dia::Graph&& graph, GameMode init_mode, const std::string& 
         const auto name = "entry" + std::to_string(i);
         const auto once_id = "once_dia_" + id + "_" + name;
         FlagTable::Never = !FlagTable::has_flag(once_id);
-        if (m_graph.at(name).conditions.evaluate()) {
+        if (m_graph.at(name).conditions.evaluate(FlagTable::callback)) {
             m_vertex = "entry" + std::to_string(i);
             FlagTable::set_flag(once_id, 1, false);
             break;
         }
     }
     if (m_vertex == "") {
-        std::cerr << "dialogue error -  no eligible entry point found\n";
+        std::cerr << "dialogue error - no eligible entry point found\n";
         exit(1);
     }
     m_vertex_index = 0;
@@ -45,7 +39,7 @@ void Dialogue::advance(size_t index) {
     case State::Player: {
         const auto& options = std::get<std::vector<dia::Response>>(current_vertex().outcome);
         const auto& response = options[index];
-        set_response_flags(response.flags);
+        response.modifiers.evaluate(FlagTable::callback);
         if (response.edge == "exit") {
             m_state = State::Empty;
         } else {
@@ -57,14 +51,16 @@ void Dialogue::advance(size_t index) {
     case State::Lines:
         m_vertex_index++;
         if (m_vertex_index == current_vertex().lines.size()) {
-            if (std::holds_alternative<dia::Exit>(current_vertex().outcome)) {
-                m_state = State::Empty;
-            } else if (const auto script = std::get_if<dia::ExitInto>(&current_vertex().outcome)) {
-                m_followup = script->script;
-                m_state = State::EmptyWithFollowup;
-            } else if (auto vert = std::get_if<dia::Goto>(&current_vertex().outcome)) {
-                m_vertex = vert->vertex;
-                m_vertex_index = 0;
+            if (auto vert = std::get_if<dia::Goto>(&current_vertex().outcome)) {
+                if (vert->is_exit && vert->next.empty()) {
+                    m_state = State::Empty;
+                } else if (vert->is_exit && !vert->next.empty()) {
+                    m_followup = vert->next;
+                    m_state = State::EmptyWithFollowup;
+                } else {
+                    m_vertex = vert->next;
+                    m_vertex_index = 0;
+                }
             } else {
                 m_state = State::Player;
             }
@@ -90,7 +86,7 @@ Dialogue::Element Dialogue::get_current_element() const {
         const auto& options = std::get<std::vector<dia::Response>>(current_vertex().outcome);
         auto vec = std::vector<Choice>();
         for (size_t i = 0; i < options.size(); i++) {
-            if (options[i].conditions.evaluate()) {
+            if (options[i].conditions.evaluate(FlagTable::callback)) {
                 vec.push_back({options[i].text, i});
             }
         }

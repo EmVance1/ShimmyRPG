@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "style.h"
+#include "gui/style.h"
 #include "util/str.h"
 #include "util/json.h"
 

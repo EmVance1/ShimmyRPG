@@ -13,7 +13,7 @@ void Area::load_gui() {
     gui.set_background_color(sf::Color::Transparent);
     {
         auto label = gui::Text::create(gui::Position::topcenter({0.f, 50.f}), sf::Vector2f(300, 35), p_region->get_style(), story_id);
-        label->set_text_alignment(gui::Alignment::Center);
+        label->set_text_alignment(gui::Position::Alignment::Center);
         label->set_text_padding(0.f);
         gui.add_widget("area_label", label);
     }
@@ -22,7 +22,7 @@ void Area::load_gui() {
         gold->set_background_texture(sf::IntRect{ {150, 0}, {100, 100} });
 
         auto goldtxt = gui::Text::create(gui::Position::topleft({0.f, 70.f}), sf::Vector2f(100, 30), p_region->get_style(), "100");
-        goldtxt->set_text_alignment(gui::Alignment::Center);
+        goldtxt->set_text_alignment(gui::Position::Alignment::Center);
         goldtxt->set_text_padding(0.f);
         goldtxt->set_sorting_layer(1);
 
@@ -31,7 +31,7 @@ void Area::load_gui() {
     }
     {
         auto tooltip = gui::Text::create(gui::Position::topleft({0.f, 0.f}), sf::Vector2f(100, 35), p_region->get_style(), "");
-        tooltip->set_text_alignment(gui::Alignment::Center);
+        tooltip->set_text_alignment(gui::Position::Alignment::Center);
         tooltip->set_text_padding(5.f);
         tooltip->set_character_size(25);
         tooltip->set_enabled(false);
@@ -54,7 +54,7 @@ void Area::load_gui() {
                 sf::Vector2f(300.f, 50.f),
                 p_region->get_style(), "");
         speaker->set_sorting_layer(-1);
-        speaker->set_text_alignment(gui::Alignment::Center);
+        speaker->set_text_alignment(gui::Position::Alignment::Center);
         dialogue_gui->add_widget("speaker", speaker);
 
         auto line = gui::Text::create(
@@ -90,7 +90,7 @@ void Area::load_gui() {
                 p_region->get_style(),
                 ""
             );
-        actor->set_text_alignment(gui::Alignment::Center);
+        actor->set_text_alignment(gui::Position::Alignment::Center);
         combat_gui->add_widget("current_actor", actor);
 
         auto end_turn = gui::Button::create(

@@ -40,7 +40,9 @@ enum class TokenType : uint32_t {
     LessEq        = 1 << 21,
     GreaterEq     = 1 << 22,
     EqualTo       = 1 << 23,
-    Pragma        = 1 << 24,
+    Add           = 1 << 24,
+    Sub           = 1 << 25,
+    Pragma        = 1 << 26,
 };
 
 struct Token {

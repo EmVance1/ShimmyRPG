@@ -19,7 +19,7 @@ void NormalMode::move_to_action(const std::string& target) {
     } else {
         const auto abs = t.get_sorting_boundary().get_center_of_mass();
         const auto pos = p_area->iso_to_cart.transformPoint(abs);
-        p_area->get_player().get_tracker().set_target_position(pos);
+        p_area->get_player().get_tracker().set_target_position({ pos.x, pos.y });
     }
     p_area->update_motionguide();
 }
@@ -27,8 +27,8 @@ void NormalMode::move_to_action(const std::string& target) {
 void NormalMode::speak_action(const std::string& target, const std::string& speech) {
     const auto& t = p_area->entities.at(target);
     const float thresh = 70.f;
-    if (sf::Vector2f(p_area->get_player().get_tracker().get_position()
-                         - t.get_tracker().get_position()).lengthSquared() < (thresh * thresh * 1.1f)) {
+    const auto dist = p_area->get_player().get_tracker().get_position() - t.get_tracker().get_position();
+    if (sf::Vector2f(dist.x, dist.y).lengthSquared() < (thresh * thresh * 1.1f)) {
         if (speech.ends_with(".shmy")) {
             p_area->begin_dialogue(shmy::speech::load_from_file(shmy::env::pkg_full() / speech), speech);
             p_area->set_mode(GameMode::Dialogue);
@@ -63,7 +63,7 @@ void NormalMode::handle_event(const sf::Event& event) {
             auto& player = p_area->get_player();
             player.get_tracker().start();
             if (!player.is_hovered()) {
-                if (player.get_tracker().set_target_position(iso)) {
+                if (player.get_tracker().set_target_position({ iso.x, iso.y })) {
                     p_area->update_motionguide();
                 }
             }
@@ -117,7 +117,7 @@ void NormalMode::handle_event(const sf::Event& event) {
             const auto iso = p_area->iso_to_cart.transformPoint(mapped);
 
             player.get_tracker().start();
-            if (player.get_tracker().set_target_position(iso)) {
+            if (player.get_tracker().set_target_position({ iso.x, iso.y })) {
                 p_area->update_motionguide();
             }
             player.get_tracker().pause();

@@ -11,7 +11,7 @@ private:
     sf::Text m_label;
     std::u32string m_label_value;
     uint32_t m_character_size = 25;
-    Alignment m_text_alignment = Alignment::TopLeft;
+    Position::Alignment m_text_alignment = Position::Alignment::TopLeft;
     float m_text_padding = 5.f;
 
 protected:
@@ -29,8 +29,8 @@ public:
     void set_character_size(uint32_t character_size);
     uint32_t get_character_size() const { return m_character_size; }
 
-    void set_text_alignment(Alignment alignment);
-    Alignment get_text_alignment() const { return m_text_alignment; }
+    void set_text_alignment(Position::Alignment alignment);
+    Position::Alignment get_text_alignment() const { return m_text_alignment; }
 
     void set_text_padding(float padding);
     float get_text_padding() const { return m_text_padding; }

@@ -1,26 +1,27 @@
 
-entry(default) = ShimmyPrime: [ "Allo, traveller. Pretty late in the day to be just coming in. You know theres a curfew in place. What can I get ye?" ] => {
-    "Whisky. (3 silver)"      => v00{ Player_Alcohol: Add(2), Player_Coin: Sub(3) },
+entry(Player_Origin == Twinvayne) = ShimmyPrime: [ "You're a long way from home pal. Good thing you made it before the curfew. What can I get ye?" ] => {
+    "Whisky. (3 silver)"      => v00{ Player_Alcohol: +2, Player_Coin: -3 },
     "Water."                  => v01,
-    "Any specialties?"        => v02,
+    "[Twinvayne Local] A Shimmy brew, please. (4 silver)" => v20{ Player_Alcohol: +4, Player_Coin: -4 },
     "A curfew?"               => v03,
 }
-entry(Player_Origin == Twinvayne) = ShimmyPrime: [ "You're a long way from home pal. Good thing you made it before the curfew. What can I get ye?" ] => {
-    "Whisky. (3 silver)"      => v00{ Player_Alcohol: Add(2), Player_Coin: Sub(3) },
+
+entry(default) = ShimmyPrime: [ "Allo, traveller. Pretty late in the day to be just coming in. You know theres a curfew in place. What can I get ye?" ] => {
+    "Whisky. (3 silver)"      => v00{ Player_Alcohol: +2, Player_Coin: -3 },
     "Water."                  => v01,
-    "[Twinvayne Local] A Shimmy brew, please. (4 silver)" => v20{ Player_Alcohol: Add(4), Player_Coin: Sub(4) },
+    "Any specialties?"        => v02,
     "A curfew?"               => v03,
 }
 
 v00 = ShimmyPrime: [ "Right away." ]                      => brian
 v01 = ShimmyPrime: [ "Yer not a fekin dryshite are ye?" ] => {
-    "Fine. Whisky."           => v10{ Player_Alcohol: Add(2) },
+    "Fine. Whisky."           => v10{ Player_Alcohol: +2 },
     "I said water."           => v11,
-    (PlayerOrigin == Twinvayne) "[Twinvayne Local] I know better than to trust your drinks, Shimmy" => v12{},
+    (Player_Origin == Twinvayne) "[Twinvayne Local] I know better than to trust your drinks, Shimmy" => v12{},
 }
 v02 = ShimmyPrime: [ "Well... Since yez ask... Got here my special brew. Gots to be strong enough for it though." ] => {
-    "Sure I am. (4 silver)"              => v20{ Player_Alcohol: Add(4), Player_Coin: Sub(4) },
-    "Mmm, maybe just whisky. (3 silver)" => v21{ Player_Alcohol: Add(2), Player_Coin: Sub(3) },
+    "Sure I am. (4 silver)"              => v20{ Player_Alcohol: +4, Player_Coin: -4 },
+    "Mmm, maybe just whisky. (3 silver)" => v21{ Player_Alcohol: +2, Player_Coin: -3 },
 }
 v03 = ShimmyPrime: [ "Aye. Nasty business. We've got rooms if you need one, but best not be going outside much longer." ] => {
     "Much appreciated."                         => brian,
@@ -31,7 +32,7 @@ v10 = ShimmyPrime: [ "That's more like it." ]           => brian
 v11 = ShimmyPrime: [ "Suit yerself..." ]                => brian
 v12 = ShimmyPrime: [ "Hush now, not so loud. I've come up in the world you know. You might find yourself pleasantly surprised." ] => brian
 v13 = ShimmyPrime: [ "You'll fit right in here, so long as you dont give me too much to clean. So what'll it be?" ] => {
-    "Whisky."                 => v00{ Player_Alcohol: Add(2) },
+    "Whisky."                 => v00{ Player_Alcohol: +2 },
     "Water."                  => v01,
     "Any specialties?"        => v02,
 }

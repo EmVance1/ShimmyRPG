@@ -1,16 +1,16 @@
 #include "pch.h"
-#include "conversions.h"
+#include "scripting/lua/conversions.h"
 
 
 void lua_pushvec2f(lua_State* L, const sf::Vector2f& vec) {
     lua_newtable(L);
 
     lua_pushstring(L, "x");
-    lua_pushnumber(L, vec.x);
+    lua_pushnumber(L, (lua_Number)vec.x);
     lua_settable(L, -3);
 
     lua_pushstring(L, "y");
-    lua_pushnumber(L, vec.y);
+    lua_pushnumber(L, (lua_Number)vec.y);
     lua_settable(L, -3);
 }
 

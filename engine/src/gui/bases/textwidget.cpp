@@ -1,6 +1,6 @@
 #include "pch.h"
 #include <utf8.h>
-#include "textwidget.h"
+#include "gui/bases/textwidget.h"
 
 
 namespace gui {
@@ -62,23 +62,23 @@ void TextWidget::apply_text_alignment() {
     const auto c_size = get_size();
     const auto t_size = m_label.getLocalBounds().size;
     switch (m_text_alignment) {
-    case Alignment::TopLeft:
+    case Position::Alignment::TopLeft:
         m_label.setPosition({m_text_padding, m_text_padding}); break;
-    case Alignment::CenterLeft:
+    case Position::Alignment::CenterLeft:
         m_label.setPosition({m_text_padding, c_size.y * 0.5f - t_size.y * 0.5f}); break;
-    case Alignment::BottomLeft:
+    case Position::Alignment::BottomLeft:
         m_label.setPosition({m_text_padding, c_size.y - t_size.y - m_text_padding}); break;
-    case Alignment::TopCenter:
+    case Position::Alignment::TopCenter:
         m_label.setPosition({c_size.x * 0.5f - t_size.x * 0.5f, m_text_padding}); break;
-    case Alignment::Center:
+    case Position::Alignment::Center:
         m_label.setPosition(c_size * 0.5f - t_size * 0.5f); break;
-    case Alignment::BottomCenter:
+    case Position::Alignment::BottomCenter:
         m_label.setPosition({c_size.x * 0.5f - t_size.x * 0.5f, c_size.y - t_size.y - m_text_padding}); break;
-    case Alignment::TopRight:
+    case Position::Alignment::TopRight:
         m_label.setPosition({c_size.x - t_size.x - m_text_padding, m_text_padding}); break;
-    case Alignment::CenterRight:
+    case Position::Alignment::CenterRight:
         m_label.setPosition({c_size.x - t_size.x - m_text_padding, c_size.y * 0.5f - t_size.y * 0.5f}); break;
-    case Alignment::BottomRight:
+    case Position::Alignment::BottomRight:
         m_label.setPosition({c_size.x - t_size.x - m_text_padding, c_size.y - t_size.y - m_text_padding}); break;
     }
     m_label.move(sf::Vector2f(0.f, -5.f));
@@ -91,7 +91,7 @@ void TextWidget::set_character_size(uint32_t character_size) {
     apply_text_alignment();
 }
 
-void TextWidget::set_text_alignment(Alignment alignment) {
+void TextWidget::set_text_alignment(Position::Alignment alignment) {
     m_text_alignment = alignment;
     apply_text_alignment();
 }

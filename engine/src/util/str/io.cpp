@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "../str.h"
+#include "util/str.h"
 
 
 namespace shmy { namespace str {
@@ -10,7 +10,7 @@ std::string read_to_string(const std::fs::path& filename) {
     const auto size = f.tellg();
     if (size < 0) return "";
     f.seekg(0, std::ios::beg);
-    auto buffer = std::string(size, '\0');
+    auto buffer = std::string((size_t)size, '\0');
 #ifdef VANGO_DEBUG
     if (!f.read(buffer.data(), size)) {
         std::cout << "streaming error - file " << filename << " could not be read\n";
@@ -27,8 +27,8 @@ std::string read_to_string(const std::fs::path& filename) {
 }
 
 void write_to_file(const std::fs::path& filename, const std::string& content) {
-    auto f = std::ofstream(PATH_NORM(filename));
-    f.write(content.data(), content.size());
+    auto f = std::ofstream(filename);
+    f.write(content.data(), (std::streamsize)content.size());
     f.close();
 }
 

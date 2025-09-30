@@ -6,7 +6,7 @@
 namespace shmy { namespace flags {
 
 static void load_file(const std::fs::path& filename, const std::fs::path& prefix) {
-    auto file = std::ifstream(PATH_NORM(filename));
+    auto file = std::ifstream(filename);
     auto line = std::string("");
     bool err = false;
 

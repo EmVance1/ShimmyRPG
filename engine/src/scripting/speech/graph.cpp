@@ -1,6 +1,6 @@
 #include "pch.h"
-#include "graph.h"
-#include "../lexer.h"
+#include "scripting/speech/graph.h"
+#include "scripting/lexer.h"
 #include "util/str.h"
 
 
@@ -22,10 +22,10 @@ Graph load_from_file(const std::fs::path& filename) {
 Graph load_from_line(const std::string& speaker, const std::string& line) {
     auto res = Graph();
     res.emplace("entry0", Vertex{
-        FlagExpr::True(),
+        Expr::True(),
         speaker,
         { line },
-        Exit{}
+        Goto{ "", true }
     });
     return res;
 }
@@ -38,22 +38,15 @@ bool operator==(const Vertex& a, const Vertex& b) {
 }
 
 bool operator==(const Response& a, const Response& b) {
-    return a.conditions == b.conditions &&
-           a.text == b.text &&
+    return a.text == b.text &&
            a.edge == b.edge &&
-           a.flags == b.flags;
+           a.conditions == b.conditions &&
+           a.modifiers == b.modifiers;
 }
 
 bool operator==(const Goto& a, const Goto& b) {
-    return a.vertex == b.vertex;
-}
-
-bool operator==(const Exit&, const Exit&) {
-    return true;
-}
-
-bool operator==(const ExitInto& a, const ExitInto& b) {
-    return a.script == b.script;
+    return a.next == b.next &&
+           a.is_exit == b.is_exit;
 }
 
 } }

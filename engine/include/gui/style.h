@@ -35,13 +35,13 @@ struct Style {
     bool load_from_dir(const std::filesystem::path& dir);
 };
 
-enum class Alignment {
-    TopLeft,    CenterLeft,  BottomLeft,
-    TopCenter,  Center,      BottomCenter,
-    TopRight,   CenterRight, BottomRight,
-};
-
 struct Position {
+    enum class Alignment {
+        TopLeft,    CenterLeft,  BottomLeft,
+        TopCenter,  Center,      BottomCenter,
+        TopRight,   CenterRight, BottomRight,
+    };
+
     Alignment alignment;
     sf::Vector2f offset;
 
@@ -56,6 +56,24 @@ struct Position {
     static Position bottomright (const sf::Vector2f& offset) { return Position{ Alignment::BottomRight,  offset }; }
 
     Position moved(const sf::Vector2f& move) const { return Position{ alignment, offset + move }; }
+
+    sf::Vector2f get_relative_center(const sf::FloatRect& container) const;
+    sf::Vector2f get_relative_topleft(const sf::FloatRect& container, const sf::Vector2f& size) const;
+
+    sf::Vector2f get_absolute_center(const sf::FloatRect& container) const { return get_relative_center(container) + container.position; }
+    sf::Vector2f get_absolute_topleft(const sf::FloatRect& container, const sf::Vector2f& size) const { return get_relative_topleft(container, size) + container.position; }
+};
+
+struct Size {
+    enum class Alignment {
+        Percent, Absolute,
+    };
+
+    Alignment alignment;
+    sf::Vector2f amount;
+
+    static Size percent (const sf::Vector2f& amount) { return Size{ Alignment::Percent,  amount }; }
+    static Size absolute(const sf::Vector2f& amount) { return Size{ Alignment::Absolute, amount }; }
 
     sf::Vector2f get_relative_center(const sf::FloatRect& container) const;
     sf::Vector2f get_relative_topleft(const sf::FloatRect& container, const sf::Vector2f& size) const;

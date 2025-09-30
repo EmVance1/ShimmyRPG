@@ -1,3 +1,4 @@
+
 #define _CRT_SECURE_NO_WARNINGS
 #include <cstdlib>
 #include <cstdio>
@@ -24,11 +25,6 @@
 #include <random>
 #include <filesystem>
 namespace std { namespace fs = filesystem; }
-#ifdef _WIN32
-#define PATH_NORM(p) p
-#else
-#define PATH_NORM(p) p.string()
-#endif
 
 #include <SFML/Graphics.hpp>
 #include <SFML/Window.hpp>
@@ -41,7 +37,7 @@ namespace std { namespace fs = filesystem; }
 #include <rapidjson/filereadstream.h>
 #include <rapidjson/document.h>
 
-#define UTF_CPP_CPLUSPLUS 202002L // C++20
+// #define UTF_CPP_CPLUSPLUS 202002L // C++20
 #include <utf8.h>
 
 #include <thread_pool/thread_pool.h>

@@ -21,7 +21,7 @@ int main(int argc, char** argv) {
     }
 
     const auto video_mode = sf::VideoMode::getDesktopMode();
-    auto window = sf::RenderWindow(video_mode, "Shimmy", SCREEN_MODE);
+    auto window = sf::RenderWindow(video_mode, "Shimmy Player - pre-alpha " VANGO_PKG_VERSION, SCREEN_MODE);
     // window.setVerticalSyncEnabled(true);
     window.setMouseCursorVisible(false);
     window.setPosition({0, 0});
@@ -63,7 +63,7 @@ int main(int argc, char** argv) {
         region_folder = tokens[2];
         shmy::flags::load_from_dir(shmy::env::pkg_full() / "flags");
         const auto starting_area = tokens[3];
-        region.load_from_dir(region_folder, std::atoi(starting_area.c_str()));
+        region.load_from_dir(region_folder, (size_t)std::atoi(starting_area.c_str()));
     }
 
     // auto& pixelate = render_settings.shaders.emplace_back(std::fs::path("res/shaders/pixelate.frag"), sf::Shader::Type::Fragment);

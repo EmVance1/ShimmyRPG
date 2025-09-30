@@ -87,17 +87,17 @@ void Area::init(const rapidjson::Value& prefabs, const rapidjson::Document& doc)
         } else if (action.HasMember("CameraZoom")) {
             const auto& act = action["ChangeFlag"];
             if (act.HasMember("Add")) {
-                t.action = ChangeFlag{ JSON_GET_STR(act, "name"), FlagAdd{ JSON_GET_INT(act, "Add"), true } };
+                t.action = ChangeFlag{ JSON_GET_STR(act, "name"), FlagAdd{  JSON_GET_INT(act, "Add"), true } };
             } else if (action.HasMember("Sub")) {
-                t.action = ChangeFlag{ JSON_GET_STR(act, "name"), FlagSub{ JSON_GET_INT(act, "Sub"), true } };
+                t.action = ChangeFlag{ JSON_GET_STR(act, "name"), FlagAdd{ -JSON_GET_INT(act, "Sub"), true } };
             } else if (action.HasMember("Set")) {
-                t.action = ChangeFlag{ JSON_GET_STR(act, "name"), FlagSet{ JSON_GET_INT(act, "Set"), true } };
+                t.action = ChangeFlag{ JSON_GET_STR(act, "name"), FlagSet{  JSON_GET_INT(act, "Set"), true } };
             }
         }
         if (e.HasMember("condition")) {
             const auto cond = std::string(JSON_GET_STR(e, "condition"));
             try {
-                t.condition = shmy::FlagExpr::from_string(cond);
+                t.condition = shmy::Expr::from_string(cond);
             } catch (const std::exception& e) {
                 std::cout << "error parsing 'condition': " << e.what() << "\n";
             }

@@ -1,14 +1,14 @@
 
 entry(ShimmyIntroScene_IsActive) = ShimmyPrime: [ "Don't mind me, I'll just be serving these folks over here. Don't be shy, Brian doesn't bite." ] => exit
 
-entry(Shimmy_Approval >= 70) = ShimmyPrime: [ "%player old friend! What'll it be, this evening?" ] => {
-    "Whisky. (2 silver)"      => v00{ Player_Alcohol: Add(2), Player_Coin: Sub(3) },
+entry(Shimmy_Approval >= 70) = ShimmyPrime: [ "${player} old friend! What'll it be, this evening?" ] => {
+    "Whisky. (2 silver)"      => v00{ Player_Alcohol: +2, Player_Coin: -3 },
     "Water."                  => v01,
-    "[Twinvayne Local] A Shimmy brew, please. (3 silver)"  => v20{ Player_Alcohol: Add(4), Player_Coin: Sub(4) },
+    "[Twinvayne Local] A Shimmy brew, please. (3 silver)"  => v20{ Player_Alcohol: +4, Player_Coin: -4 },
 }
 
 entry(default) = ShimmyPrime: [ "Oh hallo there. What can I get ye?" ] => {
-    "Whisky. (3 silver)"      => v00{ Player_Alcohol: Add(2), Player_Coin: Sub(3) },
+    "Whisky. (3 silver)"      => v00{ Player_Alcohol: -2, Player_Coin: -3 },
     "Water."                  => v01,
     "Any specialties?"        => v02,
 }

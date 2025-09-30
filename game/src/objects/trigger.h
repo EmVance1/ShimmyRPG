@@ -3,7 +3,7 @@
 #include <string>
 #include <variant>
 #include "flags.h"
-#include "scripting/flag_expr.h"
+#include "scripting/expr.h"
 #include "sfutil/geometry.h"
 
 
@@ -20,7 +20,7 @@ struct Trigger {
     sfu::RotatedFloatRect bounds;
     TriggerAction action;
     std::string once_id;
-    shmy::FlagExpr condition = shmy::FlagExpr::True();
+    shmy::Expr condition = shmy::Expr::True();
     bool cooldown = false;
 };
 

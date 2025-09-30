@@ -1,78 +1,66 @@
 #include "pch.h"
 #include "flags.h"
+#include <random>
 
 
-bool operator==(const FlagModifier& a, const FlagModifier& b) {
-    if (a.index() != b.index()) {
-        return false;
-    }
-    if (const auto a_add = std::get_if<FlagAdd>(&a)) {
-        const auto b_add = std::get<FlagAdd>(b);
-        return a_add->dif == b_add.dif;
-    } else if (const auto a_sub = std::get_if<FlagSub>(&a)) {
-        const auto b_sub = std::get<FlagSub>(b);
-        return a_sub->dif == b_sub.dif;
-    } else {
-        const auto a_set = std::get<FlagSet>(a);
-        const auto b_set = std::get<FlagSet>(b);
-        return a_set.val == b_set.val;
-    }
-}
-
-std::ostream& operator<<(std::ostream& stream, const FlagModifier& p) {
-    if (const auto add = std::get_if<FlagAdd>(&p)) {
-        return stream << "Add(" << std::to_string(add->dif) << ")";
-    } else if (const auto sub = std::get_if<FlagSub>(&p)) {
-        return stream << "Sub(" << std::to_string(sub->dif) << ")";
-    } else {
-        const auto set = std::get<FlagSet>(p);
-        return stream << "Set(" << std::to_string(set.val) << ")";
-    }
-}
+static std::mt19937 RNG{ std::random_device()() };
 
 
 std::unordered_map<std::string, uint64_t> FlagTable::cache;
 
 
+uint64_t* FlagTable::callback(const char* key, bool strict) {
+    static uint64_t TEMP = 0;
+
+    if (strncmp(key, "once", 4) == 0) {
+        return &FlagTable::Never;
+    } else if (strncmp(key, "default", 7) == 0) {
+        TEMP = 1;
+        return &TEMP;
+    } else if (strncmp(key, "rng", 3) == 0) {
+        auto mod = (uint64_t)atoll(key+3);
+        auto dist = std::uniform_int_distribution<uint64_t>(0, mod-1);
+        TEMP = dist(RNG);
+        return &TEMP;
+    } else {
+        if (!strict && !cache.contains(key)) {
+            cache[key] = 0;
+        }
+        return &cache.at(key);
+    }
+}
+
 void FlagTable::change_flag(const std::string& key, const FlagModifier& mod) {
     if (const auto add = std::get_if<FlagAdd>(&mod)) {
+        auto val = 0ULL;
         if (add->strict) {
 #ifdef VANGO_DEBUG
-        if (!has_flag(key)) {
-            std::cerr << "runtime error: flag table does not contain key '" << key << "'\n";
-            exit(1);
-        }
+            if (!has_flag(key)) {
+                std::cerr << "runtime error: flag table does not contain key '" << key << "'\n";
+                exit(1);
+            }
 #endif
-            cache.at(key) += add->dif;
+            val = cache.at(key);
         } else {
-            cache[key] += add->dif;
+            val = cache[key];
         }
-    } else if (const auto sub = std::get_if<FlagSub>(&mod)) {
-        if (sub->strict) {
-#ifdef VANGO_DEBUG
-        if (!has_flag(key)) {
-            std::cerr << "runtime error: flag table does not contain key '" << key << "'\n";
-            exit(1);
-        }
-#endif
-            auto& flag = cache.at(key);
-            flag = (sub->dif > (int)flag) ? 0 : (int)flag - sub->dif;
+        if (add->val < 0 && (uint64_t)std::abs(add->val) > val) {
+            cache[key] = 0;
         } else {
-            auto& flag = cache[key];
-            flag = (sub->dif > (int)flag) ? 0 : (int)flag - sub->dif;
+            cache[key] = val + (uint64_t)add->val;
         }
     } else {
         const auto set = std::get<FlagSet>(mod);
         if (set.strict) {
 #ifdef VANGO_DEBUG
-        if (!has_flag(key)) {
-            std::cerr << "runtime error: flag table does not contain key '" << key << "'\n";
-            exit(1);
-        }
+            if (!has_flag(key)) {
+                std::cerr << "runtime error: flag table does not contain key '" << key << "'\n";
+                exit(1);
+            }
 #endif
-            cache.at(key) = set.val;
+            cache.at(key) = (uint64_t)set.val;
         } else {
-            cache[key] = set.val;
+            cache[key] = (uint64_t)set.val;
         }
     }
 }

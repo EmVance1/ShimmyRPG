@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "image.h"
+#include "gui/image.h"
 
 
 namespace gui {

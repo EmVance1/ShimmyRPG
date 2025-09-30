@@ -45,7 +45,7 @@ void CombatMode::handle_event(const sf::Event& event) {
                     const auto mapped = p_area->camera.mapPixelToWorld(mbp->position, p_area->render_settings->viewport);
                     const auto iso = p_area->iso_to_cart.transformPoint(mapped);
                     active.get_tracker().start();
-                    if (active.get_tracker().set_target_position(iso)) {
+                    if (active.get_tracker().set_target_position({ iso.x, iso.y })) {
                         const auto len = active.get_tracker().get_active_path_length();
                         active.get_tracker().clamp_path_walked(active.get_stats().movement);
                         p_area->update_motionguide();
@@ -78,7 +78,7 @@ void CombatMode::handle_event(const sf::Event& event) {
             auto& active = get_active();
             if (!active.is_hovered() && active.get_stats().movement > 0.f && !active.get_tracker().is_moving()) {
                 active.get_tracker().start();
-                if (active.get_tracker().set_target_position(iso)) {
+                if (active.get_tracker().set_target_position({ iso.x, iso.y })) {
                     active.get_tracker().clamp_path_walked(active.get_stats().movement);
                     p_area->update_motionguide();
                 }

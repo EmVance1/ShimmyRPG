@@ -123,7 +123,8 @@ static int l_entity_set_path(lua_State* L) {
     lua_pushstring(L, "ptr");
     lua_gettable(L, 1);
     Entity* entity = (Entity*)lua_touserdata(L, -1);
-    entity->get_tracker().set_target_position(lua_tovec2f(L, 2));
+    const auto vec = lua_tovec2f(L, 2);
+    entity->get_tracker().set_target_position({ vec.x, vec.y });
 
     return 0;
 }
@@ -144,7 +145,8 @@ static int l_entity_get_position(lua_State* L) {
     lua_pushstring(L, "ptr");
     lua_gettable(L, 1);
     const Entity* entity = (Entity*)lua_touserdata(L, -1);
-    lua_pushvec2f(L, entity->get_tracker().get_position());
+    const auto vec = entity->get_tracker().get_position();
+    lua_pushvec2f(L, { vec.x, vec.y });
 
     return 1;
 }

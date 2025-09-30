@@ -1,39 +1,41 @@
 #include "pch.h"
-#include "graph.h"
-#include "../flag_expr.h"
-#include "../lexer.h"
+#include "scripting/speech/graph.h"
+#include "scripting/expr.h"
+#include "scripting/lexer.h"
 #include <stdexcept>
 
 
-using namespace shmy::detail;
-
 namespace shmy {
 
-FlagExpr parse_flag_expr(Lexer& lexer);
+namespace detail {
+
+struct ParseContext {
+    speech::Graph result;
+
+    Lexer lexer;
+    size_t entry_count = 0;
+
+    bool p_set_strict = true;
+    bool p_link_audio = false;
+};
+
+}
+
+Expr parse_flag_expr(detail::Lexer& lexer);
 
 namespace speech {
 
-using VertexTuple = std::pair<std::string, Vertex>;
+using namespace detail;
 
-static std::optional<VertexTuple> parse_vertex(Lexer& lexer, size_t& entrycount);
-static Outcome parse_outcome(Lexer& lexer);
-static void set_pragma(const std::string& pragma);
-
-
-static bool p_set_strict = true;
-static size_t p_pool_size = 16;
+static bool parse_vertex(ParseContext& ctx);
+static Outcome parse_outcome(ParseContext& ctx);
+static void set_pragma(ParseContext& ctx, const std::string& pragma);
 
 
-Graph parse_graph(Lexer&& lexer) {
-    auto result = Graph();
-    size_t entrycount = 0;
-    p_set_strict = true;
-
-    while (auto pair = parse_vertex(lexer, entrycount)) {
-        result.emplace(pair->first, std::move(pair->second));
-    }
-
-    return result;
+Graph parse_graph(detail::Lexer&& lexer) {
+    auto ctx = detail::ParseContext{ Graph(), std::move(lexer) };
+    while (parse_vertex(ctx));
+    return ctx.result;
 }
 
 
@@ -42,65 +44,68 @@ static std::string span_to_str(size_t row, size_t col) {
 }
 
 
-static std::string unwrap_token(const std::optional<Token>& value, TokenType expect) {
+static std::string unwrap_token(const std::optional<Token>& value, TokenType expect, const std::string& error) {
     return (value.has_value() && value->type == expect) ? value->val :
-        throw std::runtime_error(std::string("token unwrapped to wrong type - ") + span_to_str(value->row, value->col));
+        throw std::runtime_error(error + span_to_str(value->row, value->col));
 }
 
-static std::string unwrap_token(const std::optional<Token>& value, int expect) {
+static std::string unwrap_token(const std::optional<Token>& value, int expect, const std::string& error) {
     return (value.has_value() && (uint32_t)value->type & expect) ? value->val :
-        throw std::runtime_error(std::string("token unwrapped to wrong type - ") + span_to_str(value->row, value->col));
+        throw std::runtime_error(error + span_to_str(value->row, value->col));
 }
 
-static std::optional<VertexTuple> parse_vertex(Lexer& lexer, size_t& entrycount) {
-    auto next = lexer.next();
-    if (!next.has_value()) { return {}; }
-    while (next->type == TokenType::Pragma) { set_pragma(next->val); next = lexer.next(); if (!next.has_value()) { return {}; } }
-    auto key =  unwrap_token(next, (uint32_t)TokenType::Identifier|(uint32_t)TokenType::IntLiteral);
-    auto conditions = FlagExpr::True();
+static bool parse_vertex(ParseContext& ctx) {
+    auto next = ctx.lexer.next();
+    if (!next.has_value()) { return false; }
+    while (next->type == TokenType::Pragma) { set_pragma(ctx, next->val); next = ctx.lexer.next(); if (!next.has_value()) { return false; } }
+
+    auto key =  unwrap_token(next, (uint32_t)TokenType::Identifier|(uint32_t)TokenType::IntLiteral, "token unwrapped to wrong type - ");
+    auto conditions = Expr::True();
     if (key == "entry") {
-        key = key + std::to_string(entrycount++);
-        unwrap_token(lexer.next(), TokenType::OpenParen);
-        conditions = parse_flag_expr(lexer);
+        key = key + std::to_string(ctx.entry_count++);
+        unwrap_token(ctx.lexer.next(), TokenType::OpenParen, "'entry' vertices must have a condition or 'default' - ");
+        conditions = parse_flag_expr(ctx.lexer);
+        conditions.strict = ctx.p_set_strict;
     }
 
-                         unwrap_token(lexer.next(), TokenType::EqualTo);
-    const auto speaker = unwrap_token(lexer.next(), TokenType::Identifier);
-                         unwrap_token(lexer.next(), TokenType::Colon);
-                         unwrap_token(lexer.next(), TokenType::OpenBracket);
+                         unwrap_token(ctx.lexer.next(), TokenType::EqualTo,     "expected '=' after vertex declaration - ");
+    const auto speaker = unwrap_token(ctx.lexer.next(), TokenType::Identifier,  "vertex definition must start with speaker ID - ");
+                         unwrap_token(ctx.lexer.next(), TokenType::Colon,       "expected ':' after speaker ID - ");
+                         unwrap_token(ctx.lexer.next(), TokenType::OpenBracket, "expected string array here - ");
     auto lines = std::vector<std::string>();
     while (true) {
-        next = lexer.next();
+        next = ctx.lexer.next();
         switch (next->type) {
+        case TokenType::CloseBracket:  goto string_arr_end;
         case TokenType::StringLiteral: lines.push_back(next->val); break;
-        case TokenType::CloseBracket:  goto after_loop1;
         default: throw std::runtime_error(std::string("token unwrapped to wrong type - ") + span_to_str(next->row, next->col));
         };
-        next = lexer.next();
+        next = ctx.lexer.next();
         switch (next->type) {
-        case TokenType::CloseBracket: goto after_loop1;
-        case TokenType::Comma: break;
+        case TokenType::CloseBracket:  goto string_arr_end;
+        case TokenType::Comma:         break;
         default: throw std::runtime_error(std::string("token unwrapped to wrong type - ") + span_to_str(next->row, next->col));
         }
     }
-after_loop1:
-    unwrap_token(lexer.next(), TokenType::Arrow);
-    return { { key, Vertex{ std::move(conditions), speaker, lines, parse_outcome(lexer) } } };
+string_arr_end:
+    unwrap_token(ctx.lexer.next(), TokenType::Arrow, "token unwrapped to wrong type - ");
+    ctx.result[key] = Vertex{ std::move(conditions), std::move(speaker), std::move(lines), parse_outcome(ctx) };
+    return true;
 }
 
-static Outcome parse_outcome(Lexer& lexer) {
-    auto next = lexer.next();
+static Outcome parse_outcome(ParseContext& ctx) {
+    auto next = ctx.lexer.next();
     switch (next->type) {
     case TokenType::Identifier:
-        if (next->val== "exit") {
-            return Exit{};
+        if (next->val == "exit") {
+            return Goto{ "", true };
         } else if (next->val == "exit_into") {
-            unwrap_token(lexer.next(), TokenType::OpenBrace);
-            const auto script = unwrap_token(lexer.next(), TokenType::StringLiteral);
-            unwrap_token(lexer.next(), TokenType::CloseBrace);
-            return ExitInto(script);
+                                unwrap_token(ctx.lexer.next(), TokenType::OpenBrace,     "token unwrapped to wrong type - ");
+            const auto script = unwrap_token(ctx.lexer.next(), TokenType::StringLiteral, "exit_into block must contain a script name - ");
+                                unwrap_token(ctx.lexer.next(), TokenType::CloseBrace,    "token unwrapped to wrong type - ");
+            return Goto{ script, true };
         } else {
-            return Goto(next->val);
+            return Goto{ next->val, false };
         }
     case TokenType::OpenBrace: break;
     default: throw std::runtime_error(std::string("token unwrapped to wrong type - ") + span_to_str(next->row, next->col));
@@ -108,23 +113,25 @@ static Outcome parse_outcome(Lexer& lexer) {
 
     auto responses = std::vector<Response>();
     while (true) {
-        auto conditions = FlagExpr::True();
+        auto conditions = Expr::True();
         auto text = std::string("");
-        next = lexer.next();
+        next = ctx.lexer.next();
         switch (next->type) {
         case TokenType::OpenParen:
-            conditions = parse_flag_expr(lexer);
-            text = unwrap_token(lexer.next(), TokenType::StringLiteral);
+            conditions = parse_flag_expr(ctx.lexer);
+            conditions.strict = ctx.p_set_strict;
+            text = unwrap_token(ctx.lexer.next(), TokenType::StringLiteral, "token unwrapped to wrong type - ");
             break;
         case TokenType::StringLiteral: text = next->val; break;
         case TokenType::CloseBrace: goto after_loop2;
         default: throw std::runtime_error(std::string("token unwrapped to wrong type - ") + span_to_str(next->row, next->col));
         };
 
-                          unwrap_token(lexer.next(), TokenType::Arrow);
-        const auto edge = unwrap_token(lexer.next(), (uint32_t)TokenType::Identifier|(uint32_t)TokenType::IntLiteral);
-        auto flags = std::unordered_map<std::string, FlagModifier>();
-        next = lexer.next();
+
+                          unwrap_token(ctx.lexer.next(), TokenType::Arrow, "token unwrapped to wrong type - ");
+        const auto edge = unwrap_token(ctx.lexer.next(), (uint32_t)TokenType::Identifier|(uint32_t)TokenType::IntLiteral, "token unwrapped to wrong type - ");
+        auto modifiers = Expr{};
+        next = ctx.lexer.next();
         switch (next->type) {
         case TokenType::Comma: goto this_one;
         case TokenType::OpenBrace: break;
@@ -132,29 +139,51 @@ static Outcome parse_outcome(Lexer& lexer) {
         }
         while (true) {
             auto key = std::string("");
-            next = lexer.next();
+            next = ctx.lexer.next();
             switch (next->type) {
             case TokenType::Identifier: key = next->val; break;
             case TokenType::CloseBrace: goto after_loop3;
-            default: throw std::runtime_error(std::string("token unwrapped to wrong type - ") + span_to_str(next->row, next->col));
+            default: throw std::runtime_error(std::string("expected modifier or end of list - ") + span_to_str(next->row, next->col));
             }
-                             unwrap_token(lexer.next(), TokenType::Colon);
-            const auto flg = unwrap_token(lexer.next(), TokenType::Identifier);
-                             unwrap_token(lexer.next(), TokenType::OpenParen);
-            const auto val = unwrap_token(lexer.next(), TokenType::IntLiteral);
-                             unwrap_token(lexer.next(), TokenType::CloseParen);
-            auto modifier = FlagModifier();
-            if (flg == "Set") {
-                modifier = FlagSet{ std::atoi(val.c_str()), p_set_strict };
-            } else if (flg == "Add") {
-                modifier = FlagAdd{ std::atoi(val.c_str()), p_set_strict };
-            } else if (flg == "Sub") {
-                modifier = FlagSub{ std::atoi(val.c_str()), p_set_strict };
-            } else {
-                throw std::runtime_error(std::string("token unwrapped to wrong type - ") + span_to_str(next->row, next->col));
-            };
-            flags[key] = modifier;
-            next = lexer.next();
+            unwrap_token(ctx.lexer.next(), TokenType::Colon, "expected colon to denote modification - ");
+
+            {
+            const auto n = modifiers.idents.size();
+            modifiers.bytecode.push_back(Expr::IPushK);
+            const auto idx = modifiers.bytecode.size();
+            modifiers.bytecode.resize(idx + sizeof(size_t));
+            memcpy(modifiers.bytecode.data() + idx, &n, sizeof(size_t));
+            modifiers.idents.push_back(key);
+            }
+
+            modifiers.bytecode.push_back(Expr::IPushC);
+            const auto idx = modifiers.bytecode.size();
+            modifiers.bytecode.resize(idx + sizeof(int64_t));
+
+            next = ctx.lexer.next();
+            switch (next->type) {
+            case TokenType::Add: {
+                const auto val = unwrap_token(ctx.lexer.next(), TokenType::IntLiteral, "flag modifier must be integer - ");
+                const auto n = std::atoll(val.c_str());
+                memcpy(modifiers.bytecode.data() + idx, &n, sizeof(int64_t));
+                modifiers.bytecode.push_back(Expr::IAddV);
+                break; }
+            case TokenType::Sub: {
+                const auto val = unwrap_token(ctx.lexer.next(), TokenType::IntLiteral, "flag modifier must be integer - ");
+                const auto n = -std::atoll(val.c_str());
+                memcpy(modifiers.bytecode.data() + idx, &n, sizeof(int64_t));
+                modifiers.bytecode.push_back(Expr::IAddV);
+                break; }
+            case TokenType::EqualTo: {
+                const auto val = unwrap_token(ctx.lexer.next(), TokenType::IntLiteral, "flag modifier must be integer - ");
+                const auto n = std::atoll(val.c_str());
+                memcpy(modifiers.bytecode.data() + idx, &n, sizeof(int64_t));
+                modifiers.bytecode.push_back(Expr::ISetV);
+                break; }
+            default: throw std::runtime_error(std::string("expected '+'|'-'|'=' to specify modifier - ") + span_to_str(next->row, next->col));
+            }
+
+            next = ctx.lexer.next();
             switch (next->type) {
             case TokenType::CloseBrace: goto after_loop3;
             case TokenType::Comma: break;
@@ -163,7 +192,7 @@ static Outcome parse_outcome(Lexer& lexer) {
         }
 after_loop3:
 
-        next = lexer.next();
+        next = ctx.lexer.next();
         switch (next->type) {
         case TokenType::CloseBrace: goto after_loop2;
         case TokenType::Comma: break;
@@ -171,11 +200,14 @@ after_loop3:
         }
 
 this_one:
+        modifiers.bytecode.push_back(Expr::IEndOf);
+        modifiers.strict = ctx.p_set_strict;
+
         responses.emplace_back(Response{
+            std::move(text),
+            std::move(edge),
             std::move(conditions),
-            text,
-            edge,
-            flags
+            std::move(modifiers),
         });
     }
 after_loop2:
@@ -184,17 +216,13 @@ after_loop2:
 }
 
 
-static void set_pragma(const std::string& pragma) {
+static void set_pragma(ParseContext& ctx, const std::string& pragma) {
     if (pragma == "!SET_OR_CREATE") {
-        p_set_strict = false;
+        ctx.p_set_strict = false;
     } else if (pragma == "!SET_STRICT") {
-        p_set_strict = true;
-    } else if (pragma == "!POOL_SIZE_HUGE") {
-        p_pool_size = 64;
-    } else if (pragma == "!POOL_SIZE_DOUBLE") {
-        p_pool_size = 32;
-    } else if (pragma == "!POOL_SIZE_SINGLE") {
-        p_pool_size = 16;
+        ctx.p_set_strict = true;
+    } else if (pragma == "!LINK_AUDIO") {
+        ctx.p_link_audio = true;
     }
 }
 

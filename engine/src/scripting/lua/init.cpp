@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "init.h"
+#include "scripting/lua/init.h"
 
 
 namespace shmy { namespace lua {

@@ -4,16 +4,17 @@ version = "0.1.0"
 lang = "C++20"
 pch = "pch.h"
 
-warn-level = "high"
+warn-level = "basic"
+iso-compliant = true
 
 [dependencies]
-engine  = { path="../engine" }
-SFUtil  = { path="../../SFUtil" }
-NavMesh = { path="../../NavMesh" }
-SFML    = { path="../../_Libs/SFML-3", features=[ "graphics" ] }
-LuaJIT  = { path="../../_Libs/luajit" }
-thread_pool = { headers="../deps/thread_pool/include" }
-rapidjson   = { headers="../deps/rapidjson/include" }
-utfcpp      = { headers="../deps/utfcpp/source" }
-
+engine    = { path="../engine" }
+audio     = { path="../audio" }
+SFUtil    = { path="../../SFUtil" }
+NavMesh   = { path="../../NavMesh" }
+SFML      = { path="../../_Libs/SFML-3", features=[ "graphics" ] }
+LuaJIT    = { path="../../_Libs/luajit" }
+thread_pool = { headers="../libs/thread_pool/include" }
+rapidjson   = { headers="../libs/rapidjson/include" }
+utfcpp      = { headers="../libs/utfcpp/source" }
 

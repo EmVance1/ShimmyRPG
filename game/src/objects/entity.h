@@ -2,7 +2,6 @@
 #include <SFML/Graphics.hpp>
 #include <sfutil/sfutil.h>
 #include <navmesh/lib.h>
-#include "motion/tracker.h"
 #include "sfutil/animation.h"
 #include "util/vechash.h"
 #include "action.h"
@@ -43,7 +42,7 @@ private:
     sfu::AnimatedSprite m_sprite;
     sfu::AnimatedSprite m_outline_sprite;
 
-    shmy::PathTracker m_tracker;
+    nav::Agent m_tracker;
     SortBoundary m_boundary;
     sfu::FloatCircle m_collider;
 
@@ -93,8 +92,8 @@ public:
     void set_dialogue(const std::string& filename);
     const std::string& get_dialogue() const;
 
-    const shmy::PathTracker& get_tracker() const { return m_tracker; }
-    shmy::PathTracker& get_tracker() { return m_tracker; }
+    const nav::Agent& get_tracker() const { return m_tracker; }
+    nav::Agent& get_tracker() { return m_tracker; }
 
     const std::vector<ContextAction>& get_actions() const { return m_actions; }
     std::vector<ContextAction>& get_actions() { return m_actions; }

@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "lexer.h"
+#include "scripting/lexer.h"
 
 
 namespace shmy { namespace detail {
@@ -63,6 +63,8 @@ std::optional<Token> Lexer::next() {
                 case '?': return Token{ TokenType::Question,     "?", row, col };
                 case '&': return Token{ TokenType::LogAnd,       "&", row, col };
                 case '|': return Token{ TokenType::LogOr,        "|", row, col };
+                case '+': return Token{ TokenType::Add,          "+", row, col };
+                case '-': return Token{ TokenType::Sub,          "-", row, col };
                 case '\0': return {};
                 default: throw LexerError(std::string("invalid character '") + c + "' in script body - "
                              + std::to_string(row) + ":" + std::to_string(col));
@@ -147,7 +149,7 @@ std::optional<Token> Lexer::next() {
             }
             break;
         case State::Comment:
-            if (c == '\n') {
+            if (c == '\r' || c == '\n') {
                 state = State::Void;
                 if (tok_len > 0 && token[0] == '!') {
                     return Token{ TokenType::Pragma, token, row, col };

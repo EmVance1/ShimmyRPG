@@ -1,6 +1,6 @@
 #include "pch.h"
-#include "script.h"
-#include "init.h"
+#include "scripting/lua/script.h"
+#include "scripting/lua/init.h"
 #include "time/deltatime.h"
 #include "util/str.h"
 
@@ -206,7 +206,7 @@ void Script::update() {
     if (async_update.resumable) {
         async_update.delay -= deltatime;
         if (async_update.delay <= 0) {
-            lua_pushnumber(async_update.thread, deltatime);
+            lua_pushnumber(async_update.thread, (double)deltatime);
             switch (lua_resume(async_update.thread, 1)) {
             case LUA_YIELD: {
                 if (const auto nresults = lua_gettop(async_update.thread); nresults == 1) {
