@@ -22,11 +22,13 @@ public:
     size_t get_active_area_index() const { return m_active_area; };
     void set_active_area(size_t index);
 
-    const gui::Style& get_style() const { return m_guistyle; }
+    const gui::Style& style() const { return m_guistyle; }
+    const std::string& id() const { return m_id; }
 
     void update_all();
 
     friend struct Area;
+    friend class SceneLoader;
     friend class AreaDebugger;
 };
 

@@ -1,67 +1,75 @@
 #include "pch.h"
 #include <rapidjson/document.h>
-#include "util/uuid.h"
 #include "world/area.h"
 #include "world/region.h"
-#include "util/str.h"
+#include "objects/trigger.h"
+#include "core/uuid.h"
 #include "util/json.h"
 #include "util/env.h"
 #include "util/iso_map.h"
-#include "objects/trigger.h"
+#include "load_scene.h"
 
 
-void init_engine_api(lua_State* L);
-
-
-Area::Area(const std::string& _id, Region* parent_region)
-    : p_region(parent_region), id(_id), lua_vm("shmy"),
+Area::Area() : lua_vm("shmy"),
     camera(sf::FloatRect({0, 0}, (sf::Vector2f)render_settings->viewport)),
-    gui(gui::Position::topleft({0, 0}), sf::Vector2f(render_settings->viewport), parent_region->get_style())
+    gui(gui::Position::topleft({0, 0}), sf::Vector2f(render_settings->viewport), gui::Style())
+{}
+
+Area::Area(Area&& other)
+    : lua_vm(std::move(other.lua_vm)), gui(std::move(other.gui))
 {
-    motionguide_square.setFillColor(sf::Color::Transparent);
-    motionguide_square.setOutlineColor(sf::Color::Cyan);
-    motionguide_square.setOutlineThickness(1);
-
-    init_engine_api(lua_vm.get_state());
-    lua_pushlightuserdata(lua_vm.get_state(), this);
-    lua_setfield(lua_vm.get_state(), LUA_REGISTRYINDEX, "_area");
-}
-
-Area::Area(Area&& other) : lua_vm(std::move(other.lua_vm)), gui(std::move(other.gui)) {
-    std::cout << "Area objects should never be copied or moved\n";
+    std::cerr << "Area objects should never be copied or moved\n";
     abort();
 }
 
 
-void Area::init(const rapidjson::Value& prefabs, const rapidjson::Document& doc) {
+SceneLoader::SceneLoader(Region* _region, const rapidjson::Value& _prefabs)
+    : region(_region), prefabs(_prefabs)
+{}
+
+
+void init_engine_api(lua_State* L);
+
+void SceneLoader::load(Area* _area, const std::string& _id) {
+    area = _area;
+    area->region = region;
+
+    init_engine_api(area->lua_vm.get_state());
+    lua_pushlightuserdata(area->lua_vm.get_state(), area);
+    lua_setfield(area->lua_vm.get_state(), LUA_REGISTRYINDEX, "_area");
+
+    const auto filename = shmy::env::pkg_full() / region->id() / (_id + ".json");
+    const auto doc = shmy::json::load_from_file(filename);
     const auto& meta = JSON_GET(doc, "world");
 
-    story_id = std::string(JSON_GET_STR(meta, "label"));
-    topleft = shmy::json::into_vector2f(JSON_GET_ARRAY(meta, "topleft"));
+    area->name = JSON_GET_STR(meta, "label");
+    area->topleft = shmy::json::into_vector2f(JSON_GET_ARRAY(meta, "topleft"));
     const auto scale = JSON_GET_FLOAT(meta, "scale");
-    pathfinder = nav::Mesh::read_file((shmy::env::pkg_full() / p_region->m_id / id).concat(".nav"), scale);
+    area->pathfinder = nav::Mesh::read_file(shmy::env::pkg_full() / region->id() / (_id + ".nav"), scale);
 
-    cart_to_iso = cartesian_to_isometric(topleft);
-    iso_to_cart = isometric_to_cartesian(topleft);
+    area->cart_to_iso = cartesian_to_isometric(area->topleft);
+    area->iso_to_cart = isometric_to_cartesian(area->topleft);
 
-    motionguide_square.setSize({ scale * 2, scale * 2 });
-    motionguide_square.setOrigin({ scale, scale });
+    area->motionguide_square.setSize({ scale * 2, scale * 2 });
+    area->motionguide_square.setOrigin({ scale, scale });
+    area->motionguide_square.setFillColor(sf::Color::Transparent);
+    area->motionguide_square.setOutlineColor(sf::Color::Cyan);
+    area->motionguide_square.setOutlineThickness(1);
 
     if (meta.HasMember("zoom")) {
-        camera.setSize(meta["zoom"].GetFloat() * (sf::Vector2f)render_settings->viewport);
+        area->camera.setSize(meta["zoom"].GetFloat() * (sf::Vector2f)area->render_settings->viewport);
     }
 
-    background.load_from_json(JSON_GET(doc, "background"), 0.5f);
+    area->background.load_from_json(JSON_GET(doc, "background"), 0.5f);
 
     for (const auto& e : JSON_GET_ARRAY(doc, "entities")) {
-        load_entity(prefabs, e);
+        load_entity(e);
     }
 
-    if (player_id == "") { throw std::invalid_argument("exactly one entity MUST be designated 'player'\n"); }
+    if (area->player_id == "") { throw std::runtime_error("exactly one entity MUST be designated 'player'\n"); }
 
     for (const auto& e : JSON_GET_ARRAY(doc, "triggers")) {
-        auto& t = triggers.emplace_back();
-        t.once_id = "once_trig_" + id + shmy::Uuid::generate_v4();
+        auto& t = area->triggers.emplace_back();
         t.bounds = (sfu::RotatedFloatRect)shmy::json::into_floatrect(JSON_GET(e, "rect"));
         if (e.HasMember("angle")) {
             t.bounds.angle = sf::degrees(JSON_GET_FLOAT(e, "angle"));
@@ -96,28 +104,23 @@ void Area::init(const rapidjson::Value& prefabs, const rapidjson::Document& doc)
         }
         if (e.HasMember("condition")) {
             const auto cond = std::string(JSON_GET_STR(e, "condition"));
-            try {
-                t.condition = shmy::Expr::from_string(cond);
-            } catch (const std::exception& e) {
-                std::cout << "error parsing 'condition': " << e.what() << "\n";
-            }
+            t.condition = shmy::Expr::from_string(cond);
         }
     }
 
-    camera.zoom(0.9f);
-    camera.setTrackingOffset(50.f);
-    camera.setCenter(get_player().get_sprite().getPosition(), true);
-    camera.setTrackingMode(sfu::Camera::ControlMode::TrackBehind);
+    area->camera.zoom(0.9f);
+    area->camera.setTrackingOffset(50.f);
+    area->camera.setCenter(area->entities[area->player_id].get_sprite().getPosition(), true);
+    area->camera.setTrackingMode(sfu::Camera::ControlMode::TrackBehind);
 
     load_gui();
 
-    normal_mode.init(this);
-    cinematic_mode.init(this);
-    combat_mode.init(this);
-    sleep_mode.init(this);
+    area->normal_mode.init(area);
+    area->cinematic_mode.init(area);
+    area->combat_mode.init(area);
 
 #ifdef VANGO_DEBUG
-    debugger.init(this);
+    area->debugger.init(area);
 #endif
 }
 

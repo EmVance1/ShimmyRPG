@@ -4,6 +4,9 @@ version = "0.1.0"
 lang = "C++17"
 kind = "staticlib"
 
+warn-level = "high"
+iso-compliant = true
+
 [dependencies]
 miniaudio = { headers="../libs/miniaudio" }
 libogg    = { path="../../_Libs/libogg" }

@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "combat_mode.h"
-#include "time/deltatime.h"
 #include "world/area.h"
+#include "util/deltatime.h"
 #include "sorting.h"
 #include "gui/gui.h"
 
@@ -36,6 +36,7 @@ void CombatMode::handle_event(const sf::Event& event) {
             atk_gui->set_visible(false);
             atk_gui->set_enabled(false);
             p_area->set_mode(GameMode::Normal);
+            p_area->lua_vm.set_paused(false);
         }
     } else if (auto mbp = event.getIf<sf::Event::MouseButtonPressed>()) {
         if (mbp->button == sf::Mouse::Button::Left) {
@@ -48,7 +49,6 @@ void CombatMode::handle_event(const sf::Event& event) {
                     if (active.get_tracker().set_target_position({ iso.x, iso.y })) {
                         const auto len = active.get_tracker().get_active_path_length();
                         active.get_tracker().clamp_path_walked(active.get_stats().movement);
-                        p_area->update_motionguide();
                         active.get_stats().movement -= len;
                     }
                 }
@@ -80,7 +80,6 @@ void CombatMode::handle_event(const sf::Event& event) {
                 active.get_tracker().start();
                 if (active.get_tracker().set_target_position({ iso.x, iso.y })) {
                     active.get_tracker().clamp_path_walked(active.get_stats().movement);
-                    p_area->update_motionguide();
                 }
                 active.get_tracker().pause();
             }
@@ -95,13 +94,10 @@ void CombatMode::handle_event(const sf::Event& event) {
 }
 
 void CombatMode::update() {
-    for (auto& [_, e] : p_area->entities) {
-        if (!e.is_offstage()) {
-            e.update(p_area->cart_to_iso);
-        }
-    }
+    p_area->lua_vm.set_paused(true);
 
     if (advance_turn) {
+        printf("attempt advance, active: %d\n", (int)active_turn);
         get_active().get_tracker().stop();
         active_turn = (active_turn + 1) % participants.size();
         get_active().get_stats().reset_turn();

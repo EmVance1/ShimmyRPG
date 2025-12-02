@@ -6,9 +6,14 @@
 
 namespace shmy {
 
-
 struct Expr {
     enum Instr : uint8_t {
+        IEndOf,
+        IStrict,
+
+        CTrue,
+        CFalse,
+
         IPushC,
         IPushV,
         IPushK,
@@ -24,27 +29,26 @@ struct Expr {
         IAssign,
         ISetV,
         IAddV,
-        IEndOf,
     };
     using ByteCode = std::vector<uint8_t>;
     using IdTable = std::vector<std::string>;
+    using Callback = uint64_t*(*)(const char* key, bool strict);
 
     ByteCode bytecode;
     IdTable idents;
-    bool strict = true;
 
-    static Expr Constant(int64_t n);
-    static Expr Variable(std::string&& id);
     static Expr True();
     static Expr False();
-
+    static Expr Constant(int64_t n);
+    static Expr Variable(std::string&& id);
     static Expr from_string(const std::string& expr);
 
-    int64_t evaluate(uint64_t*(*ctx)(const char* key, bool strict)) const;
+    static int64_t evaluate(const uint8_t* bytecode, const std::vector<std::string>& idents, Callback ctx);
+    int64_t evaluate(Callback ctx) const;
 };
 
-bool operator==(const Expr& a, const Expr& b);
-std::ostream& operator<<(std::ostream& stream, const Expr& ex);
-
+std::ostream& operator<<(std::ostream& stream, const Expr& val);
+bool operator==(const Expr& lhs, const Expr& rhs);
+bool operator!=(const Expr& lhs, const Expr& rhs);
 
 }

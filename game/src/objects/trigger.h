@@ -19,8 +19,8 @@ using TriggerAction = std::variant<BeginScript, BeginDialogue, Popup, GotoRegion
 struct Trigger {
     sfu::RotatedFloatRect bounds;
     TriggerAction action;
-    std::string once_id;
-    shmy::Expr condition = shmy::Expr::True();
     bool cooldown = false;
+    bool used = false;
+    shmy::Expr condition = shmy::Expr::True();
 };
 

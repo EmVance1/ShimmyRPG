@@ -1,2 +1,2 @@
-Approval 50
+Approval = 50
 

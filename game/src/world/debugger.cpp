@@ -27,7 +27,7 @@ void AreaDebugger::init(const Area* area) {
 
         shape.setSize(t.bounds.size);
         shape.setFillColor(sf::Color::Transparent);
-        shape.setOutlineThickness(1);
+        shape.setOutlineThickness(1.5f);
         shape.setOutlineColor(sf::Color::Magenta);
     }
     for (const auto& [_, e] : area->entities) {
@@ -37,7 +37,7 @@ void AreaDebugger::init(const Area* area) {
             shape.setRadius(e.get_trigger_collider().radius);
             shape.setOrigin({ e.get_trigger_collider().radius, e.get_trigger_collider().radius });
             shape.setFillColor(sf::Color::Transparent);
-            shape.setOutlineThickness(1);
+            shape.setOutlineThickness(1.5f);
             shape.setOutlineColor(sf::Color::Magenta);
         } else {
             auto& shape = m_boundaries.emplace_back(sf::PrimitiveType::Lines);
@@ -48,7 +48,7 @@ void AreaDebugger::init(const Area* area) {
         shape.setPosition(e.get_sprite().getPosition() - e.get_sprite().getOrigin());
         shape.setSize(sf::Vector2f(e.get_sprite().getAnimation().getCellSize()));
         shape.setFillColor(sf::Color::Transparent);
-        shape.setOutlineThickness(1);
+        shape.setOutlineThickness(1.5f);
         shape.setOutlineColor(sf::Color::Cyan);
     }
 }
@@ -68,11 +68,11 @@ void AreaDebugger::update() {
 
     i = 0;
     for (const auto& t : p_area->triggers) {
-        FlagTable::Never = !FlagTable::has_flag(t.once_id);
-        if (!t.condition.evaluate(FlagTable::callback) || t.cooldown) {
-            m_triggers[i].setOutlineColor(sf::Color(255, 0, 255, 100));
-        } else {
+        FlagTable::Allow = !t.used;
+        if (t.condition.evaluate(FlagTable::callback) && !t.cooldown) {
             m_triggers[i].setOutlineColor(sf::Color::Magenta);
+        } else {
+            m_triggers[i].setOutlineColor(sf::Color(255, 0, 255, 100));
         }
         i++;
     }

@@ -1,9 +1,9 @@
-// world constants
-Nomad     0
-Twinvayne 1
-Dovara    2
-Xudovara  3
-Obsidian  4
-Saffarin  5
-Vertebrum 6
+# world constants
+Origin.Nomad      = 0
+Origin.Twinvayne  = 1
+Origin.Dovara     = 2
+Origin.Xudovara   = 3
+Origin.Obsidian   = 4
+Origin.Saffarin   = 5
+Origin.Vertebrum  = 6
 

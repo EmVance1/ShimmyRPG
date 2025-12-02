@@ -1,15 +1,14 @@
 #include "pch.h"
 #include "area.h"
-#include "util/str.h"
-#include "util/env.h"
-#include "sorting.h"
-#include "time/deltatime.h"
-#include "region.h"
-#include "objects/trigger.h"
 #include "scripting/lua/script.h"
+#include "objects/trigger.h"
+#include "util/deltatime.h"
+#include "util/random.h"
+#include "util/env.h"
+#include "region.h"
+#include "sorting.h"
 
 
-static std::mt19937 RNG{ std::random_device()() };
 RenderSettings* Area::render_settings = nullptr;
 
 
@@ -21,32 +20,18 @@ const Entity& Area::get_player() const {
     return entities.at(player_id);
 }
 
-Entity& Area::get_entity_by_script_id(const std::string& _id) {
-    return entities.at(script_to_uuid.at(_id));
+Entity& Area::get_entity_by_script_id(const std::string& id) {
+    return entities.at(script_to_uuid.at(id));
 }
 
-const Entity& Area::get_entity_by_script_id(const std::string& _id) const {
-    return entities.at(script_to_uuid.at(_id));
+const Entity& Area::get_entity_by_script_id(const std::string& id) const {
+    return entities.at(script_to_uuid.at(id));
 }
 
-Entity& Area::get_entity_by_story_id(const std::string& _id) {
-    return entities.at(story_to_uuid.at(_id));
-}
-
-const Entity& Area::get_entity_by_story_id(const std::string& _id) const {
-    return entities.at(story_to_uuid.at(_id));
-}
-
-
-void Area::update_motionguide() {
-    const auto vec = get_player().get_tracker().get_target_position();
-    motionguide_square.setPosition({ vec.x, vec.y });
-}
 
 void Area::handle_trigger(const Trigger& trigger) {
-    FlagTable::Never = !FlagTable::has_flag(trigger.once_id);
-    if (!trigger.condition.evaluate(FlagTable::callback)) { return; }
-    FlagTable::set_flag(trigger.once_id, 1, false);
+    FlagTable::Allow = !trigger.used;
+    if (!trigger.condition.evaluate(FlagTable::callback)) return;
 
     switch (trigger.action.index()) {
     case 0: {
@@ -56,12 +41,12 @@ void Area::handle_trigger(const Trigger& trigger) {
         break; }
     case 1: {
         const auto loaddia = std::get<BeginDialogue>(trigger.action);
-        begin_dialogue(shmy::speech::load_from_file(shmy::env::pkg_full() / loaddia.filename), loaddia.filename);
+        begin_dialogue(shmy::speech::Graph::load_from_file(shmy::env::pkg_full() / loaddia.filename), loaddia.filename);
         set_mode(GameMode::Dialogue);
         break; }
     case 2: {
         const auto popup = std::get<Popup>(trigger.action);
-        auto popup_ui = gui::Popup::create(gui::Position::center({0, 0}), sf::Vector2f(700, 150), p_region->get_style(), popup.message);
+        auto popup_ui = gui::Popup::create(gui::Position::center({0, 0}), sf::Vector2f(700, 150), region->style(), popup.message);
         popup_ui->set_position(gui::Position::center({0, 0}));
         get_player().get_tracker().stop();
         gui.add_widget("popup", popup_ui);
@@ -74,14 +59,14 @@ void Area::handle_trigger(const Trigger& trigger) {
 
         const auto gotoarea = std::get<GotoArea>(trigger.action);
         if (FlagTable::get_flag(gotoarea.lock_id, true)) {
-            auto popup_ui = gui::Popup::create(gui::Position::center({0, 0}), sf::Vector2f(700, 150), p_region->get_style(), "This door is locked.");
+            auto popup_ui = gui::Popup::create(gui::Position::center({0, 0}), sf::Vector2f(700, 150), region->style(), "This door is locked.");
             popup_ui->set_position(gui::Position::center({0, 0}));
             get_player().get_tracker().stop();
             gui.add_widget("lock_popup", popup_ui);
         } else {
-            p_region->set_active_area(gotoarea.index);
-            p_region->get_active_area().get_player().set_position(gotoarea.spawnpos, cart_to_iso);
-            p_region->get_active_area().suppress_portals = true;
+            region->set_active_area(gotoarea.index);
+            region->get_active_area().get_player().set_position(gotoarea.spawnpos, cart_to_iso);
+            region->get_active_area().suppress_portals = true;
         }
         break; }
     case 5: {
@@ -102,13 +87,13 @@ void Area::begin_dialogue(shmy::speech::Graph&& graph, const std::string& dia_id
     dia_gui->set_enabled(true);
     dia_gui->set_visible(true);
     auto speaker_gui = dia_gui->get_widget<gui::TextWidget>("speaker");
-    if (line.speaker == "Narrator") {
+    if (*line.speaker == "Narrator") {
         speaker_gui->set_label("Narrator");
     } else {
-        speaker_gui->set_label(get_entity_by_script_id(line.speaker).story_id());
+        speaker_gui->set_label(get_entity_by_script_id(*line.speaker).story_id());
     }
     auto line_gui = dia_gui->get_widget<gui::TextWidget>("lines");
-    line_gui->set_label(line.line);
+    line_gui->set_label(*line.line);
 }
 
 void Area::begin_combat(
@@ -118,42 +103,40 @@ void Area::begin_combat(
         const std::unordered_set<std::string>& unaligned_tags
     )
 {
-    auto dist = std::uniform_int_distribution<uint32_t>(1, 20);
-
     combat_mode.participants.clear();
-    combat_mode.participants.push_back(CombatParticipant{ player_id, dist(RNG), CombatFaction::Ally });
+    combat_mode.participants.push_back(CombatParticipant{ player_id, Random::d20(), CombatFaction::Ally });
     get_player().get_tracker().stop();
 
-    for (auto& [name, e] : entities) {
+    for (auto& [id, e] : entities) {
         for (const auto& t : ally_tags) {
             if (e.get_tags().contains(t)) {
-                combat_mode.participants.push_back(CombatParticipant{ name, dist(RNG), CombatFaction::Ally });
+                combat_mode.participants.push_back(CombatParticipant{ id, Random::d20(), CombatFaction::Ally });
                 e.get_tracker().stop();
-                goto end_loop;
+                goto contd;
             }
         }
         for (const auto& t : enemy_tags) {
             if (e.get_tags().contains(t)) {
-                combat_mode.participants.push_back(CombatParticipant{ name, dist(RNG), CombatFaction::Enemy });
+                combat_mode.participants.push_back(CombatParticipant{ id, Random::d20(), CombatFaction::Enemy });
                 e.get_tracker().stop();
-                goto end_loop;
+                goto contd;
             }
         }
         for (const auto& t : enemysenemy_tags) {
             if (e.get_tags().contains(t)) {
-                combat_mode.participants.push_back(CombatParticipant{ name, dist(RNG), CombatFaction::EnemysEnemy });
+                combat_mode.participants.push_back(CombatParticipant{ id, Random::d20(), CombatFaction::EnemysEnemy });
                 e.get_tracker().stop();
-                goto end_loop;
+                goto contd;
             }
         }
         for (const auto& t : unaligned_tags) {
             if (e.get_tags().contains(t)) {
-                combat_mode.participants.push_back(CombatParticipant{ name, dist(RNG), CombatFaction::UnalignedHostile });
+                combat_mode.participants.push_back(CombatParticipant{ id, Random::d20(), CombatFaction::UnalignedHostile });
                 e.get_tracker().stop();
-                goto end_loop;
+                goto contd;
             }
         }
-end_loop: ;
+contd: ;
     }
 
     std::sort(combat_mode.participants.begin(), combat_mode.participants.end(),
@@ -203,10 +186,7 @@ void Area::handle_event(const sf::Event& event) {
         combat_mode.handle_event(event);
         break;
     case GameMode::Sleep:
-        sleep_mode.handle_event(event);
-        break;
-    default:
-        break;
+        return;
     }
 
 #ifdef VANGO_DEBUG
@@ -215,6 +195,13 @@ void Area::handle_event(const sf::Event& event) {
 }
 
 void Area::update() {
+    for (auto& [_, e] : entities) {
+        if (!e.is_offstage()) {
+            e.update(cart_to_iso);
+        }
+    }
+    lua_vm.update();
+
     switch (gamemode) {
     case GameMode::Normal:
         normal_mode.update();
@@ -226,19 +213,18 @@ void Area::update() {
         combat_mode.update();
         break;
     case GameMode::Sleep:
-        sleep_mode.update();
-        break;
-    default:
-        break;
+        return;
     }
-
-    if (gamemode == GameMode::Sleep) { return; }
 
     sorted_entities = sprites_topo_sort(entities);
     camera.update(Time::deltatime());
     background.update(camera.getFrustum());
+    if (get_player().get_tracker().is_moving()) {
+        const auto vec = get_player().get_tracker().get_target_position();
+        motionguide_square.setPosition({ vec.x, vec.y });
+    }
 
-    const auto g = FlagTable::get_flag("Player_Coin", true);
+    const auto g = FlagTable::get_flag("Player.Coin", true);
     gui.get_widget<gui::Panel>("gold_counter")->get_widget<gui::Text>("goldtxt")->set_label(std::to_string(g));
 
     const auto crop_thresh = 100.f;
@@ -283,8 +269,7 @@ void Area::render_world(sf::RenderTarget& target) {
     debugger.render_map(target);
 #endif
 
-    // if (get_player().get_tracker().is_moving() || gamemode == GameMode::Combat) {
-    if (gamemode == GameMode::Combat || gamemode == GameMode::Normal) {
+    if (get_player().get_tracker().is_moving()) {
         target.draw(motionguide_square, cart_to_iso);
     }
 

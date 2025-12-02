@@ -9,10 +9,10 @@ warn-level = "high"
 iso-compliant = true
 
 [dependencies]
-audio   = { path="../audio" }
-SFML    = { path="../../_Libs/SFML-3" }
-LuaJIT  = { path="../../_Libs/luajit" }
-SFUtil  = { path="../../sfutil" }
+audio  = { path="../audio" }
+SFML   = { path="../../_Libs/SFML-3" }
+LuaJIT = { path="../../_Libs/luajit" }
+SFUtil = { path="../../sfutil" }
 thread_pool = { headers="../libs/thread_pool/include" }
 rapidjson   = { headers="../libs/rapidjson/include" }
 utfcpp      = { headers="../libs/utfcpp/source" }

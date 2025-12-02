@@ -334,7 +334,7 @@ static int l_yield_dialogue(lua_State* L) {
     try {
         lua_getfield(L, LUA_REGISTRYINDEX, "_area");
         const auto area = static_cast<Area*>(lua_touserdata(L, -1));
-        auto dia = shmy::speech::load_from_file(shmy::env::pkg_full() / filename);
+        auto dia = shmy::speech::Graph::load_from_file(shmy::env::pkg_full() / filename);
         area->begin_dialogue(std::move(dia), filename);
     } catch (const std::exception& e) {
         std::cerr << "dialogue error: " << e.what() << "\n";
@@ -349,7 +349,7 @@ static int l_yield_dialogue(lua_State* L) {
     const auto filename = lua_tostring(L, 1);
     lua_getfield(L, LUA_REGISTRYINDEX, "_area");
     const auto area = static_cast<Area*>(lua_touserdata(L, -1));
-    area->begin_dialogue(shmy::speech::load_from_file(shmy::env::pkg_full() / filename), filename);
+    area->begin_dialogue(shmy::speech::Graph::load_from_file(shmy::env::pkg_full() / filename), filename);
 
     lua_pushnumber(L, 0.0);
     return lua_yield(L, 1);
@@ -382,9 +382,9 @@ static int l_goto_area(lua_State* L) {
     lua_getfield(L, LUA_REGISTRYINDEX, "_area");
     const auto area = static_cast<Area*>(lua_touserdata(L, -1));
     const auto& cti = area->cart_to_iso;
-    area->p_region->set_active_area(idx);
-    area->p_region->get_active_area().get_player().set_position(spawnpos, cti);
-    area->p_region->get_active_area().suppress_portals = true;
+    area->region->set_active_area(idx);
+    area->region->get_active_area().get_player().set_position(spawnpos, cti);
+    area->region->get_active_area().suppress_portals = true;
 
     return 0;
 }

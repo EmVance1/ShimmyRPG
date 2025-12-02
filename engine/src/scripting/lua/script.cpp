@@ -1,8 +1,8 @@
 #include "pch.h"
 #include "scripting/lua/script.h"
 #include "scripting/lua/init.h"
-#include "time/deltatime.h"
-#include "util/str.h"
+#include "util/deltatime.h"
+#include "core/fs.h"
 
 
 namespace shmy { namespace lua {
@@ -23,7 +23,7 @@ static int block_globals(lua_State* L);
 
 Script::Script(lua_State* L, const std::fs::path& filename, const char* api) : p_L(L) {
     {
-        const auto file = shmy::str::read_to_string(filename);
+        const auto file = core::read_to_string(filename).unwrap();
         LUA_CHECK(luaL_loadstring(p_L, file.c_str()), "lua parse error");
     }
 
@@ -167,7 +167,7 @@ void Script::update() {
     if (m_funcs & (1 << (uint32_t)Callback::OnUpdate)) {
         lua_rawgeti(p_L, LUA_REGISTRYINDEX, m_env);
         lua_getfield(p_L, -1, "OnUpdate");
-        lua_pushnumber(p_L, deltatime);
+        lua_pushnumber(p_L, (lua_Number)deltatime);
         LUA_CHECK(lua_pcall(p_L, 1, 0, 0), "lua pcall error");
         lua_pop(p_L, 1);
     }

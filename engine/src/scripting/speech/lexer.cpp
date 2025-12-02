@@ -1,8 +1,8 @@
 #include "pch.h"
-#include "scripting/lexer.h"
+#include "scripting/speech/lexer.h"
 
 
-namespace shmy { namespace detail {
+namespace shmy { namespace speech { namespace detail {
 
 constexpr static bool SYM_LUT[] = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -27,13 +27,17 @@ constexpr static bool WS_LUT[] = {
 };
 
 
-Lexer::Lexer(const std::string& _src) : src(_src.c_str()) {}
+Lexer::Lexer(const std::string& _src) : src(_src.c_str()) {
+    peeked = lex();
+}
 
-std::optional<Token> Lexer::next() {
-    char token[512] = { 0 };
+
+std::optional<Token> Lexer::lex() {
+    char token[1024] = { 0 };
     size_t tok_len = 0;
 
-    while (const char c = src[index++]) {
+    while (const char c = src[index]) {
+        index++;
         if (c == '\n') { row++; col = 0; } else { col++; }
 
         switch (state) {
@@ -52,19 +56,19 @@ std::optional<Token> Lexer::next() {
                 case '>': state = State::Compound; token[tok_len++] = c; break;
                 case '<': state = State::Compound; token[tok_len++] = c; break;
                 case '!': state = State::Compound; token[tok_len++] = c; break;
-                case '(': return Token{ TokenType::OpenParen,    "(", row, col };
-                case ')': return Token{ TokenType::CloseParen,   ")", row, col };
-                case '{': return Token{ TokenType::OpenBrace,    "{", row, col };
-                case '}': return Token{ TokenType::CloseBrace,   "}", row, col };
-                case '[': return Token{ TokenType::OpenBracket,  "[", row, col };
-                case ']': return Token{ TokenType::CloseBracket, "]", row, col };
-                case ',': return Token{ TokenType::Comma,        ",", row, col };
-                case ':': return Token{ TokenType::Colon,        ":", row, col };
-                case '?': return Token{ TokenType::Question,     "?", row, col };
-                case '&': return Token{ TokenType::LogAnd,       "&", row, col };
-                case '|': return Token{ TokenType::LogOr,        "|", row, col };
-                case '+': return Token{ TokenType::Add,          "+", row, col };
-                case '-': return Token{ TokenType::Sub,          "-", row, col };
+                case '(': return Token{ "(", TokenType::OpenParen,    row, col };
+                case ')': return Token{ ")", TokenType::CloseParen,   row, col };
+                case '{': return Token{ "{", TokenType::OpenBrace,    row, col };
+                case '}': return Token{ "}", TokenType::CloseBrace,   row, col };
+                case '[': return Token{ "[", TokenType::OpenBracket,  row, col };
+                case ']': return Token{ "]", TokenType::CloseBracket, row, col };
+                case ',': return Token{ ",", TokenType::Comma,        row, col };
+                case ':': return Token{ ":", TokenType::Colon,        row, col };
+                case '?': return Token{ "?", TokenType::Question,     row, col };
+                case '&': return Token{ "&", TokenType::LogAnd,       row, col };
+                case '|': return Token{ "|", TokenType::LogOr,        row, col };
+                case '+': return Token{ "+", TokenType::Add,          row, col };
+                case '-': return Token{ "-", TokenType::Sub,          row, col };
                 case '\0': return {};
                 default: throw LexerError(std::string("invalid character '") + c + "' in script body - "
                              + std::to_string(row) + ":" + std::to_string(col));
@@ -72,15 +76,15 @@ std::optional<Token> Lexer::next() {
             }
             break;
         case State::Identifier:
-            if (('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') || ('0' <= c && c <= '9') || c == '_') {
+            if (('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') || ('0' <= c && c <= '9') || c == '_' || c == '.') {
                 token[tok_len++] = c;
             } else if (SYM_LUT[(int)c]) {
                 state = State::Void;
                 index--;
-                return Token{ TokenType::Identifier, token, row, col };
+                return Token{ token, TokenType::Identifier, row, col };
             } else if (WS_LUT[(int)c]) {
                 state = State::Void;
-                return Token{ TokenType::Identifier, token, row, col };
+                return Token{ token, TokenType::Identifier, row, col };
             } else {
                 throw LexerError(std::string("invalid character '") + c + "' after identifier - "
                              + std::to_string(row) + ":" + std::to_string(col));
@@ -92,10 +96,10 @@ std::optional<Token> Lexer::next() {
             } else if (SYM_LUT[(int)c]) {
                 state = State::Void;
                 index--;
-                return Token{ TokenType::IntLiteral, token, row, col };
+                return Token{ token, TokenType::IntLiteral, row, col };
             } else if (WS_LUT[(int)c]) {
                 state = State::Void;
-                return Token{ TokenType::IntLiteral, token, row, col };
+                return Token{ token, TokenType::IntLiteral, row, col };
             } else {
                 throw LexerError(std::string("invalid character '") + c + "' after int literal - "
                              + std::to_string(row) + ":" + std::to_string(col));
@@ -105,7 +109,7 @@ std::optional<Token> Lexer::next() {
             switch (c) {
             case '"':
                 state = State::Void;
-                return Token{ TokenType::StringLiteral, token, row, col };
+                return Token{ token, TokenType::StringLiteral, row, col };
             case '\\':
                 state = State::StringEscape;
                 break;
@@ -129,21 +133,21 @@ std::optional<Token> Lexer::next() {
             state = State::Void;
             if (c == '=') {
                 switch (token[0]) {
-                case '>': return Token{ TokenType::GreaterEq, ">=", row, col };
-                case '<': return Token{ TokenType::LessEq,    "<=", row, col };
-                case '!': return Token{ TokenType::BangEq,    "!=", row, col };
-                case '=': return Token{ TokenType::EqualEq,   "==", row, col };
+                case '>': return Token{ ">=", TokenType::GreaterEq, row, col };
+                case '<': return Token{ "<=", TokenType::LessEq,    row, col };
+                case '!': return Token{ "!=", TokenType::BangEq,    row, col };
+                case '=': return Token{ "==", TokenType::EqualEq,   row, col };
                 default: throw LexerError(std::string("programming error: state '") + token[0] + "' should be unreachable - cmp1");
                 }
             } else if (token[0] == '=' && c == '>') {
-                return Token{ TokenType::Arrow, "=>", row, col };
+                return Token{ "=>", TokenType::Arrow, row, col };
             } else {
                 index--;
                 switch (token[0]) {
-                case '>': return Token{ TokenType::GreaterThan, ">", row, col };
-                case '<': return Token{ TokenType::LessThan,    "<", row, col };
-                case '!': return Token{ TokenType::Bang,        "!", row, col };
-                case '=': return Token{ TokenType::EqualTo,     "=", row, col };
+                case '>': return Token{ ">", TokenType::GreaterThan, row, col };
+                case '<': return Token{ "<", TokenType::LessThan,    row, col };
+                case '!': return Token{ "!", TokenType::Bang,        row, col };
+                case '=': return Token{ "=", TokenType::EqualTo,     row, col };
                 default: throw LexerError(std::string("programming error: state '") + token[0] + "' should be unreachable - cmp2");
                 }
             }
@@ -152,7 +156,7 @@ std::optional<Token> Lexer::next() {
             if (c == '\r' || c == '\n') {
                 state = State::Void;
                 if (tok_len > 0 && token[0] == '!') {
-                    return Token{ TokenType::Pragma, token, row, col };
+                    return Token{ token, TokenType::Pragma, row, col };
                 } else {
                     memset(token, 0, 512);
                     tok_len = 0;
@@ -166,8 +170,8 @@ std::optional<Token> Lexer::next() {
 
     if (tok_len != 0) {
         switch (state) {
-        case State::Identifier:          return Token{ TokenType::Identifier,   token, row, col };
-        case State::Number:              return Token{ TokenType::IntLiteral,   token, row, col };
+        case State::Identifier: return Token{ token, TokenType::Identifier, row, col };
+        case State::Number:     return Token{ token, TokenType::IntLiteral, row, col };
         default: throw LexerError("invalid trailing characters in final token - should be unreachable");
         }
     }
@@ -175,4 +179,14 @@ std::optional<Token> Lexer::next() {
     return {};
 }
 
-} }
+std::optional<Token> Lexer::peek() {
+    return peeked;
+}
+
+std::optional<Token> Lexer::next() {
+    const auto temp = std::move(peeked);
+    peeked = lex();
+    return temp;
+}
+
+} } }

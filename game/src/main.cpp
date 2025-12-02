@@ -1,32 +1,41 @@
 #include "pch.h"
-#include "time/deltatime.h"
+#include "settings.h"
 #include "world/region.h"
 #include "world/area.h"
+#include "util/deltatime.h"
 #include "util/env.h"
-#include "util/str.h"
+#include "core/str.h"
+#include "core/split.h"
 #include "io/load_flags.h"
 
 
 #ifdef VANGO_DEBUG
-    #define SCREEN_MODE sf::Style::Default
+    #define SCREEN_MODE sf::State::Windowed
 #else
-    // #define SCREEN_MODE sf::Style::Default
     #define SCREEN_MODE sf::State::Fullscreen
 #endif
 
 
-int main(int argc, char** argv) {
-    if (argc == 3 && std::string(argv[1]) == "gen" && std::string(argv[2]) == "template") {
-        // load project template
+int main() {
+    Settings::init(".sets");
+
+    auto ctxt = sf::ContextSettings();
+    if (Settings::antialiasing == 0) {
+        ctxt.antiAliasingLevel = 0;
+    } else if (Settings::antialiasing == 1) {
+        ctxt.antiAliasingLevel = 4;
+    } else if (Settings::antialiasing == 2) {
+        ctxt.antiAliasingLevel = 8;
     }
-
-    const auto video_mode = sf::VideoMode::getDesktopMode();
-    auto window = sf::RenderWindow(video_mode, "Shimmy Player - pre-alpha " VANGO_PKG_VERSION, SCREEN_MODE);
-    // window.setVerticalSyncEnabled(true);
+    const auto video_mode = sf::VideoMode{ { Settings::x_resolution, Settings::y_resolution}, Settings::bitsperpixel };
+    auto window = sf::RenderWindow(video_mode, "Shimmy Player - pre-alpha " VANGO_PKG_VERSION, SCREEN_MODE, ctxt);
+    if (Settings::enable_vsync) {
+        window.setVerticalSyncEnabled(true);
+    }
     window.setMouseCursorVisible(false);
+#ifdef VANGO_DEBUG
     window.setPosition({0, 0});
-
-    const auto font = sf::Font("res/calibri.ttf");
+#endif
 
     auto render_view = window.getDefaultView();
     /*
@@ -42,22 +51,22 @@ int main(int argc, char** argv) {
     */
 
     gui::Widget::VIEWPORT_SIZE = (sf::Vector2u)render_view.getSize();
-    // gui::Widget::VIEWPORT_SIZE = window.getSize();
-
 
     auto target = sf::RenderTexture();
     std::ignore = target.resize(window.getSize());
+    target.setSmooth(true);
 
     auto render_settings = RenderSettings((sf::Vector2i)target.getSize());
     Area::render_settings = &render_settings;
 
     auto region = Region();
     auto region_folder = std::string("");
+
     {
-        auto startup_file = std::ifstream(".startup");
+        auto startup_file = std::ifstream(".boot");
         auto startup_env = std::string();
         startup_file >> startup_env;
-        const auto tokens = shmy::str::split(startup_env, ':');
+        auto tokens = shmy::core::split(startup_env, ':');
         shmy::env::init(tokens[0]);
         shmy::env::set_pkg(tokens[1]);
         region_folder = tokens[2];
@@ -78,7 +87,7 @@ int main(int argc, char** argv) {
     // glitch.setUniform("u_dist", 3);
     // glitch.setUniform("u_resolution", (sf::Vector2f)window.getSize());
 
-    // const auto font = sf::Font(shmy::env::app_dir() / "calibri.ttf");
+    const auto font = sf::Font(shmy::env::app_dir() / "calibri.ttf");
     auto fps_draw = sf::Text(font, "0", 25);
     fps_draw.setPosition({ 10, 10 });
     fps_draw.setFillColor(sf::Color::White);
@@ -111,8 +120,8 @@ int main(int argc, char** argv) {
 
         region.update_all();
 
-        window.clear(sf::Color::Black);
 
+        window.clear(sf::Color::Black);
         target.clear(sf::Color::Black);
         region.get_active_area().render_world(target);
 
@@ -134,9 +143,7 @@ int main(int argc, char** argv) {
         target_sp.setTextureRect((sf::IntRect)render_settings.crop);
         target_sp.setPosition((sf::Vector2f)render_settings.crop.position);
         target_sp.setColor(render_settings.overlay);
-        // window.setView(sf::View({960, 540}, { 1600, 900 }));
         window.draw(target_sp);
-        // window.setView(window.getDefaultView());
 
 
         target.clear(sf::Color::Transparent);

@@ -12,13 +12,13 @@
             // front door
             "rect": [ 265, 535, 120, 30 ],
             "action": { "GotoArea": { "index": 1, "spawnpos": [ 810, 360 ] } },
-            "condition": "!Ademmar_CurfewInPlace"
+            "condition": "!Ademmar.CurfewInPlace"
         },
         {
             // welcome cutscene
             "rect": [ 140, 0, 394, 380 ],
             "action": { "BeginScript": "scripts/ShimmyIntroScene.lua" },
-            "condition": "ShimmyIntroScene_IsActive & once"
+            "condition": "once"
         },
         {
             // behind bar
@@ -29,7 +29,7 @@
             // curfew blocker
             "rect": [ 265, 535, 120, 30 ],
             "action": { "Popup": "There is a curfew in place. It is unwise to go outside." },
-            "condition": "Ademmar_CurfewInPlace"
+            "condition": "Ademmar.CurfewInPlace"
         }
     ],
     "entities": [

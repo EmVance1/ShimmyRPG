@@ -1,52 +1,75 @@
 #include "pch.h"
 #include "scripting/speech/graph.h"
-#include "scripting/lexer.h"
-#include "util/str.h"
+#include "scripting/expr.h"
+#include "core/fs.h"
 
 
 namespace shmy { namespace speech {
 
-Graph parse_graph(detail::Lexer&& lexer);
 
-Graph load_from_file(const std::fs::path& filename) {
-    const auto src = str::read_to_string(filename);
-    auto lexer = detail::Lexer(src);
-    try {
-        return parse_graph(std::move(lexer));
-    } catch (const std::exception& e) {
-        std::cout << e.what() << "\n";
-        return {};
+Graph Graph::load_from_file(const std::fs::path& filename) {
+    return Graph::load_from_string(core::read_to_string(filename).unwrap());
+}
+
+Graph Graph::create_from_line(const std::string& speaker, const std::string& line) {
+    return Graph{
+        .eps={ Entry{
+            .condition=1,
+            .vert=0,
+        } },
+        .verts={ Vert{
+            .n_lines=1,
+            .n_edges=Graph::EXIT,
+            .speaker=0,
+            .lines=1,
+            .edges=0,
+        } },
+        .edges={},
+        .exprs={ Expr::CFalse, Expr::CTrue },
+        .strs={ speaker, line },
+    };
+}
+
+int64_t Graph::eval_expr(size_t ref, Callback ctxt) const {
+    switch (ref) {
+    case 0: return 0;
+    case 1: return 1;
+    default: return Expr::evaluate(&exprs[ref], strs, ctxt);
     }
 }
 
-Graph load_from_line(const std::string& speaker, const std::string& line) {
-    auto res = Graph();
-    res.emplace("entry0", Vertex{
-        Expr::True(),
-        speaker,
-        { line },
-        Goto{ "", true }
-    });
-    return res;
+
+bool operator==(const Edge& a, const Edge& b) {
+    return memcmp(&a, &b, sizeof(Edge)) == 0;
+}
+bool operator!=(const Edge& a, const Edge& b) {
+    return !(a == b);
 }
 
-
-bool operator==(const Vertex& a, const Vertex& b) {
-    return a.speaker == b.speaker &&
-           a.lines == b.lines &&
-           a.outcome == b.outcome;
+bool operator==(const Vert& a, const Vert& b) {
+    return memcmp(&a, &b, sizeof(Vert)) == 0;
+}
+bool operator!=(const Vert& a, const Vert& b) {
+    return !(a == b);
 }
 
-bool operator==(const Response& a, const Response& b) {
-    return a.text == b.text &&
-           a.edge == b.edge &&
-           a.conditions == b.conditions &&
-           a.modifiers == b.modifiers;
+bool operator==(const Entry& a, const Entry& b) {
+    return memcmp(&a, &b, sizeof(Entry)) == 0;
+}
+bool operator!=(const Entry& a, const Entry& b) {
+    return !(a == b);
 }
 
-bool operator==(const Goto& a, const Goto& b) {
-    return a.next == b.next &&
-           a.is_exit == b.is_exit;
+bool operator==(const Graph& a, const Graph& b) {
+    return a.eps == b.eps &&
+           a.verts == b.verts &&
+           a.edges == b.edges &&
+           a.exprs == b.exprs &&
+           a.strs == b.strs;
 }
+bool operator!=(const Graph& a, const Graph& b) {
+    return !(a == b);
+}
+
 
 } }

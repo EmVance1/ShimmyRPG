@@ -1,30 +1,30 @@
 #include "pch.h"
+#include "io/load_scene.h"
 #include "world/area.h"
 #include "world/region.h"
-#include "util/json.h"
-#include "util/uuid.h"
+#include "core/uuid.h"
 #include "util/json.h"
 #include <stdexcept>
 
 
-void Area::load_prefab(const rapidjson::Value& prefabs, const rapidjson::Value& value, const std::string& name) {
+void SceneLoader::load_prefab(const rapidjson::Value& value, const std::string& name) {
     const auto& prefab = JSON_GET(prefabs, name.c_str());
 
-    const auto e_id = shmy::Uuid::generate_v4();
+    const auto e_id = shmy::core::generate_uuid_v4();
     const auto tex = JSON_GET_STR(prefab, "texture");
 
-    entities[e_id] = Entity(e_id,
-        p_region->m_atlases.at(tex),
-        p_region->m_atlases.at(tex + std::string("_outline")),
-        p_region->m_alphamaps.at(tex + std::string("_map")),
-        &pathfinder, value.HasMember("trait_movement") || prefab.HasMember("trait_movement")
+    area->entities[e_id] = Entity(e_id,
+        region->m_atlases.at(tex),
+        region->m_atlases.at(tex + std::string("_outline")),
+        region->m_alphamaps.at(tex + std::string("_map")),
+        &area->pathfinder, value.HasMember("trait_movement") || prefab.HasMember("trait_movement")
     );
-    auto& entity = entities[e_id];
+    auto& entity = area->entities[e_id];
 
     // POSITION ===============================================
     const auto& pos = JSON_GET(value, "position");
     if (pos.HasMember("world")) {
-        entity.set_position(shmy::json::into_vector2f(pos["world"]), cart_to_iso);
+        entity.set_position(shmy::json::into_vector2f(pos["world"]), area->cart_to_iso);
     } else if (pos.HasMember("iso")) {
         entity.set_sprite_position(shmy::json::into_vector2f(pos["iso"]));
     }
@@ -34,23 +34,22 @@ void Area::load_prefab(const rapidjson::Value& prefabs, const rapidjson::Value& 
         for (const auto& tag : JSON_GET_ARRAY(prefab, "tags")) {
             entity.get_tags().emplace(tag.GetString());
         }
-    }
-    if (value.HasMember("tags")) {
+    } else if (value.HasMember("tags")) {
         for (const auto& tag : JSON_GET_ARRAY(value, "tags")) {
             entity.get_tags().emplace(tag.GetString());
         }
     }
 #ifdef VANGO_DEBUG
-    if (!prefab.HasMember("tags") && !prefab.HasMember("tags")) {
-        throw std::invalid_argument(std::string("invalid json access - object has no member 'tags'\n"));
+    else {
+        throw std::invalid_argument("json object has no member 'tags'\n");
     }
 #endif
 
     if (entity.get_tags().contains("player")) {
-        if (player_id == "") {
-            player_id = e_id;
+        if (area->player_id == "") {
+            area->player_id = e_id;
         } else {
-            throw std::invalid_argument("exactly one entity MUST be designated 'player'\n");
+            throw std::runtime_error("exactly one entity MUST be designated 'player'\n");
         }
     } else {
         entity.get_actions().emplace_back(MoveToAction{});
@@ -76,16 +75,14 @@ void Area::load_prefab(const rapidjson::Value& prefabs, const rapidjson::Value& 
         const auto& ids = JSON_GET(prefab, "trait_scriptable");
         const auto script = JSON_GET_STR(ids, "script_id");
         const auto story = JSON_GET_STR(ids, "story_id");
-        script_to_uuid[script] = e_id;
-        story_to_uuid[story] = e_id;
+        area->script_to_uuid[script] = e_id;
         entity.set_script_id(script);
         entity.set_story_id(story);
     } else if (value.HasMember("trait_scriptable")) {
         const auto& ids = JSON_GET(value, "trait_scriptable");
         const auto script = JSON_GET_STR(ids, "script_id");
         const auto story = JSON_GET_STR(ids, "story_id");
-        script_to_uuid[script] = e_id;
-        story_to_uuid[story] = e_id;
+        area->script_to_uuid[script] = e_id;
         entity.set_script_id(script);
         entity.set_story_id(story);
     }
@@ -125,27 +122,27 @@ void Area::load_prefab(const rapidjson::Value& prefabs, const rapidjson::Value& 
     }
 }
 
-void Area::load_entity(const rapidjson::Value& prefabs, const rapidjson::Value& value) {
+void SceneLoader::load_entity(const rapidjson::Value& value) {
     // PREFABS
     if (value.HasMember("prefab")) {
-        load_prefab(prefabs, value, JSON_GET_STR(value, "prefab"));
+        load_prefab(value, JSON_GET_STR(value, "prefab"));
         return;
     }
 
-    const auto e_id = shmy::Uuid::generate_v4();
+    const auto e_id = shmy::core::generate_uuid_v4();
     const auto tex = JSON_GET_STR(value, "texture");
-    entities[e_id] = Entity(e_id,
-        p_region->m_atlases.at(tex),
-        p_region->m_atlases.at(tex + std::string("_outline")),
-        p_region->m_alphamaps.at(tex + std::string("_map")),
-        &pathfinder, value.HasMember("trait_movement")
+    area->entities[e_id] = Entity(e_id,
+        region->m_atlases.at(tex),
+        region->m_atlases.at(tex + std::string("_outline")),
+        region->m_alphamaps.at(tex + std::string("_map")),
+        &area->pathfinder, value.HasMember("trait_movement")
     );
-    auto& entity = entities[e_id];
+    auto& entity = area->entities[e_id];
 
     // POSITION ===============================================
     const auto& pos = JSON_GET(value, "position");
     if (pos.HasMember("world")) {
-        entity.set_position(shmy::json::into_vector2f(pos["world"]), cart_to_iso);
+        entity.set_position(shmy::json::into_vector2f(pos["world"]), area->cart_to_iso);
     } else if (pos.HasMember("iso")) {
         entity.set_sprite_position(shmy::json::into_vector2f(pos["iso"]));
     }
@@ -155,10 +152,10 @@ void Area::load_entity(const rapidjson::Value& prefabs, const rapidjson::Value& 
         entity.get_tags().emplace(tag.GetString());
     }
     if (entity.get_tags().contains("player")) {
-        if (player_id == "") {
-            player_id = e_id;
+        if (area->player_id == "") {
+            area->player_id = e_id;
         } else {
-            throw std::invalid_argument("exactly one entity MUST be designated 'player'\n");
+            throw std::runtime_error("exactly one entity MUST be designated 'player'\n");
         }
     } else {
         entity.get_actions().emplace_back(MoveToAction{});
@@ -175,8 +172,7 @@ void Area::load_entity(const rapidjson::Value& prefabs, const rapidjson::Value& 
         const auto& ids = JSON_GET(value, "trait_scriptable");
         const auto script = JSON_GET_STR(ids, "script_id");
         const auto story = JSON_GET_STR(ids, "story_id");
-        script_to_uuid[script] = e_id;
-        story_to_uuid[story] = e_id;
+        area->script_to_uuid[script] = e_id;
         entity.set_script_id(script);
         entity.set_story_id(story);
     }

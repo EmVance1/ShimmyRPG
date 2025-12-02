@@ -3,7 +3,7 @@
 #include <optional>
 
 
-namespace shmy { namespace detail {
+namespace shmy { namespace speech { namespace detail {
 
 class LexerError : public std::exception {
 private:
@@ -46,16 +46,15 @@ enum class TokenType : uint32_t {
 };
 
 struct Token {
-    TokenType type;
     std::string val;
+    TokenType type;
     size_t row = 0;
     size_t col = 0;
 };
 
-
 class Lexer {
 private:
-    enum class State {
+    enum class State : uint8_t {
         Void,
         Identifier,
         Number,
@@ -70,11 +69,15 @@ private:
     size_t index = 0;
     size_t row = 1;
     size_t col = 0;
+    std::optional<Token> peeked;
+
+    std::optional<Token> lex();
 
 public:
     Lexer(const std::string& src);
 
+    std::optional<Token> peek();
     std::optional<Token> next();
 };
 
-} }
+} } }

@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "entity.h"
-#include "time/deltatime.h"
+#include "util/deltatime.h"
 
 
 float SortBoundary::get_threshold(const sf::Vector2f& point) const {

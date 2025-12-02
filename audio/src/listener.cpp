@@ -17,7 +17,7 @@ void Listener::set_listener_count(uint32_t count) {
 
 void Listener::set_listen_from_single(uint32_t index) {
     single_listener = true;
-    for (int i = 0; i < get_audio_engine_ptr()->listenerCount; i++) {
+    for (uint32_t i = 0; i < get_audio_engine_ptr()->listenerCount; i++) {
         ma_engine_listener_set_enabled(get_audio_engine_ptr(), i, i == index);
     }
     main_listener = index;
@@ -29,7 +29,7 @@ void Listener::set_listen_from_enabled() {
 
 void Listener::set_listen_from_all() {
     single_listener = false;
-    for (int i = 0; i < get_audio_engine_ptr()->listenerCount; i++) {
+    for (uint32_t i = 0; i < get_audio_engine_ptr()->listenerCount; i++) {
         ma_engine_listener_set_enabled(get_audio_engine_ptr(), i, true);
     }
 }

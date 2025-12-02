@@ -1,6 +1,6 @@
 #include <vangotest/asserts2.h>
 #include <SFML/Graphics.hpp>
-#include "time/deltatime.h"
+#include "util/deltatime.h"
 #include "gui/gui.h"
 
 

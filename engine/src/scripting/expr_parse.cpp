@@ -1,48 +1,53 @@
 #include "pch.h"
 #include "scripting/expr.h"
-#include "scripting/lexer.h"
+#include "scripting/speech/lexer.h"
+#include "scripting/speech/ctxt.h"
 
 
-namespace shmy {
+namespace shmy { namespace speech { namespace detail {
 
-using namespace detail;
+struct ParseContext;
 
-struct ExprContext {
-    Lexer* lexer;
-    std::vector<std::string> identifiers;
-};
+void append_flag_expr(detail::ParseContext& ctx, Expr::ByteCode& base, Expr::IdTable& table);
 
-static void parse_or  (ExprContext& ctx, Expr& base, Token& next);
-static void parse_and (ExprContext& ctx, Expr& base, Token& next);
-static void parse_eq  (ExprContext& ctx, Expr& base, Token& next);
-static void parse_cmp (ExprContext& ctx, Expr& base, Token& next);
-static void parse_unit(ExprContext& ctx, Expr& base, Token& next);
+static void parse_or  (detail::ParseContext& ctx, Expr::ByteCode& base, Expr::IdTable& table);
+static void parse_and (detail::ParseContext& ctx, Expr::ByteCode& base, Expr::IdTable& table);
+static void parse_eq  (detail::ParseContext& ctx, Expr::ByteCode& base, Expr::IdTable& table);
+static void parse_cmp (detail::ParseContext& ctx, Expr::ByteCode& base, Expr::IdTable& table);
+static void parse_unit(detail::ParseContext& ctx, Expr::ByteCode& base, Expr::IdTable& table);
 
-Expr parse_flag_expr(Lexer& lexer) {
-    auto ctx = ExprContext{ &lexer, {} };
-    auto base = Expr{};
-    auto next = *lexer.next();
-    parse_or(ctx, base, next);
-    base.bytecode.push_back(Expr::IEndOf);
-    return base;
-}
+} }
 
 Expr Expr::from_string(const std::string& expr) {
     const auto temp = expr + ")";
-    auto lexer = Lexer(temp);
-    return parse_flag_expr(lexer);
+    auto base = Expr{};
+    auto ctx = speech::detail::ParseContext{
+        speech::detail::Lexer(temp),
+        nullptr,
+    };
+    speech::detail::append_flag_expr(ctx, base.bytecode, base.idents);
+    return base;
 }
 
 
-static void parse_or(ExprContext& ctx, Expr& base, Token& next) {
-    parse_and(ctx, base, next);
+namespace speech { namespace detail {
+
+
+void append_flag_expr(ParseContext& ctx, Expr::ByteCode& base, Expr::IdTable& table) {
+    parse_or(ctx, base, table);
+    base.push_back(Expr::IEndOf);
+}
+
+
+static void parse_or(ParseContext& ctx, Expr::ByteCode& base, Expr::IdTable& table) {
+    parse_and(ctx, base, table);
 
     while (true) {
-        switch (next.type) {
+        switch (ctx.lexer.peek()->type) {
         case TokenType::LogOr: {
-            next = *ctx.lexer->next();
-            parse_and(ctx, base, next);
-            base.bytecode.push_back(Expr::ILogOr);
+            ctx.lexer.next();
+            parse_and(ctx, base, table);
+            base.push_back(Expr::ILogOr);
             break; }
         case TokenType::CloseParen:
             return;
@@ -52,15 +57,15 @@ static void parse_or(ExprContext& ctx, Expr& base, Token& next) {
     }
 }
 
-static void parse_and(ExprContext& ctx, Expr& base, Token& next) {
-    parse_eq(ctx, base, next);
+static void parse_and(ParseContext& ctx, Expr::ByteCode& base, Expr::IdTable& table) {
+    parse_eq(ctx, base, table);
 
     while (true) {
-        switch (next.type) {
+        switch (ctx.lexer.peek()->type) {
         case TokenType::LogAnd: {
-            next = *ctx.lexer->next();
-            parse_eq(ctx, base, next);
-            base.bytecode.push_back(Expr::ILogAnd);
+            ctx.lexer.next();
+            parse_eq(ctx, base, table);
+            base.push_back(Expr::ILogAnd);
             break; }
         case TokenType::LogOr:
             return;
@@ -72,20 +77,20 @@ static void parse_and(ExprContext& ctx, Expr& base, Token& next) {
     }
 }
 
-static void parse_eq(ExprContext& ctx, Expr& base, Token& next) {
-    parse_cmp(ctx, base, next);
+static void parse_eq(ParseContext& ctx, Expr::ByteCode& base, Expr::IdTable& table) {
+    parse_cmp(ctx, base, table);
 
     while (true) {
-        switch (next.type) {
+        switch (ctx.lexer.peek()->type) {
         case TokenType::EqualEq: {
-            next = *ctx.lexer->next();
-            parse_cmp(ctx, base, next);
-            base.bytecode.push_back(Expr::ICmpEq);
+            ctx.lexer.next();
+            parse_cmp(ctx, base, table);
+            base.push_back(Expr::ICmpEq);
             break; }
         case TokenType::BangEq: {
-            next = *ctx.lexer->next();
-            parse_cmp(ctx, base, next);
-            base.bytecode.push_back(Expr::ICmpNe);
+            ctx.lexer.next();
+            parse_cmp(ctx, base, table);
+            base.push_back(Expr::ICmpNe);
             break; }
         case TokenType::LogAnd: case TokenType::LogOr:
             return;
@@ -97,30 +102,30 @@ static void parse_eq(ExprContext& ctx, Expr& base, Token& next) {
     }
 }
 
-static void parse_cmp(ExprContext& ctx, Expr& base, Token& next) {
-    parse_unit(ctx, base, next);
+static void parse_cmp(ParseContext& ctx, Expr::ByteCode& base, Expr::IdTable& table) {
+    parse_unit(ctx, base, table);
 
     while (true) {
-        switch (next.type) {
+        switch (ctx.lexer.peek()->type) {
         case TokenType::LessThan: {
-            next = *ctx.lexer->next();
-            parse_unit(ctx, base, next);
-            base.bytecode.push_back(Expr::ICmpLt);
+            ctx.lexer.next();
+            parse_unit(ctx, base, table);
+            base.push_back(Expr::ICmpLt);
             break; }
         case TokenType::GreaterThan: {
-            next = *ctx.lexer->next();
-            parse_unit(ctx, base, next);
-            base.bytecode.push_back(Expr::ICmpGt);
+            ctx.lexer.next();
+            parse_unit(ctx, base, table);
+            base.push_back(Expr::ICmpGt);
             break; }
         case TokenType::LessEq: {
-            next = *ctx.lexer->next();
-            parse_unit(ctx, base, next);
-            base.bytecode.push_back(Expr::ICmpLe);
+            ctx.lexer.next();
+            parse_unit(ctx, base, table);
+            base.push_back(Expr::ICmpLe);
             break; }
         case TokenType::GreaterEq: {
-            next = *ctx.lexer->next();
-            parse_unit(ctx, base, next);
-            base.bytecode.push_back(Expr::ICmpGe);
+            ctx.lexer.next();
+            parse_unit(ctx, base, table);
+            base.push_back(Expr::ICmpGe);
             break; }
         case TokenType::LogAnd: case TokenType::LogOr: case TokenType::EqualEq: case TokenType::BangEq:
             return;
@@ -132,53 +137,55 @@ static void parse_cmp(ExprContext& ctx, Expr& base, Token& next) {
     }
 }
 
-static void parse_unit(ExprContext& ctx, Expr& base, Token& next) {
-    switch (next.type) {
+static void parse_unit(ParseContext& ctx, Expr::ByteCode& base, Expr::IdTable& table) {
+    auto tok = ctx.lexer.next();
+
+    switch (tok->type) {
     case TokenType::IntLiteral: {
-        const auto i = next.val;
-        next = *ctx.lexer->next();
+        const auto i = tok->val;
         const auto n = std::atoll(i.c_str());
 
-        base.bytecode.push_back(Expr::IPushC);
-        const auto idx = base.bytecode.size();
-        base.bytecode.resize(base.bytecode.size() + 8);
-        memcpy(base.bytecode.data() + idx, &n, sizeof(int64_t));
+        base.push_back(Expr::IPushC);
+        const auto idx = base.size();
+        base.resize(base.size() + 8);
+        memcpy(base.data() + idx, &n, sizeof(int64_t));
         break; }
 
     case TokenType::Identifier: {
-        const auto id = next.val;
-        next = *ctx.lexer->next();
-        const auto n = base.idents.size();
-        base.idents.push_back(std::move(id));
-
-        if (next.type == TokenType::Colon) {
-            base.bytecode.push_back(Expr::IPushK);
-            const auto idx = base.bytecode.size();
-            base.bytecode.resize(idx + sizeof(size_t));
-            memcpy(base.bytecode.data() + idx, &n, sizeof(size_t));
-
-            next = *ctx.lexer->next();
-            parse_unit(ctx, base, next);
-            base.bytecode.push_back(Expr::IAssign);
+        uint32_t ref = 0;
+        if (ctx.s_LUT.find(tok->val) == ctx.s_LUT.end()) {
+            ref = (uint32_t)table.size();
+            ctx.s_LUT[tok->val] = ref;
+            table.emplace_back(std::move(tok->val));
         } else {
-            base.bytecode.push_back(Expr::IPushV);
-            const auto idx = base.bytecode.size();
-            base.bytecode.resize(idx + sizeof(size_t));
-            memcpy(base.bytecode.data() + idx, &n, sizeof(size_t));
+            ref = ctx.s_LUT[tok->val];
+        }
+
+        if (ctx.lexer.peek()->type == TokenType::Colon) {
+            base.push_back(Expr::IPushK);
+            const auto idx = base.size();
+            base.resize(idx + sizeof(uint32_t));
+            memcpy(base.data() + idx, &ref, sizeof(uint32_t));
+
+            ctx.lexer.next();
+            parse_unit(ctx, base, table);
+            base.push_back(Expr::IAssign);
+        } else {
+            base.push_back(Expr::IPushV);
+            const auto idx = base.size();
+            base.resize(idx + sizeof(uint32_t));
+            memcpy(base.data() + idx, &ref, sizeof(uint32_t));
         }
         break; }
 
     case TokenType::Bang: {
-        next = *ctx.lexer->next();
-        parse_unit(ctx, base, next);
-        base.bytecode.push_back(Expr::ILogNot);
+        parse_unit(ctx, base, table);
+        base.push_back(Expr::ILogNot);
         return; }
 
     case TokenType::OpenParen: {
-        next = *ctx.lexer->next();
-        parse_or(ctx, base, next);
-        if (next.type == TokenType::CloseParen) {
-            next = *ctx.lexer->next();
+        parse_or(ctx, base, table);
+        if (ctx.lexer.next()->type == TokenType::CloseParen) {
             return;
         } else {
             throw std::runtime_error("should be unreachable");
@@ -190,4 +197,4 @@ static void parse_unit(ExprContext& ctx, Expr& base, Token& next) {
     }
 }
 
-}
+} } }

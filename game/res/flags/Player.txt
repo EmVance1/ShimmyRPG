@@ -1,4 +1,4 @@
-Origin  1
-Alcohol 0
-Coin    100
+Origin  = 1
+Alcohol = 0
+Coin    = 100
 

@@ -1,10 +1,10 @@
 #include "pch.h"
 #include "region.h"
-#include "util/str.h"
+#include "graphics/filters.h"
+#include "util/deltatime.h"
 #include "util/json.h"
 #include "util/env.h"
-#include "graphics/filters.h"
-#include "time/deltatime.h"
+#include "io/load_scene.h"
 
 
 #define OUTLINE_WIDTH 5
@@ -44,30 +44,26 @@ void Region::load_from_dir(const std::fs::path& folder, size_t initial_area) {
     m_guistyle.load_from_dir(shmy::env::pkg_full() / "gui" / doc["gui_style"].GetString());
 #else
     std::cout << "1 - areas: " << m_areas.size() << ", active: " << m_active_area << ", passed in: " << initial_area << "\n";
-    // m_guistyle.load_from_dir(shmy::env::pkg_full() / "gui" / doc["gui_style"].GetString());
+    m_guistyle.load_from_dir(shmy::env::pkg_full() / "gui" / doc["gui_style"].GetString());
     std::cout << "2 - areas: " << m_areas.size() << ", active: " << m_active_area << ", passed in: " << initial_area << "\n";
 #endif
 
     const auto& areas = doc["areas"].GetArray();
-    m_areas.reserve(areas.Size());
     const auto prefabs = shmy::json::load_from_file(shmy::env::pkg_full() / "prefabs.json");
-    for (const auto& area : areas) {
-        m_areas.emplace_back(area.GetString(), this);
-    }
+    m_areas.resize(areas.Size());
+    auto loader = SceneLoader(this, prefabs);
 
     size_t i = 0;
     for (const auto& area : areas) {
 #ifdef VANGO_DEBUG
         try {
-            const auto area_doc = shmy::json::load_from_file(shmy::env::pkg_full() / folder / (std::string(area.GetString()) + ".json"));
-            m_areas[i].init(prefabs, area_doc);
+            loader.load(&m_areas[i], area.GetString());
         } catch (const std::exception& e) {
-            std::cerr << "error loading area '" << m_areas[i].id << "': " << e.what() << "\n";
+            std::cerr << "load module error - area '" << area.GetString() << "': " << e.what() << "\n";
             exit(1);
         }
 #else
-        const auto area_doc = shmy::json::load_from_file(shmy::env::pkg_full() / folder / (std::string(area.GetString()) + ".json"));
-        m_areas[i].init(prefabs, area_doc);
+        loader.load(&m_areas[i], area.GetString());
 #endif
         if (i != m_active_area) {
             m_areas[i].set_mode(GameMode::Sleep);
@@ -77,7 +73,6 @@ void Region::load_from_dir(const std::fs::path& folder, size_t initial_area) {
 }
 
 void Region::set_active_area(size_t index) {
-    std::cout << "called set_active_area\n";
     Time::stop();
     const auto mode = m_areas[m_active_area].gamemode;
     m_areas[m_active_area].set_mode(GameMode::Sleep);

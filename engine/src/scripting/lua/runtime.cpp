@@ -25,9 +25,14 @@ Script& Runtime::spawn_script(const std::filesystem::path& path) {
 }
 
 void Runtime::update() {
+    if (m_paused) return;
     for (auto& s : m_scripts) {
         s.update();
     }
+}
+
+void Runtime::set_paused(bool paused) {
+    m_paused = paused;
 }
 
 } }

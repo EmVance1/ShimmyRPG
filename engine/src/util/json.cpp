@@ -55,15 +55,15 @@ sf::Color into_color(const rj::Value& arr) {
 
 
 #ifdef _WIN32
-#define os_fopen(filename, mode) _wfopen(filename.c_str(), L##mode);
+#define os_fopen(file, mode) _wfopen(file.c_str(), L##mode);
 #else
-#define os_fopen(filename, mode) fopen((const char*)filename.u8string().c_str(), mode);
+#define os_fopen(file, mode) fopen(file.c_str(), mode);
 #endif
 
 rj::Document load_from_file(const std::fs::path& filename) {
     FILE* fp = os_fopen(filename, "rb");
     if (!fp) {
-        std::cerr << "failed to open json document: " << filename.string() << '\n';
+        std::cerr << "failed to open json file '" << filename.string() << "'\n";
         exit(1);
     }
 
@@ -73,15 +73,16 @@ rj::Document load_from_file(const std::fs::path& filename) {
 #ifdef VANGO_DEBUG
     constexpr auto FLAGS = rj::kParseTrailingCommasFlag|rj::kParseCommentsFlag|rj::kParseNanAndInfFlag|rj::kParseValidateEncodingFlag;
     rj::ParseResult ok = doc.ParseStream<FLAGS>(is);
+    fclose(fp);
     if (!ok) {
-        throw std::invalid_argument(std::string("invalid json document - ")
+        throw std::runtime_error(std::string("failed to parse json file '") + filename.string() + "': "
                 + rj::GetParseError_En(ok.Code()) + " (" + std::to_string(ok.Offset()) + ")");
     }
 #else
     constexpr auto FLAGS = rj::kParseTrailingCommasFlag|rj::kParseCommentsFlag|rj::kParseNanAndInfFlag;
     doc.ParseStream<FLAGS>(is);
-#endif
     fclose(fp);
+#endif
     return doc;
 }
 
@@ -90,43 +91,43 @@ rj::Document load_from_file(const std::fs::path& filename) {
 
 const char* debug_get_str(const rj::Value& object, const char* name) {
     if (!object.HasMember(name)) {
-        throw std::invalid_argument(std::string("invalid json access - object has no member '") + name + "");
+        throw std::invalid_argument(std::string("json object has no member '") + name + "");
     }
     const auto& e = object[name];
     if (!e.IsString()) {
-        throw std::invalid_argument(std::string("invalid json access - object member '") + name + "' is not of expected type");
+        throw std::invalid_argument(std::string("json object member '") + name + "' is not of expected type");
     }
     return e.GetString();
 }
 size_t debug_get_strlen(const rj::Value& object, const char* name) {
     if (!object.HasMember(name)) {
-        throw std::invalid_argument(std::string("invalid json access - object has no member '") + name + "'");
+        throw std::invalid_argument(std::string("json object has no member '") + name + "'");
     }
     const auto& e = object[name];
     if (!e.IsString()) {
-        throw std::invalid_argument(std::string("invalid json access - object member '") + name + "' is not of expected type");
+        throw std::invalid_argument(std::string("json object member '") + name + "' is not of expected type");
     }
     return e.GetStringLength();
 }
 bool debug_get_bool(const rj::Value& object, const char* name) {
     if (!object.HasMember(name)) {
-        throw std::invalid_argument(std::string("invalid json access - object has no member '") + name + "'");
+        throw std::invalid_argument(std::string("json object has no member '") + name + "'");
     }
     const auto& e = object[name];
     if (!e.IsBool()) {
-        throw std::invalid_argument(std::string("invalid json access - object member '") + name + "' is not of expected type");
+        throw std::invalid_argument(std::string("json object member '") + name + "' is not of expected type");
     }
     return e.GetBool();
 }
 bool debug_is_null(const rj::Value& object, const char* name) {
     if (!object.HasMember(name)) {
-        throw std::invalid_argument(std::string("invalid json access - object has no member '") + name + "'");
+        throw std::invalid_argument(std::string("json object has no member '") + name + "'");
     }
     return object[name].IsNull();
 }
 const rj::Value& debug_get(const rj::Value& object, const char* name) {
     if (!object.HasMember(name)) {
-        throw std::invalid_argument(std::string("invalid json access - object has no member '") + name + "'");
+        throw std::invalid_argument(std::string("json object has no member '") + name + "'");
     }
     return object[name];
 }

@@ -1,106 +1,89 @@
 #include "pch.h"
 #include "flags.h"
-#include <random>
-
-
-static std::mt19937 RNG{ std::random_device()() };
+#include "util/random.h"
 
 
 std::unordered_map<std::string, uint64_t> FlagTable::cache;
+std::unordered_map<std::string, uint64_t> FlagTable::temps;
+std::unordered_map<std::string, shmy::Expr> FlagTable::funcs;
 
 
 uint64_t* FlagTable::callback(const char* key, bool strict) {
     static uint64_t TEMP = 0;
+    const auto len = strlen(key);
 
-    if (strncmp(key, "once", 4) == 0) {
-        return &FlagTable::Never;
-    } else if (strncmp(key, "default", 7) == 0) {
+    if (len == 0) {
+        std::cerr << "runtime error - invalid flag table key ''\n";
+        exit(1);
+    } else if (strcmp(key, "once") == 0) {
+        TEMP = FlagTable::Allow;
+        return &TEMP;
+    } else if (strcmp(key, "true") == 0) {
         TEMP = 1;
         return &TEMP;
-    } else if (strncmp(key, "rng", 3) == 0) {
-        auto mod = (uint64_t)atoll(key+3);
-        auto dist = std::uniform_int_distribution<uint64_t>(0, mod-1);
-        TEMP = dist(RNG);
+    } else if (strcmp(key, "false") == 0) {
+        TEMP = 0;
         return &TEMP;
-    } else {
-        if (!strict && !cache.contains(key)) {
-            cache[key] = 0;
+    } else if (strcmp(key, "inf") == 0) {
+        TEMP = UINT64_MAX;
+        return &TEMP;
+    } else if (strcmp(key, "default") == 0) {
+        TEMP = 1;
+        return &TEMP;
+    } else if (strcmp(key, "rng") == 0) {
+        TEMP = (uint64_t)Random::integer(0, atoll(key+3)-1);
+        return &TEMP;
+    } else if (key[0] == '_') {
+        if (!temps.contains(key)) {
+#ifdef VANGO_DEBUG
+            if (strict) {
+                std::cerr << "runtime error - invalid flag table key '" << key << "'\n";
+                exit(1);
+            }
+#endif
+            temps[key] = 0;
         }
-        return &cache.at(key);
+        return &temps.at(key);
+    } else if (!cache.contains(key)) {
+#ifdef VANGO_DEBUG
+        if (strict) {
+            std::cerr << "runtime error - invalid flag table key '" << key << "'\n";
+            exit(1);
+        }
+#endif
+        cache[key] = 0;
     }
+    return &cache.at(key);
 }
 
 void FlagTable::change_flag(const std::string& key, const FlagModifier& mod) {
     if (const auto add = std::get_if<FlagAdd>(&mod)) {
-        auto val = 0ULL;
-        if (add->strict) {
-#ifdef VANGO_DEBUG
-            if (!has_flag(key)) {
-                std::cerr << "runtime error: flag table does not contain key '" << key << "'\n";
-                exit(1);
-            }
-#endif
-            val = cache.at(key);
+        auto ptr = FlagTable::callback(key.c_str(), add->strict);
+        if (add->val < 0 && (uint64_t)std::abs(add->val) > *ptr) {
+            *ptr = 0;
         } else {
-            val = cache[key];
-        }
-        if (add->val < 0 && (uint64_t)std::abs(add->val) > val) {
-            cache[key] = 0;
-        } else {
-            cache[key] = val + (uint64_t)add->val;
+            *ptr += (uint64_t)add->val;
         }
     } else {
         const auto set = std::get<FlagSet>(mod);
-        if (set.strict) {
-#ifdef VANGO_DEBUG
-            if (!has_flag(key)) {
-                std::cerr << "runtime error: flag table does not contain key '" << key << "'\n";
-                exit(1);
-            }
-#endif
-            cache.at(key) = (uint64_t)set.val;
-        } else {
-            cache[key] = (uint64_t)set.val;
-        }
+        auto ptr = FlagTable::callback(key.c_str(), set.strict);
+        *ptr = (uint64_t)set.val;
     }
 }
 
 void FlagTable::set_flag(const std::string& key, uint64_t val, bool strict) {
-    if (strict) {
-#ifdef VANGO_DEBUG
-        if (!has_flag(key)) {
-            std::cerr << "runtime error: flag table does not contain key '" << key << "'\n";
-            exit(1);
-        }
-#endif
-        cache.at(key) = val;
-    } else {
-        cache[key] = val;
-    }
+    *FlagTable::callback(key.c_str(), strict) = val;
 }
 
 uint64_t FlagTable::get_flag(const std::string& key, bool strict) {
-    if (strict) {
-#ifdef VANGO_DEBUG
-        if (!has_flag(key)) {
-            std::cerr << "runtime error: flag table does not contain key '" << key << "'\n";
-            exit(1);
-        }
-#endif
-        return cache.at(key);
-    } else {
-        return cache[key];
-    }
+    return *FlagTable::callback(key.c_str(), strict);
 }
 
 bool FlagTable::has_flag(const std::string& key) {
-    return cache.find(key) != cache.end();
+    return cache.contains(key);
 }
 
 void FlagTable::unset_flag(const std::string& key) {
-    const auto it = cache.find(key);
-    if (it != cache.end()) {
-        cache.erase(it);
-    }
+    cache.erase(key);
 }
 

@@ -1,10 +1,10 @@
 #include "pch.h"
 #include "normal_mode.h"
 #include "scripting/speech/graph.h"
-#include "util/env.h"
 #include "world/region.h"
 #include "world/area.h"
-#include "time/deltatime.h"
+#include "util/deltatime.h"
+#include "util/env.h"
 #include "sorting.h"
 #include "gui/gui.h"
 
@@ -21,7 +21,6 @@ void NormalMode::move_to_action(const std::string& target) {
         const auto pos = p_area->iso_to_cart.transformPoint(abs);
         p_area->get_player().get_tracker().set_target_position({ pos.x, pos.y });
     }
-    p_area->update_motionguide();
 }
 
 void NormalMode::speak_action(const std::string& target, const std::string& speech) {
@@ -30,10 +29,10 @@ void NormalMode::speak_action(const std::string& target, const std::string& spee
     const auto dist = p_area->get_player().get_tracker().get_position() - t.get_tracker().get_position();
     if (sf::Vector2f(dist.x, dist.y).lengthSquared() < (thresh * thresh * 1.1f)) {
         if (speech.ends_with(".shmy")) {
-            p_area->begin_dialogue(shmy::speech::load_from_file(shmy::env::pkg_full() / speech), speech);
+            p_area->begin_dialogue(shmy::speech::Graph::load_from_file(shmy::env::pkg_full() / speech), speech);
             p_area->set_mode(GameMode::Dialogue);
         } else {
-            p_area->begin_dialogue(shmy::speech::load_from_line(t.script_id(), speech), t.script_id());
+            p_area->begin_dialogue(shmy::speech::Graph::create_from_line(t.script_id(), speech), t.script_id());
             p_area->set_mode(GameMode::Dialogue);
         }
     } else {
@@ -61,12 +60,10 @@ void NormalMode::handle_event(const sf::Event& event) {
             const auto mapped = p_area->camera.mapPixelToWorld(mbp->position, p_area->render_settings->viewport);
             const auto iso = p_area->iso_to_cart.transformPoint(mapped);
             auto& player = p_area->get_player();
-            player.get_tracker().start();
             if (!player.is_hovered()) {
-                if (player.get_tracker().set_target_position({ iso.x, iso.y })) {
-                    p_area->update_motionguide();
-                }
+                player.get_tracker().set_target_position({ iso.x, iso.y });
             }
+            player.get_tracker().start();
             if (p_area->gui.has_widget("context_menu")) {
                 p_area->gui.remove_widget("context_menu");
             }
@@ -77,7 +74,7 @@ void NormalMode::handle_event(const sf::Event& event) {
                         p_area->gui.remove_widget("context_menu");
                     }
                     auto ctx_menu = gui::ButtonList::create(
-                            gui::Position::topleft(sf::Vector2f(mbp->position)), { 120.f, 30.f }, p_area->p_region->get_style()
+                            gui::Position::topleft(sf::Vector2f(mbp->position)), { 120.f, 30.f }, p_area->region->style()
                         );
                     for (const auto& action : e->get_actions()) {
                         const auto act = action.to_string();
@@ -112,17 +109,6 @@ void NormalMode::handle_event(const sf::Event& event) {
             }
         }
 
-        auto& player = p_area->get_player();
-        if (!player.is_hovered() && !player.get_tracker().is_moving()) {
-            const auto iso = p_area->iso_to_cart.transformPoint(mapped);
-
-            player.get_tracker().start();
-            if (player.get_tracker().set_target_position({ iso.x, iso.y })) {
-                p_area->update_motionguide();
-            }
-            player.get_tracker().pause();
-        }
-
         if (p_area->gui.has_widget("context_menu")) {
             p_area->gui.remove_widget("context_menu");
         }
@@ -138,13 +124,6 @@ void NormalMode::handle_event(const sf::Event& event) {
 
 
 void NormalMode::update() {
-    for (auto& [_, e] : p_area->entities) {
-        if (!e.is_offstage()) {
-            e.update(p_area->cart_to_iso);
-        }
-    }
-    p_area->lua_vm.update();
-
     if (p_area->queued.has_value() && !p_area->get_player().get_tracker().is_moving()) {
         const auto act = std::get<SpeakAction>(p_area->queued->get_inner());
         speak_action(act.target, act.speech);
@@ -152,21 +131,18 @@ void NormalMode::update() {
     }
 
     p_area->camera.setTrackingPos(p_area->get_player().get_sprite().getPosition());
-    // p_area->camera.update(Time::deltatime());
 
     for (auto& t : p_area->triggers) {
         if (p_area->get_player().get_trigger_collider().intersects(t.bounds)) {
             if (!t.cooldown) {
                 p_area->handle_trigger(t);
+                t.cooldown = true;
+                t.used = true;
             }
-            t.cooldown = true;
         } else {
             t.cooldown = false;
         }
     }
     p_area->suppress_portals = false;
-
-    // p_area->gui.update();
-
 }
 

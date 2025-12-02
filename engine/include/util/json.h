@@ -23,11 +23,11 @@ rapidjson::Document load_from_file(const std::filesystem::path& filename);
 template<typename T>
 T debug_get_number(const rapidjson::Value& object, const char* name) {
     if (!object.HasMember(name)) {
-        throw std::invalid_argument(std::string("invalid json access - object has no member '") + name + "'");
+        throw std::invalid_argument(std::string("json object has no member '") + name + "'");
     }
     const auto& e = object[name];
     if (!e.IsNumber()) {
-        throw std::invalid_argument(std::string("invalid json access - object member '") + name + "' is not of expected type");
+        throw std::invalid_argument(std::string("json object member '") + name + "' is not of expected type");
     }
     return e.Get<T>();
 }

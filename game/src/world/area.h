@@ -1,6 +1,5 @@
 #pragma once
 #include <SFML/Graphics.hpp>
-#include <rapidjson/document.h>
 #include <sfutil/camera.h>
 #include <navmesh/lib.h>
 #include <luajit-2.1/lua.hpp>
@@ -11,7 +10,7 @@
 #include "gui/panel.h"
 #include "objects/entity.h"
 #include "objects/trigger.h"
-#include "game/game_mode.h"
+#include "game/rules/game_mode.h"
 #include "action.h"
 #include "debugger.h"
 
@@ -33,9 +32,8 @@ class Region;
 struct Area {
     static RenderSettings* render_settings;
 
-    Region* p_region;
-    std::string id;
-    std::string story_id;
+    Region* region;
+    std::string name;
 
     nav::Mesh pathfinder;
     shmy::AsyncBackground background;
@@ -47,12 +45,10 @@ struct Area {
 
     std::unordered_map<std::string, Entity> entities;
     std::unordered_map<std::string, std::string> script_to_uuid;
-    std::unordered_map<std::string, std::string> story_to_uuid;
     std::vector<Entity*> sorted_entities;
     std::string player_id = "";
 
     shmy::lua::Runtime lua_vm;
-
     std::vector<Trigger> triggers;
     bool suppress_portals = false;
 
@@ -66,21 +62,15 @@ struct Area {
     NormalMode normal_mode;
     CinematicMode cinematic_mode;
     CombatMode combat_mode;
-    SleepMode sleep_mode;
 
 #ifdef VANGO_DEBUG
     AreaDebugger debugger;
 #endif
 
-    Area(const std::string& id, Region* parent_region);
+    Area();
     Area(const Area& other) = delete;
     Area(Area&& other);
 
-    void load_prefab(const rapidjson::Value& prefabs, const rapidjson::Value& value, const std::string& name);
-    void load_entity(const rapidjson::Value& prefabs, const rapidjson::Value& value);
-    void load_gui();
-
-    void init(const rapidjson::Value& prefabs, const rapidjson::Document& doc);
     void set_mode(GameMode mode);
 
     Entity& get_player();
@@ -89,10 +79,6 @@ struct Area {
     Entity& get_entity_by_script_id(const std::string& id);
     const Entity& get_entity_by_script_id(const std::string& id) const;
 
-    Entity& get_entity_by_story_id(const std::string& id);
-    const Entity& get_entity_by_story_id(const std::string& id) const;
-
-    void update_motionguide();
     void handle_trigger(const Trigger& trigger);
 
     void begin_dialogue(shmy::speech::Graph&& graph, const std::string& id);

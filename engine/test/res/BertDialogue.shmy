@@ -1,0 +1,68 @@
+
+entry(BigbordIntroScene_IsActive & once) = BertPrime: [ "Oh hello there stranger. Fancy a game?" ] => {
+    "How inviting, I'd love to." => v01,
+    "If that's what counts for fun around here... Stranger." => v02{ Bert_Mistrust: +1 },
+}
+
+entry(default) = BertPrime: [ "Lovely spot this, don't you think?" ] => exit
+
+v01 = BertPrime: [ "Good on ye.", "You look like someone open to new experiences.", "It'll get you a long way around here." ] => level1_pick
+v02 = BertPrime: [ "You need to open yourself up to new experiences friend.", "It'll get you a long way around here." ]       => level1_pick
+
+level1_pick = BertPrime: [ "Why don't you pick a card, any card." ] => {
+    (pick:rng3 == 0)                      "*Pick a card*" => level1_star,
+    (pick      == 1 & Bert_Mistrust == 0) "*Pick a card*" => level1_moon,
+    (pick      == 1 & Bert_Mistrust >  0) "*Pick a card*" => level1_moon_sus,
+    (pick      == 2)                      "*Pick a card*" => level1_sun,
+}
+
+level1_star  = Narrator:  [ "*TEMPERANCE*" ]  => level1_star2
+level1_star2 = BertPrime: [ "Are you one to rush into things perhaps? Could you benefit from some... Temperance?" ] => level2_pick
+
+level1_moon  = Narrator:  [ "*THE MOON*" ]  => level1_moon2
+level1_moon2 = BertPrime: [ "Fascinating. You struck me rather as the more trusting type." ] => level2_pick
+level1_moon_sus  = Narrator:  [ "*THE MOON*" ]  => level1_moon_sus2
+level1_moon_sus2 = BertPrime: [ "The moon. The cards have heard your distrust. You shan't need it here." ] => level2_pick
+
+level1_sun  = Narrator:  [ "*THE SUN*" ]  => level1_sun2
+level1_sun2 = BertPrime: [ "Aa the sun. May a such a great light indeed lie in your future." ] => level2_pick
+
+
+level2_pick = BertPrime: [ "Go on, have another." ] => {
+    (pick:rng3 == 0) "*Pick another card*" => level2_tower,
+    (pick      == 1) "*Pick another card*" => level2_justice,
+    (pick      == 2) "*Pick another card*" => level2_lovers,
+}
+
+level2_tower  = Narrator:  [ "*THE TOWER*" ] => level2_tower2
+level2_tower2 = BertPrime: [ "Yes, yes. Something dark lies in your future. Very dark indeed." ] => level3_pick
+
+level2_justice  = Narrator:  [ "*JUSTICE*" ] => level2_justice2
+level2_justice2 = BertPrime: [ "Order. You seek order. No... you seek to understand." ] => level3_pick
+
+level2_lovers  = Narrator:  [ "*THE LOVERS*" ] => level2_lovers2
+level2_lovers2 = BertPrime: [ "Hmm, a tricky one. Perhaps you will be entering into new communities very soon." ] => level3_pick
+
+
+level3_pick = BertPrime: [ "Just one more. Indulge me, please." ] => {
+    "*Pick a final card*" => level3,
+}
+
+level3 = Narrator:  [ "*THE HANGED MAN*" ] => sus1
+sus1   = BertPrime: [ "..", "....." ] => sus2
+sus2   = Narrator:  [ "*Seemingly out of nowhere, Bert hastily packs away the cards*" ] => sus3
+sus3   = BertPrime: [ "Bunch of superstitious hokum anyways.", "Say friend, do you already have a place to stay tonight?" ] => {
+    ( Player_Lodged) "That big bird offered me a place. Might take him up on it." => sus4,
+    (!Player_Lodged) "Not as of yet." => bigsus,
+}
+
+sus4   = BertPrime: [ "Splendid splendid. Well, I'll be seeing you around then." ] => exit
+bigsus = BertPrime: [ "Oh well then I must insist you stay with me. It's my pleasure, truly." ] => {
+    "I could never impose that way. Y'know you'd think a place like this has rooms." => sus5,
+    "What a generous offer. I just might take you up on it."
+        => bigsus2{ Player_Lodged_Bert: =1, Bert_MoveToShack: =1, Bert_FrontDoorLocked: =0 },
+}
+
+sus5 = BertPrime: [ "But of course it does. Just ask Big Bird. But I'm sure we'll be seeing each other again. Farewell." ] => exit
+bigsus2 = BertPrime: [ "Splendid splendid. Come to my lodge down the street." ] => exit_into{ "scripts/BertExitShack.lua" }
+

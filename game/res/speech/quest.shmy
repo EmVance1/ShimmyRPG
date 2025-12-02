@@ -1,12 +1,12 @@
 
 
 v00 = [ "" ] => {
-    (Taric_DiscussedPit == 1) => v10
-    (Taric_DiscussedPit == 2) => v11
-    (Taric_DiscussedPit == 3) => v12
+    (Taric.DiscussedPit == 1) => v10
+    (Taric.DiscussedPit == 2) => v11
+    (Taric.DiscussedPit == 3) => v12
 }
 
 v30 = {
-    (GoldenOrb_Found) => v40
+    (GoldenOrb.Found) => v40
 }
 

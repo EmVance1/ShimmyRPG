@@ -1,14 +1,4 @@
 {
-    "_background_color_1": [ 110, 38, 18 ],
-    "_background_color_2": [ 94,  32, 15 ],
-    "_background_color_3": [ 82,  28, 13 ],
-    "_outline_color_1": [ 200, 130, 0 ],
-    "_outline_color_2": [ 255, 255, 255 ],
-    "_outline_color_3": [ 0, 0, 0 ],
-    "_text_color_1": [ 255, 180, 50 ],
-    "_text_color_2": [ 255, 255, 255 ],
-    "_text_color_3": [ 0, 0, 0 ],
-
     "background_color_1": [ 255, 255, 255 ],
     "background_color_2": [ 190, 170, 170 ],
     "background_color_3": [ 140, 130, 130 ],

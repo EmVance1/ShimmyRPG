@@ -14,11 +14,11 @@ public:
         Lines,
     };
     struct Line {
-        std::string speaker;
-        std::string line;
+        const std::string* speaker;
+        const std::string* line;
     };
     struct Choice {
-        std::string line;
+        const std::string* line;
         size_t index;
     };
     using Selection = std::vector<Choice>;
@@ -26,17 +26,18 @@ public:
 
 private:
     std::string m_id;
-    shmy::speech::Graph m_graph;
-    std::string m_vertex = "entry";
-    size_t m_vertex_index = 0;
-    State m_state = State::Empty;
     GameMode m_init_mode;
-    bool m_unapplied = false;
+
+    shmy::speech::Graph m_graph;
+    State m_state = State::Empty;
+    bool  m_applied = true;
+    uint32_t m_vert = UINT32_MAX;
+    uint32_t m_line = 0;
     std::string m_followup = "";
 
 private:
-    shmy::speech::Vertex& current_vertex() { return m_graph.at(m_vertex); }
-    const shmy::speech::Vertex& current_vertex() const { return m_graph.at(m_vertex); }
+    shmy::speech::Vert& current_vert() { return m_graph.verts.at(m_vert); }
+    const shmy::speech::Vert& current_vert() const { return m_graph.verts.at(m_vert); }
 
 public:
     Dialogue() = default;
