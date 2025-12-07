@@ -2,7 +2,6 @@
 #include <unordered_set>
 #include "util/env.h"
 #include "scripting/speech/graph.h"
-#include "scripting/lua/script.h"
 #include "scripting/lua/conversions.h"
 #include "flags.h"
 #include "world/area.h"
@@ -13,13 +12,11 @@
 static int l_entity_get(lua_State* L);
 static int l_set_overlay(lua_State* L);
 static int l_goto_scene(lua_State* L);
-static int l_exit(lua_State* L);
 static int l_set_mode(lua_State* L);
 static int l_yield(lua_State* L);
 static int l_yield_seconds(lua_State* L);
 static int l_yield_combat(lua_State* L);
 static int l_yield_dialogue(lua_State* L);
-static int l_yield_exit(lua_State* L);
 static int l_camera_set_pos(lua_State* L);
 static int l_camera_set_target(lua_State* L);
 static int l_camera_set_zoom(lua_State* L);
@@ -39,8 +36,6 @@ void init_engine_api(lua_State* L) {
     lua_setfield(L, -2, "set_overlay");
     lua_pushcfunction(L, &l_goto_scene);
     lua_setfield(L, -2, "goto_area");
-    lua_pushcfunction(L, &l_exit);
-    lua_setfield(L, -2, "exit");
 
     lua_pushcfunction(L, &l_set_mode);
     lua_setfield(L, -2, "set_mode");
@@ -52,8 +47,6 @@ void init_engine_api(lua_State* L) {
     lua_setfield(L, -2, "yield_to_combat");
     lua_pushcfunction(L, &l_yield_dialogue);
     lua_setfield(L, -2, "yield_to_dialogue");
-    lua_pushcfunction(L, &l_yield_exit);
-    lua_setfield(L, -2, "yield_exit");
 
     lua_pushstring(L, "camera");
     lua_createtable(L, 0, 3);
@@ -356,15 +349,6 @@ static int l_yield_dialogue(lua_State* L) {
 }
 #endif
 
-static int l_yield_exit(lua_State* L) {
-    lua_getfield(L, LUA_REGISTRYINDEX, "_runtime");
-    auto script = static_cast<shmy::lua::Script*>(lua_touserdata(L, -1));
-    script->mark_for_termination();
-
-    lua_pushnumber(L, 0.f);
-    return lua_yield(L, 1);
-}
-
 
 static int l_set_overlay(lua_State* L) {
     const auto col = lua_tocolor(L, 1);
@@ -382,15 +366,6 @@ static int l_goto_scene(lua_State* L) {
     lua_getfield(L, LUA_REGISTRYINDEX, "_scene");
     const auto area = static_cast<Area*>(lua_touserdata(L, -1));
     area->region->queue_scene_swap(idx, spawnpos);
-    return 0;
-}
-
-
-static int l_exit(lua_State* L) {
-    lua_getfield(L, LUA_REGISTRYINDEX, "_runtime");
-    auto script = static_cast<shmy::lua::Script*>(lua_touserdata(L, -1));
-    script->mark_for_termination();
-
     return 0;
 }
 

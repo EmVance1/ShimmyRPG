@@ -7,6 +7,9 @@
     "background": [
         { "file": "textures/ademmar/shimmyshack.png", "bounds": [ -68, -70, 2054, 1156 ] }
     ],
+    "scripts": [
+        "scripts/ShimmyIntroScene.lua"
+    ],
     "triggers": [
         {
             // front door
@@ -17,8 +20,7 @@
         {
             // welcome cutscene
             "rect": [ 140, 0, 394, 380 ],
-            // "act_func": "shmy.event("OnShimmyCutsceneTriggered")",
-            "act_script": "scripts/ShimmyIntroScene.lua",
+            "act_event": "OnShimmyIntroCutsceneTriggered",
             "condition": "once",
         },
         {

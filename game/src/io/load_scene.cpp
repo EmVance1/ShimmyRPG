@@ -72,8 +72,8 @@ void SceneLoader::load(Area* _area, const std::string& _id) {
         }
         if (e.HasMember("act_func")) {
             t.action = action::DoString{ JSON_GET_STR(e, "act_func") };
-        } else if (e.HasMember("act_script")) {
-            t.action = action::LoadScript{ JSON_GET_STR(e, "act_script") };
+        } else if (e.HasMember("act_event")) {
+            t.action = action::DoEvent{ JSON_GET_STR(e, "act_event") };
         } else if (e.HasMember("act_dia")) {
             t.action = action::LoadDia{ JSON_GET_STR(e, "act_dia") };
         } else if (e.HasMember("act_popup")) {
@@ -94,6 +94,10 @@ void SceneLoader::load(Area* _area, const std::string& _id) {
         }
     }
 
+    for (const auto& s : JSON_GET_ARRAY(doc, "scripts")) {
+        area->lua_vm.load_file(shmy::env::pkg_full() / s.GetString());
+    }
+
     area->camera.setTrackingOffset(50.f);
     area->camera.setCenter(area->entities[area->player_id].get_sprite().getPosition(), true);
     area->camera.setTrackingMode(sfu::Camera::ControlMode::TrackBehind);
@@ -101,5 +105,7 @@ void SceneLoader::load(Area* _area, const std::string& _id) {
 #ifdef VANGO_DEBUG
     area->debugger.init(area);
 #endif
+
+    area->lua_vm.on_event("OnStart", -1);
 }
 

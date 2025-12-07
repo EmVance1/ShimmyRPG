@@ -63,9 +63,9 @@ void CinematicMode::handle_event(const sf::Event& event) {
             dia_gui->set_enabled(false);
             dia_gui->set_visible(false);
             if (const auto fu = dialogue.get_followup()) {
-                auto& s = area.lua_vm.spawn_script(shmy::env::pkg_full() / fu.value());
-                s.start();
+                area.lua_vm.load_anon(fu.value());
             }
+            get_area().lua_vm.set_paused(false);
         }
     }
 }

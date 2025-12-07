@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "area.h"
-#include "scripting/lua/script.h"
 #include "objects/trigger.h"
 #include "util/deltatime.h"
 #include "util/random.h"
@@ -34,12 +33,11 @@ void Area::handle_trigger(const Trigger& trigger) {
     switch (trigger.action.index()) {
     case 0: {
         const auto dostr = std::get<action::DoString>(trigger.action);
-        lua_vm.spawn_small(dostr.str);
+        lua_vm.load_anon(dostr.str);
         break; }
     case 1: {
-        const auto loadscript = std::get<action::LoadScript>(trigger.action);
-        auto& s = lua_vm.spawn_script(shmy::env::pkg_full() / loadscript.file);
-        s.start();
+        const auto doevent = std::get<action::DoEvent>(trigger.action);
+        lua_vm.on_event(doevent.event, -1);
         break; }
     case 2: {
         const auto loaddia = std::get<action::LoadDia>(trigger.action);

@@ -1,6 +1,7 @@
 local shmy = shmy
 
-function OnStartAsync()
+
+RegisterAsyncHandler("OnShimmyIntroCutsceneTriggered", function(args)
     local shimmy = shmy.entity("ShimmyPrime")
 
     shmy.camera.set_target(shimmy:get_position())
@@ -12,9 +13,5 @@ function OnStartAsync()
 
     shimmy:set_path({ x=400, y=50 })
     shmy.set_mode(shmy.mode.NORMAL)
-
-    -- shmy.set_mode(shmy.mode.COMBAT)
-    -- shmy.yield_to_combat({}, { "shimmy_staff", "shimmy_customer" })
-    -- shmy.yield_seconds(0.7)
-end
+end)
 
