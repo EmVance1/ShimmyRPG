@@ -1,3 +1,3 @@
 
-CurfewInPlace = true
+CurfewInPlace = false
 

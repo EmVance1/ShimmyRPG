@@ -4,11 +4,14 @@
 #include "game/dialogue.h"
 
 
+class Region;
 struct Area;
 
 class CinematicMode {
 private:
-    Area* p_area = nullptr;
+    Region* p_region = nullptr;
+
+    Area& get_area();
 
 public:
     std::shared_ptr<gui::Panel> dia_gui;
@@ -17,7 +20,7 @@ public:
 public:
     CinematicMode() = default;
 
-    void init(Area* area) { p_area = area; }
+    void init(Region* _region) { p_region = _region; }
 
     void handle_event(const sf::Event& event);
     void update();

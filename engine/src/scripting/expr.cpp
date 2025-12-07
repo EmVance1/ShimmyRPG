@@ -66,35 +66,36 @@ int64_t Expr::evaluate(const uint8_t* bytecode, const std::vector<std::string>& 
             PUSH((int64_t)v);
             pc += 4;
             break; }
+
         case Instr::ICmpEq: {
             const int64_t r = POP(int64_t);
             const int64_t l = POP(int64_t);
-            PUSH(r == l);
+            PUSH(l == r);
             break; }
         case Instr::ICmpNe: {
             const int64_t r = POP(int64_t);
             const int64_t l = POP(int64_t);
-            PUSH(r != l);
+            PUSH(l != r);
             break; }
         case Instr::ICmpLt: {
             const int64_t r = POP(int64_t);
             const int64_t l = POP(int64_t);
-            PUSH(r < l);
+            PUSH(l < r);
             break; }
         case Instr::ICmpGt: {
             const int64_t r = POP(int64_t);
             const int64_t l = POP(int64_t);
-            PUSH(r > l);
+            PUSH(l > r);
             break; }
         case Instr::ICmpLe: {
             const int64_t r = POP(int64_t);
             const int64_t l = POP(int64_t);
-            PUSH(r <= l);
+            PUSH(l <= r);
             break; }
         case Instr::ICmpGe: {
             const int64_t r = POP(int64_t);
             const int64_t l = POP(int64_t);
-            PUSH(r >= l);
+            PUSH(l >= r);
             break; }
         case Instr::ILogNot: {
             const int64_t v = POP(int64_t);
@@ -103,26 +104,27 @@ int64_t Expr::evaluate(const uint8_t* bytecode, const std::vector<std::string>& 
         case Instr::ILogOr: {
             const int64_t r = POP(int64_t);
             const int64_t l = POP(int64_t);
-            PUSH(r || l);
+            PUSH(l || r);
             break; }
         case Instr::ILogAnd: {
             const int64_t r = POP(int64_t);
             const int64_t l = POP(int64_t);
-            PUSH(r && l);
+            PUSH(l && r);
             break; }
+
         case Instr::IAssign: {
-            const int64_t v = POP(int64_t);
+            const uint64_t v = POP(uint64_t);
             const uint32_t k = POP(uint32_t);
-            *ctx(idents[k].c_str(), false) = (uint64_t)v;
-            PUSH(v);
+            *ctx(idents[(size_t)k].c_str(), false) = v;
+            PUSH((int64_t)v);
             break; }
         case Instr::ISetV: {
-            const int64_t v = POP(int64_t);
+            const uint64_t v = POP(uint64_t);
             const uint32_t k = POP(uint32_t);
-            *ctx(idents[(size_t)k].c_str(), strict) = (uint64_t)v;
+            *ctx(idents[(size_t)k].c_str(), strict) = v;
             break; }
         case Instr::IAddV: {
-            const int64_t v = POP(int64_t);
+            const int64_t v  = POP(int64_t);
             const uint32_t k = POP(uint32_t);
             *ctx(idents[(size_t)k].c_str(), strict) += (uint64_t)v; // subtraction safe because unsigned wrapping?
             break; }

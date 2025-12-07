@@ -4,7 +4,7 @@
 Shimmy script is at its core a graph representation. Named nodes are declared, representing the lines of NPCs, and edges makeup the possible responses / outcomes of a given interaction. This reads as a call and response structure, wherein the programmer simply has to define what a given NPC or the player might have to say under any given circumstances, and the possibilities these may lead to. For example, the character 'Shimmy' welcomes the player into his pub, to which the player can respond in ways varying in positivity:
 ```shmy
 v00 = Shimmy: [ "Greetings traveller. Please have a seat." ] => {
-    "My what a lovely place you have here." => v10{ Shimmy.Approval: +5 },
+    "My what a lovely place you have here." => v10{ Shimmy.Approval += 5 },
     "Why thank you." => v11,
     "Mmmph. Alright then." => v12,
     (Player.Origin == Twinvayne) "Shimmy my old friend." => v13,
@@ -20,30 +20,31 @@ The 4th response demonstrates how a response may only be conditionally available
 A dialogue script requires one or more entry-point nodes. An entry point has no name and contains a condition or 'default' marker as shown below:
 ```shmy
 entry(Shimmy.Approval >= 10) = Shimmy: [ ...
-entry(default)              = Shimmy: [ ...
+entry(default)               = Shimmy: [ ...
 ```
-Entry point conditions are evaluated in order, and only one is ever selected, meaning that if more than one entry point condition is met, the first one evaulated is the one that is chosen. Therefore, it usually makes sense to list your entry points in order of priority. An error is thrown if no entry point is eligible.
+Entry points are evaluated top to bottom, and only one is ever selected, meaning that if more than one entry point condition is met, the first one evaulated is the one that is chosen. Therefore, you should list your entry points in order of priority, or ensure that conditions are mutually exclusive. It is an error if on start no entry point is eligible.
 
 ### Gotos
-One tool provided for code reuse is the ability to bypass player responses and jump straight from the end of one node to the start of another. The following shmy code:
+One tool provided for code reuse is the ability to bypass player responses and jump straight from the end of one NPC line to the start of another. The following shmy code:
 ```shmy
 v00 = Shimmy: [ "Greetings traveller." ] => v01
-v01 = Shimmy: [ "Please have a seat." ] => { ... }
+v01 = Shimmy: [ "Please have a seat." ]  => { ... }
 ```
-Is logically identical to
+Is semantically identical to
 ```shmy
 v00 = Shimmy: [ "Greetings traveller.", "Please have a seat." ] => { ... }
 ```
-This is handy when for example multiple nodes converge on a single outcome, or for handing speaking control from one NPC to another, without having to go via a player response:
+This is handy when for example multiple nodes converge on a single outcome, or for handing speaking control back and forth directly between different NPCs:
 ```shmy
 v00 = Shimmy: [ "Thank goodness you're here." ] => v01
-v01 = Brian:  [ "We need your help." ] => { ... }
+v01 = Brian:  [ "We need your help." ]          => v02
+v02 = Shimmy: [ "The situation is dire." ]      => exit
 ```
 
 ### Exit Point(s)
 There are two ways of defining ends to dialogue interactions.
-The `exit` keyword can be used after any => symbol as though it were a vertex in itself. In that regard, an `exit` after a player response can also be followed by a flag modifier list. Reaching an exit quits the dialogue.
-The other method is to use the `exit_into{ "path/to/script.lua" }` syntax. This statement spawns the provided script and runs it immediately, but is otherwise the same as a regular exit. At the time of writing this, these statements cannot result from player responses, and can only be used in gotos.
+The `exit` keyword denotes a special node that will end the dialogue when reached. Other than that it behaves just like any other node (allowed in gotos, allows modifier lists etc.).
+The other method is to use the `exit_into{ "path/to/script.lua" }` syntax. In addition to ending the dialogue, this loads the provided script file and runs it immediately. At the time of writing this, these statements can be used exclusively as a goto target.
 
 ## Special Cases
 A couple of flags that can be used in the engine behave in special ways. These are the temp, `once` and `rng` flags.
@@ -57,5 +58,5 @@ v00 = Shimmy: [ "What did you roll?" ] => {
     (_roll      == 2) "I rolled a 3." => vroll3,
 }
 ```
-As you can see, a new flag `_roll` is created and set to the value of `rng3`. It is up to the user to ensure naming collision is avoided when using this syntax. By convention, you should use temporaries or lowercase names for flags that you wont care about for very long, or won't be used outside of this script, and reserve CamelCase names for long lived flags.
+As you can see, a temp flag `_roll` is created and set to the return value of `rng3`. Therefore in this configuration, there is only ever one possible response. It is up to the user to ensure naming collision is avoided when using this syntax. By convention, you should use temporaries or lowercase names for flags that you wont care about for very long, or won't be used outside of this script, and reserve CamelCase names for long lived flags.
 

@@ -1,13 +1,20 @@
 #include "pch.h"
 #include "cinematic_mode.h"
 #include "normal_mode.h"
+#include "world/region.h"
 #include "world/area.h"
 #include "util/env.h"
 
 
+Area& CinematicMode::get_area() {
+    return p_region->get_active_area();
+}
+
 void CinematicMode::handle_event(const sf::Event& event) {
+    auto& area = get_area();
+
     if (dialogue.get_state() == Dialogue::State::Player) {
-        p_area->gui.handle_event(event);
+        p_region->m_gui.handle_event(event);
     } else {
         if (auto kyp = event.getIf<sf::Event::KeyPressed>()) {
             if (kyp->code == sf::Keyboard::Key::Space && dialogue.is_playing()) {
@@ -31,7 +38,7 @@ void CinematicMode::handle_event(const sf::Event& event) {
                 if (*line->speaker == "Narrator") {
                     std::dynamic_pointer_cast<gui::TextWidget>(speaker_gui)->set_label("Narrator");
                 } else {
-                    std::dynamic_pointer_cast<gui::TextWidget>(speaker_gui)->set_label(p_area->get_entity_by_script_id(*line->speaker).story_id());
+                    std::dynamic_pointer_cast<gui::TextWidget>(speaker_gui)->set_label(area.get_entity_by_script_id(*line->speaker).story_id());
                 }
                 auto line_gui = dia_gui->get_widget("lines");
                 line_gui->set_visible(true);
@@ -43,20 +50,20 @@ void CinematicMode::handle_event(const sf::Event& event) {
                 choice_gui->set_enabled(true);
                 choice_gui->set_visible(true);
                 for (const auto& c : *choice) {
-                    size_t i = c.index;
-                    auto b = choice_gui->add_button(*c.line, [&, i](){ dialogue.advance(i); });
+                    auto b = choice_gui->add_button(c.line(), [&, c](){ dialogue.advance(c); });
                     b->set_text_padding(10.f);
+                    b->set_background_texture(sf::IntRect{ {0, 150}, {10, 10} });
                 }
             }
         } else {
             auto choice_gui = dia_gui->get_widget("choices");
             choice_gui->set_enabled(false);
             choice_gui->set_visible(false);
-            p_area->set_mode(dialogue.get_init_mode());
+            area.set_mode(dialogue.get_init_mode());
             dia_gui->set_enabled(false);
             dia_gui->set_visible(false);
             if (const auto fu = dialogue.get_followup()) {
-                auto& s = p_area->lua_vm.spawn_script(shmy::env::pkg_full() / fu.value());
+                auto& s = area.lua_vm.spawn_script(shmy::env::pkg_full() / fu.value());
                 s.start();
             }
         }
@@ -64,6 +71,6 @@ void CinematicMode::handle_event(const sf::Event& event) {
 }
 
 void CinematicMode::update() {
-    p_area->lua_vm.set_paused(dialogue.is_playing());
+    get_area().lua_vm.set_paused(dialogue.is_playing());
 }
 

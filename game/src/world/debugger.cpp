@@ -1,10 +1,9 @@
-#include "SFML/Graphics/RenderStates.hpp"
 #include "pch.h"
 #include "debugger.h"
-#include "world/area.h"
-#include "objects/trigger.h"
 #include "flags.h"
-#include "region.h"
+#include "world/area.h"
+#include "world/region.h"
+#include "objects/trigger.h"
 
 
 void AreaDebugger::init(const Area* area) {
@@ -91,6 +90,18 @@ void AreaDebugger::handle_event(const sf::Event& event) {
         for (const auto& p : p_area->get_player().get_tracker().get_active_path()) { path.push_back({ p.x, p.y }); }
         m_motionguide_line = sfu::LineShape(path);
         m_motionguide_line.setStart(0);
+    } else if (auto kyp = event.getIf<sf::Event::KeyPressed>()) {
+        if (kyp->control && kyp->code == sf::Keyboard::Key::F) {
+            std::string key;
+            std::cout << "query: " << std::flush;
+            std::cin >> key;
+            if (key == "") return;
+            if (FlagTable::has(key)) {
+                std::cout << "value: " << FlagTable::get(key, true) << "\n";
+            } else {
+                std::cout << "key does not exist\n";
+            }
+        }
     }
 }
 
@@ -99,7 +110,7 @@ void AreaDebugger::render_map(sf::RenderTarget& target) const {
     states.transform = p_area->cart_to_iso;
     target.draw(m_pathfinder.data(), m_pathfinder.size(), sf::PrimitiveType::Triangles, states);
     // if (p_area->get_player().get_tracker().is_moving() || p_area->gamemode == GameMode::Combat) {
-    if (p_area->gamemode == GameMode::Normal || p_area->gamemode == GameMode::Combat) {
+    if (p_area->region->gamemode == GameMode::Normal || p_area->region->gamemode == GameMode::Combat) {
         target.draw(m_motionguide_line, p_area->cart_to_iso);
     }
 }

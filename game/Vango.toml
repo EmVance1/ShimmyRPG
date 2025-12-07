@@ -13,7 +13,7 @@ iso-compliant = true
 
 [dependencies]
 engine  = { path="../engine" }
-audio   = { path="../audio" }
+# audio   = { path="../audio" }
 SFUtil  = { path="../../SFUtil" }
 NavMesh = { path="../../NavMesh" }
 SFML    = { path="../../_Libs/SFML-3", features=[ "graphics" ] }

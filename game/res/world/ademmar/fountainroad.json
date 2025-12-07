@@ -11,7 +11,7 @@
         {
             // shimmy front door
             "rect": [ 755, 345, 125, 30 ],
-            "action": { "GotoArea": { "index": 0, "spawnpos": [ 320, 540 ] } }
+            "act_portal": { "index": 0, "spawnpos": [ 320, 540 ] }
         }
     ],
     "entities": [

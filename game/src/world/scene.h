@@ -11,23 +11,11 @@
 #include "objects/trigger.h"
 
 
-struct RenderSettings {
-    const sf::Vector2i viewport;
-    std::vector<sf::Shader> shaders;
-    sf::FloatRect crop;
-    sf::Color overlay;
-
-    RenderSettings(const sf::Vector2i& _viewport)
-        : viewport(_viewport), crop({0, 0}, (sf::Vector2f)viewport), overlay(sf::Color::White)
-    {}
-};
-
 class Region;
 
 struct Scene {
-    static RenderSettings* render_settings;
-
     Region* region;
+    std::string name;
 
     shmy::AsyncBackground background;
     nav::Mesh pathfinder;
@@ -41,7 +29,7 @@ struct Scene {
     std::vector<Entity*> sorted_entities; // to be removed in favour of z sorting
     std::string player_uuid = "";
 
-    bool awake = false;
+    bool sleeping = true;
 
     Scene();
     Scene(const Scene& other) = delete;
@@ -52,6 +40,8 @@ struct Scene {
 
     Entity& get_entity_by_script_id(const std::string& id);
     const Entity& get_entity_by_script_id(const std::string& id) const;
+
+    void set_sleeping(bool sleeping);
 
     void handle_event(const sf::Event& event);
     void update();

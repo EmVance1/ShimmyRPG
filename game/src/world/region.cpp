@@ -9,6 +9,9 @@
 
 #define OUTLINE_WIDTH 5
 
+Region::Region() :
+    m_gui(gui::Position::topleft({0, 0}), sf::Vector2f(render_settings->viewport), gui::Style())
+{}
 
 void Region::load_from_dir(const std::fs::path& folder, size_t initial_area) {
     m_textures.clear();
@@ -44,9 +47,13 @@ void Region::load_from_dir(const std::fs::path& folder, size_t initial_area) {
     m_guistyle.load_from_dir(shmy::env::pkg_full() / "gui" / doc["gui_style"].GetString());
 #else
     std::cout << "1 - areas: " << m_areas.size() << ", active: " << m_active_area << ", passed in: " << initial_area << "\n";
-    m_guistyle.load_from_dir(shmy::env::pkg_full() / "gui" / doc["gui_style"].GetString());
+    // m_guistyle.load_from_dir(shmy::env::pkg_full() / "gui" / doc["gui_style"].GetString());
     std::cout << "2 - areas: " << m_areas.size() << ", active: " << m_active_area << ", passed in: " << initial_area << "\n";
 #endif
+
+    m_gui.set_style(m_guistyle);
+    m_gui.set_size((sf::Vector2f)render_settings->viewport);
+    m_gui.set_background_color(sf::Color::Transparent);
 
     const auto& areas = doc["areas"].GetArray();
     const auto prefabs = shmy::json::load_from_file(shmy::env::pkg_full() / "prefabs.json");
@@ -65,19 +72,44 @@ void Region::load_from_dir(const std::fs::path& folder, size_t initial_area) {
 #else
         loader.load(&m_areas[i], area.GetString());
 #endif
-        if (i != m_active_area) {
-            m_areas[i].set_mode(GameMode::Sleep);
+        if (i == m_active_area) {
+            m_areas[i].set_sleeping(false);
         }
         i++;
     }
+
+    loader.load_gui();
+
+    normal_mode.init(this);
+    cinematic_mode.init(this);
+    combat_mode.init(this);
 }
 
-void Region::set_active_area(size_t index) {
+
+void Region::queue_scene_swap(int index, sf::Vector2f pos) {
+    if (index == m_active_area) return;
+    swap_queued = index;
+    swap_pos = pos;
+}
+
+void Region::exec_scene_swap() {
+    if (swap_queued < 0 || block_portals) {
+        block_portals = false;
+        swap_queued = -1;
+        return;
+    }
     Time::stop();
-    const auto mode = m_areas[m_active_area].gamemode;
-    m_areas[m_active_area].set_mode(GameMode::Sleep);
-    m_areas[index].set_mode(mode);
-    m_active_area = index;
+    auto& last = m_areas[m_active_area];
+    m_active_area = swap_queued;
+    auto& area = get_active_area();
+    area.camera.setCenter(area.cart_to_iso.transformPoint(swap_pos));
+    area.background.update_soft(area.camera.getFrustum());
+    last.set_sleeping(true);
+    area.get_player().set_position(swap_pos, area.cart_to_iso);
+    m_gui.get_widget<gui::Text>("area_label")->set_label(area.name);
+    block_portals = true;
+    swap_queued = -1;
+    area.set_sleeping(false);
     Time::start();
 }
 
@@ -85,5 +117,6 @@ void Region::update_all() {
     for (size_t i = 0; i < m_areas.size(); i++) {
         m_areas[i].update();
     }
+    m_gui.update();
 }
 

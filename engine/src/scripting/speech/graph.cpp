@@ -13,11 +13,11 @@ Graph Graph::load_from_file(const std::fs::path& filename) {
 
 Graph Graph::create_from_line(const std::string& speaker, const std::string& line) {
     return Graph{
-        .eps={ Entry{
+        .eps={ _Entry{
             .condition=1,
             .vert=0,
         } },
-        .verts={ Vert{
+        .verts={ _Vert{
             .n_lines=1,
             .n_edges=Graph::EXIT,
             .speaker=0,
@@ -39,24 +39,24 @@ int64_t Graph::eval_expr(size_t ref, Callback ctxt) const {
 }
 
 
-bool operator==(const Edge& a, const Edge& b) {
-    return memcmp(&a, &b, sizeof(Edge)) == 0;
+bool operator==(const _Edge& a, const _Edge& b) {
+    return memcmp(&a, &b, sizeof(_Edge)) == 0;
 }
-bool operator!=(const Edge& a, const Edge& b) {
+bool operator!=(const _Edge& a, const _Edge& b) {
     return !(a == b);
 }
 
-bool operator==(const Vert& a, const Vert& b) {
-    return memcmp(&a, &b, sizeof(Vert)) == 0;
+bool operator==(const _Vert& a, const _Vert& b) {
+    return memcmp(&a, &b, sizeof(_Vert)) == 0;
 }
-bool operator!=(const Vert& a, const Vert& b) {
+bool operator!=(const _Vert& a, const _Vert& b) {
     return !(a == b);
 }
 
-bool operator==(const Entry& a, const Entry& b) {
-    return memcmp(&a, &b, sizeof(Entry)) == 0;
+bool operator==(const _Entry& a, const _Entry& b) {
+    return memcmp(&a, &b, sizeof(_Entry)) == 0;
 }
-bool operator!=(const Entry& a, const Entry& b) {
+bool operator!=(const _Entry& a, const _Entry& b) {
     return !(a == b);
 }
 

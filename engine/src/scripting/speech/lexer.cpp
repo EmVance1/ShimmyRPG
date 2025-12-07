@@ -56,6 +56,8 @@ std::optional<Token> Lexer::lex() {
                 case '>': state = State::Compound; token[tok_len++] = c; break;
                 case '<': state = State::Compound; token[tok_len++] = c; break;
                 case '!': state = State::Compound; token[tok_len++] = c; break;
+                case '+': state = State::Compound; token[tok_len++] = c; break;
+                case '-': state = State::Compound; token[tok_len++] = c; break;
                 case '(': return Token{ "(", TokenType::OpenParen,    row, col };
                 case ')': return Token{ ")", TokenType::CloseParen,   row, col };
                 case '{': return Token{ "{", TokenType::OpenBrace,    row, col };
@@ -67,8 +69,6 @@ std::optional<Token> Lexer::lex() {
                 case '?': return Token{ "?", TokenType::Question,     row, col };
                 case '&': return Token{ "&", TokenType::LogAnd,       row, col };
                 case '|': return Token{ "|", TokenType::LogOr,        row, col };
-                case '+': return Token{ "+", TokenType::Add,          row, col };
-                case '-': return Token{ "-", TokenType::Sub,          row, col };
                 case '\0': return {};
                 default: throw LexerError(std::string("invalid character '") + c + "' in script body - "
                              + std::to_string(row) + ":" + std::to_string(col));
@@ -137,7 +137,9 @@ std::optional<Token> Lexer::lex() {
                 case '<': return Token{ "<=", TokenType::LessEq,    row, col };
                 case '!': return Token{ "!=", TokenType::BangEq,    row, col };
                 case '=': return Token{ "==", TokenType::EqualEq,   row, col };
-                default: throw LexerError(std::string("programming error: state '") + token[0] + "' should be unreachable - cmp1");
+                case '+': return Token{ "+=", TokenType::PlusEq,    row, col };
+                case '-': return Token{ "-=", TokenType::SubEq,     row, col };
+                default: throw LexerError(std::string("engine error: state '") + token[0] + "' should be unreachable - cmp1");
                 }
             } else if (token[0] == '=' && c == '>') {
                 return Token{ "=>", TokenType::Arrow, row, col };
@@ -148,7 +150,9 @@ std::optional<Token> Lexer::lex() {
                 case '<': return Token{ "<", TokenType::LessThan,    row, col };
                 case '!': return Token{ "!", TokenType::Bang,        row, col };
                 case '=': return Token{ "=", TokenType::EqualTo,     row, col };
-                default: throw LexerError(std::string("programming error: state '") + token[0] + "' should be unreachable - cmp2");
+                case '+': return Token{ "+", TokenType::Add,         row, col };
+                case '-': return Token{ "-", TokenType::Sub,         row, col };
+                default: throw LexerError(std::string("engine error: state '") + token[0] + "' should be unreachable - cmp2");
                 }
             }
             break;

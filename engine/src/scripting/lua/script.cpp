@@ -21,11 +21,8 @@ static void check_permutations(uint32_t funcs, Script::AsyncCallback* coroutines
 static int block_globals(lua_State* L);
 
 
-Script::Script(lua_State* L, const std::fs::path& filename, const char* api) : p_L(L) {
-    {
-        const auto file = core::read_to_string(filename).unwrap();
-        LUA_CHECK(luaL_loadstring(p_L, file.c_str()), "lua parse error");
-    }
+int init_env(lua_State* p_L, const char* api, const char* str) {
+    LUA_CHECK(luaL_loadstring(p_L, str), "lua parse error");
 
     lua_newtable(p_L); // chunk, env
     lua_getglobal(p_L, api);
@@ -66,9 +63,19 @@ Script::Script(lua_State* L, const std::fs::path& filename, const char* api) : p
     lua_pushvalue(p_L, -1); // chunk, env, env
     lua_setfenv(p_L, -3);   // chunk, env
 
-    m_env = luaL_ref(p_L, LUA_REGISTRYINDEX);
+    int env = luaL_ref(p_L, LUA_REGISTRYINDEX);
 
     LUA_CHECK(lua_pcall(p_L, 0, 0, 0), "lua pcall error");
+
+    return env;
+}
+
+
+Script::Script(lua_State* L, const std::fs::path& filename, const char* api) : p_L(L) {
+    {
+        const auto file = core::read_to_string(filename).unwrap();
+        m_env = init_env(L, api, file.c_str());
+    }
 
     lua_rawgeti(p_L, LUA_REGISTRYINDEX, m_env);
 
@@ -79,7 +86,7 @@ Script::Script(lua_State* L, const std::fs::path& filename, const char* api) : p
 #endif
 
     lua_pushlightuserdata(p_L, this);
-    lua_setfield(p_L, LUA_REGISTRYINDEX, "_script");
+    lua_setfield(p_L, LUA_REGISTRYINDEX, "_runtime");
 
     if ((m_funcs & (1 << (uint32_t)Callback::OnCreate))) {
         lua_getfield(p_L, -1, "OnCreate");

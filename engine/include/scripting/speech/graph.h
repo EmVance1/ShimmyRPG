@@ -1,18 +1,19 @@
 #pragma once
 #include <filesystem>
 #include <string>
+#include "iter.h"
 
 
 namespace shmy { namespace speech {
 
-struct Edge {
+struct _Edge {
     uint32_t condition = 1;
     uint32_t modifiers = 0;
     uint32_t edge;
     uint32_t line;
 };
 
-struct Vert {
+struct _Vert {
     uint32_t n_lines = 0;
     uint32_t n_edges = 0;
     uint32_t speaker;
@@ -20,7 +21,7 @@ struct Vert {
     uint32_t edges;
 };
 
-struct Entry {
+struct _Entry {
     uint32_t condition = 1;
     uint32_t vert;
 };
@@ -29,9 +30,9 @@ struct Graph {
     constexpr inline static size_t EXIT = UINT32_MAX;
     using Callback = uint64_t*(*)(const char* key, bool strict);
 
-    std::vector<Entry> eps;
-    std::vector<Vert> verts;
-    std::vector<Edge> edges;
+    std::vector<_Entry> eps;
+    std::vector<_Vert> verts;
+    std::vector<_Edge> edges;
     std::vector<uint8_t> exprs;
     std::vector<std::string> strs;
 
@@ -40,17 +41,21 @@ struct Graph {
     static Graph create_from_line(const std::string& speaker, const std::string& line);
 
     int64_t eval_expr(size_t ref, Callback ctxt) const;
+
+    Vertex first_entry() const { return { this, eps[0].vert }; }
+
+    Vertex nth_vertex(size_t n) const { return { this, n }; }
+    size_t vertex_count() const { return verts.size(); }
 };
 
+bool operator==(const _Edge& a, const _Edge& b);
+bool operator!=(const _Edge& a, const _Edge& b);
 
-bool operator==(const Edge& a, const Edge& b);
-bool operator!=(const Edge& a, const Edge& b);
+bool operator==(const _Vert& a, const _Vert& b);
+bool operator!=(const _Vert& a, const _Vert& b);
 
-bool operator==(const Vert& a, const Vert& b);
-bool operator!=(const Vert& a, const Vert& b);
-
-bool operator==(const Entry& a, const Edge& b);
-bool operator!=(const Entry& a, const Edge& b);
+bool operator==(const _Entry& a, const _Entry& b);
+bool operator!=(const _Entry& a, const _Entry& b);
 
 bool operator==(const Graph& a, const Graph& b);
 bool operator!=(const Graph& a, const Graph& b);

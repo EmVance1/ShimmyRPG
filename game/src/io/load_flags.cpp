@@ -28,7 +28,7 @@ static void load_file(const std::fs::path& filename, const std::string& path, co
     bool err = false;
 
     while (std::getline(f, str)) {
-        if (str.empty() || (str[0] == '#')) {
+        if (core::trim(str).empty() || (str[0] == '#')) {
             continue;
         }
         auto [key, val] = split_kv(str, filename, line, err);
@@ -59,13 +59,13 @@ static void load_file(const std::fs::path& filename, const std::string& path, co
         }
         // std::cout << "loaded key: " << key << "\n";
         if (val == "true") {
-            FlagTable::set_flag(key, 1, false);
+            FlagTable::set(key, 1, false);
         } else if (val == "false") {
-            FlagTable::set_flag(key, 0, false);
+            FlagTable::set(key, 0, false);
         } else if (val == "inf") {
-            FlagTable::set_flag(key, UINT64_MAX, false);
+            FlagTable::set(key, UINT64_MAX, false);
         } else {
-            FlagTable::set_flag(key, std::atoi(val.c_str()), false);
+            FlagTable::set(key, std::atoi(val.c_str()), false);
         }
         line++;
     }

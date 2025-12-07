@@ -1,42 +1,45 @@
-// #define VANGO_TEST_ROOT
+#define _CRT_SECURE_NO_WARNINGS
+#define VANGO_TEST_ROOT
 #include <vangotest/asserts2.h>
+#include <vangotest/bench.h>
 #include "scripting/speech/graph.h"
-#include "scripting/lexer.h"
+#include "core/fs.h"
 
 
-// namespace shmy { namespace speech { Graph parse_graph(detail::Lexer&& lexer); } }
+vango_test(bench_load_shmy1) {
+    size_t sink = 0;
 
-
-/*
-vango_test(parse_vertex) {
-    const auto testcase = std::string("v02 = ShimmyPrime: [ \"Well... Since yez ask...\", \"Got here my special brew. Gots to be strong enough for it though.\" ] => { \"Fine. Whisky.\" => v10{ PlayerAlcohol: Add(2), Shimmy_Approval: Add(2) }, \"I said water.\" => v11{}, (Player_Origin == Twinvayne) \"[Twinvayne Local] I know better than to trust your drinks, Shimmy.\" => v12{} }");
-
-    auto lexer = detail::Lexer(testcase);
-
-    try {
-        const auto res = speech::parse_graph(std::move(lexer));
-    } catch (const std::exception&) {
-        vg_assert(false);
-    }
-
-
-    auto val = speech::Graph();
-    val.vertices.push_back(speech::Vertex{
-        Expr::True(),
-        std::string("ShimmyPrime"),
-        std::vector<std::string>{
-            std::string("Well... Since yez ask..."),
-            std::string("Got here my special brew. Gots to be strong enough for it though."),
-        },
-        speech::Outcome{ std::vector<speech::Edge>{
-                speech::Edge{ {}, "Fine. Whisky.", "v10", { { "PlayerAlcohol", FlagAdd{ 2, true } }, { "Shimmy_Approval", FlagAdd{ 2, true } } } },
-                speech::Edge{ {}, "I said water.", "v11", {} },
-                speech::Edge{ FlagExpr::Gt(Expr::Identifier("PlayerOriginTwinvayne"), FlagExpr::Number(0)),
-                                    "[Twinvayne Local] I know better than to trust your drinks, Shimmy.", "v12", {} },
-            }
-        }
+    vango_bench(10000, [&](){
+        const auto g = shmy::speech::Graph::load_from_file("test/res/BrianDialogue.shmy");
+        sink += (size_t)g.verts[0].n_lines;
     });
 
-    // vg_assert_eq(val, res);
+    const auto src = shmy::core::read_to_string("test/res/BrianDialogue.shmy").unwrap();
+
+    vango_bench(10000, [&](){
+        const auto g = shmy::speech::Graph::load_from_string(src);
+        sink += (size_t)g.verts[0].n_lines;
+    });
+
+    printf("sink: %llu\n", sink);
 }
-*/
+
+vango_test(bench_load_shmy2) {
+    size_t sink = 0;
+
+    vango_bench(10000, [&](){
+        const auto g = shmy::speech::Graph::load_from_file("test/res/BertDialogue.shmy");
+        sink += (size_t)g.verts[0].n_lines;
+    });
+
+    const auto src = shmy::core::read_to_string("test/res/BertDialogue.shmy").unwrap();
+
+    vango_bench(10000, [&](){
+        const auto g = shmy::speech::Graph::load_from_string(src);
+        sink += (size_t)g.verts[0].n_lines;
+    });
+
+    printf("sink: %llu\n", sink);
+}
+
+

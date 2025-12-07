@@ -2,6 +2,7 @@
 #include "option.h"
 #include "str.h"
 #include <string>
+#include <vector>
 
 
 namespace shmy { namespace core {

@@ -7,30 +7,28 @@ std::unordered_map<std::string, uint64_t> FlagTable::cache;
 std::unordered_map<std::string, uint64_t> FlagTable::temps;
 std::unordered_map<std::string, shmy::Expr> FlagTable::funcs;
 
+#define STR_EQ(s, l) (strncmp(s, l, sizeof(l)) == 0)
+
 
 uint64_t* FlagTable::callback(const char* key, bool strict) {
     static uint64_t TEMP = 0;
-    const auto len = strlen(key);
 
-    if (len == 0) {
-        std::cerr << "runtime error - invalid flag table key ''\n";
-        exit(1);
-    } else if (strcmp(key, "once") == 0) {
+    if (STR_EQ(key, "once")) {
         TEMP = FlagTable::Allow;
         return &TEMP;
-    } else if (strcmp(key, "true") == 0) {
+    } else if (STR_EQ(key, "true")) {
         TEMP = 1;
         return &TEMP;
-    } else if (strcmp(key, "false") == 0) {
+    } else if (STR_EQ(key, "false")) {
         TEMP = 0;
         return &TEMP;
-    } else if (strcmp(key, "inf") == 0) {
+    } else if (STR_EQ(key, "inf")) {
         TEMP = UINT64_MAX;
         return &TEMP;
-    } else if (strcmp(key, "default") == 0) {
+    } else if (STR_EQ(key, "default")) {
         TEMP = 1;
         return &TEMP;
-    } else if (strcmp(key, "rng") == 0) {
+    } else if (strncmp(key, "rng", 3) == 0) {
         TEMP = (uint64_t)Random::integer(0, atoll(key+3)-1);
         return &TEMP;
     } else if (key[0] == '_') {
@@ -56,34 +54,37 @@ uint64_t* FlagTable::callback(const char* key, bool strict) {
     return &cache.at(key);
 }
 
-void FlagTable::change_flag(const std::string& key, const FlagModifier& mod) {
-    if (const auto add = std::get_if<FlagAdd>(&mod)) {
-        auto ptr = FlagTable::callback(key.c_str(), add->strict);
-        if (add->val < 0 && (uint64_t)std::abs(add->val) > *ptr) {
+void FlagTable::mod(const std::string& key, const Mod& mod) {
+    auto ptr = FlagTable::callback(key.c_str(), mod.strict);
+    switch (mod.op) {
+    case Mod::Add:
+        if (mod.val < 0 && (uint64_t)std::abs(mod.val) > *ptr) {
             *ptr = 0;
         } else {
-            *ptr += (uint64_t)add->val;
+            *ptr += (uint64_t)mod.val;
         }
-    } else {
-        const auto set = std::get<FlagSet>(mod);
-        auto ptr = FlagTable::callback(key.c_str(), set.strict);
-        *ptr = (uint64_t)set.val;
+        break;
+    case Mod::Set:
+        *ptr = (uint64_t)mod.val;
+        break;
     }
 }
 
-void FlagTable::set_flag(const std::string& key, uint64_t val, bool strict) {
+void FlagTable::set(const std::string& key, uint64_t val, bool strict) {
     *FlagTable::callback(key.c_str(), strict) = val;
 }
 
-uint64_t FlagTable::get_flag(const std::string& key, bool strict) {
+uint64_t FlagTable::get(const std::string& key, bool strict) {
     return *FlagTable::callback(key.c_str(), strict);
 }
 
-bool FlagTable::has_flag(const std::string& key) {
-    return cache.contains(key);
+bool FlagTable::has(const std::string& key) {
+    return cache.contains(key) || temps.contains(key) || funcs.contains(key);
 }
 
-void FlagTable::unset_flag(const std::string& key) {
+void FlagTable::del(const std::string& key) {
     cache.erase(key);
+    temps.erase(key);
+    funcs.erase(key);
 }
 

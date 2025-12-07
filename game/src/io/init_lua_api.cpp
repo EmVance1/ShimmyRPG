@@ -12,7 +12,7 @@
 
 static int l_entity_get(lua_State* L);
 static int l_set_overlay(lua_State* L);
-static int l_goto_area(lua_State* L);
+static int l_goto_scene(lua_State* L);
 static int l_exit(lua_State* L);
 static int l_set_mode(lua_State* L);
 static int l_yield(lua_State* L);
@@ -31,13 +31,13 @@ static int l_magic_flag_set(lua_State* L);
 
 
 void init_engine_api(lua_State* L) {
-    lua_createtable(L, 0, 14);
+    lua_newtable(L);
 
     lua_pushcfunction(L, &l_entity_get);
     lua_setfield(L, -2, "entity");
     lua_pushcfunction(L, &l_set_overlay);
     lua_setfield(L, -2, "set_overlay");
-    lua_pushcfunction(L, &l_goto_area);
+    lua_pushcfunction(L, &l_goto_scene);
     lua_setfield(L, -2, "goto_area");
     lua_pushcfunction(L, &l_exit);
     lua_setfield(L, -2, "exit");
@@ -103,7 +103,7 @@ static void create_entity_table(lua_State* L, Entity* e);
 
 static int l_entity_get(lua_State* L) {
     const auto entity = lua_tostring(L, 1);
-    lua_getfield(L, LUA_REGISTRYINDEX, "_area");
+    lua_getfield(L, LUA_REGISTRYINDEX, "_scene");
     const auto area = static_cast<Area*>(lua_touserdata(L, -1));
     create_entity_table(L, &area->entities.at(area->script_to_uuid.at(entity)));
 
@@ -134,7 +134,7 @@ static int l_entity_set_position(lua_State* L) {
     lua_gettable(L, 1);
     const auto entity = (Entity*)lua_touserdata(L, -1);
     const auto pos = lua_tovec2f(L, 2);
-    lua_getfield(L, LUA_REGISTRYINDEX, "_area");
+    lua_getfield(L, LUA_REGISTRYINDEX, "_scene");
     const auto area = static_cast<Area*>(lua_touserdata(L, -1));
     entity->set_position(pos, area->cart_to_iso);
 
@@ -199,7 +199,7 @@ static int l_entity_set_paused(lua_State* L) {
 
 static int l_camera_set_pos(lua_State* L) {
     const auto pos = lua_tovec2f(L, 1);
-    lua_getfield(L, LUA_REGISTRYINDEX, "_area");
+    lua_getfield(L, LUA_REGISTRYINDEX, "_scene");
     const auto area = static_cast<Area*>(lua_touserdata(L, -1));
     area->camera.setCenter(area->cart_to_iso.transformPoint(pos));
 
@@ -208,7 +208,7 @@ static int l_camera_set_pos(lua_State* L) {
 
 static int l_camera_set_target(lua_State* L) {
     const auto pos = lua_tovec2f(L, 1);
-    lua_getfield(L, LUA_REGISTRYINDEX, "_area");
+    lua_getfield(L, LUA_REGISTRYINDEX, "_scene");
     const auto area = static_cast<Area*>(lua_touserdata(L, -1));
     area->camera.setTrackingPos(area->cart_to_iso.transformPoint(pos));
 
@@ -217,9 +217,9 @@ static int l_camera_set_target(lua_State* L) {
 
 static int l_camera_set_zoom(lua_State* L) {
     const auto scale = (float)lua_tonumber(L, 1);
-    lua_getfield(L, LUA_REGISTRYINDEX, "_area");
+    lua_getfield(L, LUA_REGISTRYINDEX, "_scene");
     const auto area = static_cast<Area*>(lua_touserdata(L, -1));
-    area->zoom_target = scale;
+    area->camera.zoom(scale, sfu::Camera::ZoomFunc::Linear);
 
     return 0;
 }
@@ -228,9 +228,9 @@ static int l_camera_set_zoom(lua_State* L) {
 static int l_set_flag(lua_State* L) {
     const auto flag = lua_tostring(L, 1);
     if (lua_isboolean(L, 2)) {
-        FlagTable::set_flag(flag, (uint32_t)lua_toboolean(L, 2), true);
+        FlagTable::set(flag, (uint32_t)lua_toboolean(L, 2), true);
     } else {
-        FlagTable::set_flag(flag, (uint32_t)lua_tointeger(L, 2), true);
+        FlagTable::set(flag, (uint32_t)lua_tointeger(L, 2), true);
     }
 
     return 0;
@@ -238,7 +238,7 @@ static int l_set_flag(lua_State* L) {
 
 static int l_get_flag(lua_State* L) {
     const auto flag = lua_tostring(L, 1);
-    const auto value = FlagTable::get_flag(flag, true);
+    const auto value = FlagTable::get(flag, true);
     lua_pushinteger(L, value);
 
     return 1;
@@ -247,9 +247,9 @@ static int l_get_flag(lua_State* L) {
 static int l_set_or_create_flag(lua_State* L) {
     const auto flag = lua_tostring(L, 1);
     if (lua_isboolean(L, 2)) {
-        FlagTable::set_flag(flag, (uint32_t)lua_toboolean(L, 2), false);
+        FlagTable::set(flag, (uint32_t)lua_toboolean(L, 2), false);
     } else {
-        FlagTable::set_flag(flag, (uint32_t)lua_tointeger(L, 2), false);
+        FlagTable::set(flag, (uint32_t)lua_tointeger(L, 2), false);
     }
 
     return 0;
@@ -259,9 +259,9 @@ static int l_set_or_create_flag(lua_State* L) {
 static int l_magic_flag_set(lua_State* L) {
     const auto flag = lua_tostring(L, 2);
     if (lua_isboolean(L, 3)) {
-        FlagTable::set_flag(flag, (uint32_t)lua_toboolean(L, 3), true);
+        FlagTable::set(flag, (uint32_t)lua_toboolean(L, 3), true);
     } else {
-        FlagTable::set_flag(flag, (uint32_t)lua_tointeger(L, 3), true);
+        FlagTable::set(flag, (uint32_t)lua_tointeger(L, 3), true);
     }
 
     return 0;
@@ -269,7 +269,7 @@ static int l_magic_flag_set(lua_State* L) {
 
 static int l_magic_flag_get(lua_State* L) {
     const auto flag = lua_tostring(L, 2);
-    const auto value = FlagTable::get_flag(flag, true);
+    const auto value = FlagTable::get(flag, true);
     lua_pushinteger(L, value);
 
     return 1;
@@ -278,7 +278,7 @@ static int l_magic_flag_get(lua_State* L) {
 
 static int l_set_mode(lua_State* L) {
     const auto mode = lua_tointeger(L, 1);
-    lua_getfield(L, LUA_REGISTRYINDEX, "_area");
+    lua_getfield(L, LUA_REGISTRYINDEX, "_scene");
     const auto area = static_cast<Area*>(lua_touserdata(L, -1));
     switch (mode) {
     case 0: area->set_mode(GameMode::Normal); break;
@@ -321,7 +321,7 @@ static int l_yield_combat(lua_State* L) {
         enemy_tags.insert(lua_tostring(L, -1));
     }
 
-    lua_getfield(L, LUA_REGISTRYINDEX, "_area");
+    lua_getfield(L, LUA_REGISTRYINDEX, "_scene");
     const auto area = static_cast<Area*>(lua_touserdata(L, -1));
     area->begin_combat(ally_tags, enemy_tags, {}, {});
 
@@ -332,7 +332,7 @@ static int l_yield_combat(lua_State* L) {
 static int l_yield_dialogue(lua_State* L) {
     const auto filename = lua_tostring(L, 1);
     try {
-        lua_getfield(L, LUA_REGISTRYINDEX, "_area");
+        lua_getfield(L, LUA_REGISTRYINDEX, "_scene");
         const auto area = static_cast<Area*>(lua_touserdata(L, -1));
         auto dia = shmy::speech::Graph::load_from_file(shmy::env::pkg_full() / filename);
         area->begin_dialogue(std::move(dia), filename);
@@ -347,7 +347,7 @@ static int l_yield_dialogue(lua_State* L) {
 #else
 static int l_yield_dialogue(lua_State* L) {
     const auto filename = lua_tostring(L, 1);
-    lua_getfield(L, LUA_REGISTRYINDEX, "_area");
+    lua_getfield(L, LUA_REGISTRYINDEX, "_scene");
     const auto area = static_cast<Area*>(lua_touserdata(L, -1));
     area->begin_dialogue(shmy::speech::Graph::load_from_file(shmy::env::pkg_full() / filename), filename);
 
@@ -357,7 +357,7 @@ static int l_yield_dialogue(lua_State* L) {
 #endif
 
 static int l_yield_exit(lua_State* L) {
-    lua_getfield(L, LUA_REGISTRYINDEX, "_script");
+    lua_getfield(L, LUA_REGISTRYINDEX, "_runtime");
     auto script = static_cast<shmy::lua::Script*>(lua_touserdata(L, -1));
     script->mark_for_termination();
 
@@ -368,30 +368,26 @@ static int l_yield_exit(lua_State* L) {
 
 static int l_set_overlay(lua_State* L) {
     const auto col = lua_tocolor(L, 1);
-    lua_getfield(L, LUA_REGISTRYINDEX, "_area");
+    lua_getfield(L, LUA_REGISTRYINDEX, "_scene");
     const auto area = static_cast<Area*>(lua_touserdata(L, -1));
-    area->render_settings->overlay = col;
+    area->region->render_settings->overlay = col;
 
     return 0;
 }
 
 
-static int l_goto_area(lua_State* L) {
-    const auto idx = lua_tointeger(L, 1);
+static int l_goto_scene(lua_State* L) {
+    const auto idx = (int)lua_tointeger(L, 1);
     const auto spawnpos = lua_tovec2f(L, 2);
-    lua_getfield(L, LUA_REGISTRYINDEX, "_area");
+    lua_getfield(L, LUA_REGISTRYINDEX, "_scene");
     const auto area = static_cast<Area*>(lua_touserdata(L, -1));
-    const auto& cti = area->cart_to_iso;
-    area->region->set_active_area(idx);
-    area->region->get_active_area().get_player().set_position(spawnpos, cti);
-    area->region->get_active_area().suppress_portals = true;
-
+    area->region->queue_scene_swap(idx, spawnpos);
     return 0;
 }
 
 
 static int l_exit(lua_State* L) {
-    lua_getfield(L, LUA_REGISTRYINDEX, "_script");
+    lua_getfield(L, LUA_REGISTRYINDEX, "_runtime");
     auto script = static_cast<shmy::lua::Script*>(lua_touserdata(L, -1));
     script->mark_for_termination();
 

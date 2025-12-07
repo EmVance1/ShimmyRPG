@@ -37,7 +37,6 @@ namespace std { namespace fs = filesystem; }
 #include <rapidjson/filereadstream.h>
 #include <rapidjson/document.h>
 
-// #define UTF_CPP_CPLUSPLUS 202002L // C++20
 #include <utf8.h>
 
 #include <thread_pool/thread_pool.h>

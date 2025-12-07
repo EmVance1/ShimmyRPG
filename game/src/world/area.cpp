@@ -5,11 +5,9 @@
 #include "util/deltatime.h"
 #include "util/random.h"
 #include "util/env.h"
+#include "flags.h"
 #include "region.h"
 #include "sorting.h"
-
-
-RenderSettings* Area::render_settings = nullptr;
 
 
 Entity& Area::get_player() {
@@ -35,55 +33,44 @@ void Area::handle_trigger(const Trigger& trigger) {
 
     switch (trigger.action.index()) {
     case 0: {
-        const auto loadscript = std::get<BeginScript>(trigger.action);
-        auto& s = lua_vm.spawn_script(shmy::env::pkg_full() / loadscript.filename);
-        s.start();
+        const auto dostr = std::get<action::DoString>(trigger.action);
+        lua_vm.spawn_small(dostr.str);
         break; }
     case 1: {
-        const auto loaddia = std::get<BeginDialogue>(trigger.action);
-        begin_dialogue(shmy::speech::Graph::load_from_file(shmy::env::pkg_full() / loaddia.filename), loaddia.filename);
-        set_mode(GameMode::Dialogue);
+        const auto loadscript = std::get<action::LoadScript>(trigger.action);
+        auto& s = lua_vm.spawn_script(shmy::env::pkg_full() / loadscript.file);
+        s.start();
         break; }
     case 2: {
-        const auto popup = std::get<Popup>(trigger.action);
-        auto popup_ui = gui::Popup::create(gui::Position::center({0, 0}), sf::Vector2f(700, 150), region->style(), popup.message);
-        popup_ui->set_position(gui::Position::center({0, 0}));
-        get_player().get_tracker().stop();
-        gui.add_widget("popup", popup_ui);
+        const auto loaddia = std::get<action::LoadDia>(trigger.action);
+        begin_dialogue(shmy::speech::Graph::load_from_file(shmy::env::pkg_full() / loaddia.file), loaddia.file);
+        set_mode(GameMode::Dialogue);
         break; }
     case 3: {
-        // UNIMPLEMENTED: GOTO REGION
+        const auto popup = std::get<action::Popup>(trigger.action);
+        auto pop = gui::Popup::create(gui::Position::center({0, 0}), sf::Vector2f(700, 150), region->style(), popup.msg);
+        pop->set_position(gui::Position::center({0, 0}));
+        region->m_gui.add_widget("popup", pop);
+        get_player().get_tracker().stop();
         break; }
     case 4: {
-        if (suppress_portals) { return; }
-
-        const auto gotoarea = std::get<GotoArea>(trigger.action);
-        if (FlagTable::get_flag(gotoarea.lock_id, true)) {
-            auto popup_ui = gui::Popup::create(gui::Position::center({0, 0}), sf::Vector2f(700, 150), region->style(), "This door is locked.");
-            popup_ui->set_position(gui::Position::center({0, 0}));
+        const auto portal = std::get<action::Portal>(trigger.action);
+        if (FlagTable::get(portal.lock_id)) {
+            auto pop = gui::Popup::create(gui::Position::center({0, 0}), sf::Vector2f(700, 150), region->style(), "This door is locked.");
+            pop->set_position(gui::Position::center({0, 0}));
+            region->m_gui.add_widget("lock_popup", pop);
             get_player().get_tracker().stop();
-            gui.add_widget("lock_popup", popup_ui);
         } else {
-            region->set_active_area(gotoarea.index);
-            region->get_active_area().get_player().set_position(gotoarea.spawnpos, cart_to_iso);
-            region->get_active_area().suppress_portals = true;
+            region->queue_scene_swap((int)portal.index, portal.spawnpos);
         }
-        break; }
-    case 5: {
-        const auto camerazoom = std::get<CameraZoom>(trigger.action);
-        zoom_target = camerazoom.target;
-        break; }
-    case 6: {
-        const auto change = std::get<ChangeFlag>(trigger.action);
-        FlagTable::change_flag(change.name, change.mod);
         break; }
     }
 }
 
 void Area::begin_dialogue(shmy::speech::Graph&& graph, const std::string& dia_id) {
-    cinematic_mode.dialogue.begin(std::move(graph), gamemode, dia_id);
-    const auto line = std::get<Dialogue::Line>(cinematic_mode.dialogue.get_current_element());
-    auto dia_gui = gui.get_widget<gui::Panel>("dialogue");
+    region->cinematic_mode.dialogue.begin(std::move(graph), region->gamemode, dia_id);
+    const auto line = std::get<Dialogue::Line>(region->cinematic_mode.dialogue.get_current_element());
+    auto dia_gui = region->m_gui.get_widget<gui::Panel>("dialogue");
     dia_gui->set_enabled(true);
     dia_gui->set_visible(true);
     auto speaker_gui = dia_gui->get_widget<gui::TextWidget>("speaker");
@@ -103,35 +90,35 @@ void Area::begin_combat(
         const std::unordered_set<std::string>& unaligned_tags
     )
 {
-    combat_mode.participants.clear();
-    combat_mode.participants.push_back(CombatParticipant{ player_id, Random::d20(), CombatFaction::Ally });
+    region->combat_mode.participants.clear();
+    region->combat_mode.participants.push_back(CombatParticipant{ player_id, Random::d20(), CombatFaction::Ally });
     get_player().get_tracker().stop();
 
     for (auto& [id, e] : entities) {
         for (const auto& t : ally_tags) {
             if (e.get_tags().contains(t)) {
-                combat_mode.participants.push_back(CombatParticipant{ id, Random::d20(), CombatFaction::Ally });
+                region->combat_mode.participants.push_back(CombatParticipant{ id, Random::d20(), CombatFaction::Ally });
                 e.get_tracker().stop();
                 goto contd;
             }
         }
         for (const auto& t : enemy_tags) {
             if (e.get_tags().contains(t)) {
-                combat_mode.participants.push_back(CombatParticipant{ id, Random::d20(), CombatFaction::Enemy });
+                region->combat_mode.participants.push_back(CombatParticipant{ id, Random::d20(), CombatFaction::Enemy });
                 e.get_tracker().stop();
                 goto contd;
             }
         }
         for (const auto& t : enemysenemy_tags) {
             if (e.get_tags().contains(t)) {
-                combat_mode.participants.push_back(CombatParticipant{ id, Random::d20(), CombatFaction::EnemysEnemy });
+                region->combat_mode.participants.push_back(CombatParticipant{ id, Random::d20(), CombatFaction::EnemysEnemy });
                 e.get_tracker().stop();
                 goto contd;
             }
         }
         for (const auto& t : unaligned_tags) {
             if (e.get_tags().contains(t)) {
-                combat_mode.participants.push_back(CombatParticipant{ id, Random::d20(), CombatFaction::UnalignedHostile });
+                region->combat_mode.participants.push_back(CombatParticipant{ id, Random::d20(), CombatFaction::UnalignedHostile });
                 e.get_tracker().stop();
                 goto contd;
             }
@@ -139,54 +126,58 @@ void Area::begin_combat(
 contd: ;
     }
 
-    std::sort(combat_mode.participants.begin(), combat_mode.participants.end(),
+    std::sort(region->combat_mode.participants.begin(), region->combat_mode.participants.end(),
             [](const auto& lhs, const auto& rhs){ return lhs.initiative < rhs.initiative; });
 
-    combat_mode.active_turn = combat_mode.participants.size() - 1;
-    combat_mode.advance_turn = true;
+    region->combat_mode.active_turn = region->combat_mode.participants.size() - 1;
+    region->combat_mode.advance_turn = true;
 }
 
 
 void Area::set_mode(GameMode mode) {
-    if (mode == GameMode::Cinematic && gamemode != GameMode::Cinematic) {
+    if (mode == GameMode::Cinematic && region->gamemode != GameMode::Cinematic) {
         get_player().get_tracker().stop();
         queued = {};
-    } else if (mode != GameMode::Cinematic && gamemode == GameMode::Cinematic) {
+    } else if (mode != GameMode::Cinematic && region->gamemode == GameMode::Cinematic) {
         get_player().get_tracker().start();
-    } else if (mode == GameMode::Dialogue && gamemode != GameMode::Dialogue) {
+    } else if (mode == GameMode::Dialogue && region->gamemode != GameMode::Dialogue) {
         get_player().get_tracker().stop();
-    } else if (mode != GameMode::Dialogue && gamemode == GameMode::Dialogue) {
+    } else if (mode != GameMode::Dialogue && region->gamemode == GameMode::Dialogue) {
         get_player().get_tracker().start();
     }
     if (mode == GameMode::Cinematic || mode == GameMode::Dialogue) {
-        gui.get_widget("tooltip")->set_visible(false);
+        region->m_gui.get_widget("tooltip")->set_visible(false);
     }
-    if (mode == GameMode::Sleep) {
+    region->gamemode = mode;
+}
+
+void Area::set_sleeping(bool _sleeping) {
+    sleeping = _sleeping;
+    if (sleeping) {
         background.unload_all();
-    } else if (gamemode == GameMode::Sleep) {
+    } else {
         background.update(camera.getFrustum());
         for (auto& t : triggers) {
             t.cooldown = false;
         }
     }
-    gamemode = mode;
 }
 
 
 
 void Area::handle_event(const sf::Event& event) {
-    switch (gamemode) {
+    if (sleeping) return;
+
+    switch (region->gamemode) {
     case GameMode::Normal:
-        normal_mode.handle_event(event);
+        region->normal_mode.handle_event(event);
         break;
     case GameMode::Cinematic: case GameMode::Dialogue:
-        cinematic_mode.handle_event(event);
+        region->cinematic_mode.handle_event(event);
         break;
     case GameMode::Combat:
-        combat_mode.handle_event(event);
+        region->combat_mode.handle_event(event);
         break;
-    case GameMode::Sleep:
-        return;
     }
 
 #ifdef VANGO_DEBUG
@@ -202,18 +193,18 @@ void Area::update() {
     }
     lua_vm.update();
 
-    switch (gamemode) {
+    if (sleeping) return;
+
+    switch (region->gamemode) {
     case GameMode::Normal:
-        normal_mode.update();
+        region->normal_mode.update();
         break;
     case GameMode::Cinematic: case GameMode::Dialogue:
-        cinematic_mode.update();
+        region->cinematic_mode.update();
         break;
     case GameMode::Combat:
-        combat_mode.update();
+        region->combat_mode.update();
         break;
-    case GameMode::Sleep:
-        return;
     }
 
     sorted_entities = sprites_topo_sort(entities);
@@ -224,35 +215,17 @@ void Area::update() {
         motionguide_square.setPosition({ vec.x, vec.y });
     }
 
-    const auto g = FlagTable::get_flag("Player.Coin", true);
-    gui.get_widget<gui::Panel>("gold_counter")->get_widget<gui::Text>("goldtxt")->set_label(std::to_string(g));
+    const auto g = FlagTable::get("Player.Coin", true);
+    region->m_gui.get_widget<gui::Panel>("gold_counter")->get_widget<gui::Text>("goldtxt")->set_label(std::to_string(g));
 
     const auto crop_thresh = 100.f;
-    if (gamemode == GameMode::Cinematic && render_settings->crop.position.y <= crop_thresh) {
-        render_settings->crop.position.y += (crop_thresh + 10.f - render_settings->crop.position.y) * Time::deltatime();
-        render_settings->crop.size.y -= 2 * (crop_thresh + 10.f - render_settings->crop.position.y) * Time::deltatime();
-    } else if (gamemode != GameMode::Cinematic && render_settings->crop.position.y >= 0.f) {
-        render_settings->crop.position.y -= (render_settings->crop.position.y + 10.f) * Time::deltatime();
-        render_settings->crop.size.y += 2 * (render_settings->crop.position.y + 10.f) * Time::deltatime();
+    if (region->gamemode == GameMode::Cinematic && region->render_settings->crop.position.y <= crop_thresh) {
+        region->render_settings->crop.position.y += (crop_thresh + 10.f - region->render_settings->crop.position.y) * Time::deltatime();
+        region->render_settings->crop.size.y -= 2 * (crop_thresh + 10.f - region->render_settings->crop.position.y) * Time::deltatime();
+    } else if (region->gamemode != GameMode::Cinematic && region->render_settings->crop.position.y >= 0.f) {
+        region->render_settings->crop.position.y -= (region->render_settings->crop.position.y + 10.f) * Time::deltatime();
+        region->render_settings->crop.size.y += 2 * (region->render_settings->crop.position.y + 10.f) * Time::deltatime();
     }
-
-    if (zoom < zoom_target) {
-        zoom += Time::deltatime() * 0.5f;
-        camera.setSize(zoom * (sf::Vector2f)render_settings->viewport);
-        if (zoom >= zoom_target) {
-            zoom = zoom_target;
-            camera.setSize(zoom * (sf::Vector2f)render_settings->viewport);
-        }
-    } else if (zoom > zoom_target) {
-        zoom -= Time::deltatime() * 0.5f;
-        camera.setSize(zoom * (sf::Vector2f)render_settings->viewport);
-        if (zoom <= zoom_target) {
-            zoom = zoom_target;
-            camera.setSize(zoom * (sf::Vector2f)render_settings->viewport);
-        }
-    }
-
-    gui.update();
 
 #ifdef VANGO_DEBUG
     debugger.update();
@@ -290,6 +263,6 @@ void Area::render_overlays(sf::RenderTarget& target) {
 #endif
 
     target.setView(target.getDefaultView());
-    target.draw(gui);
+    target.draw(region->m_gui);
 }
 

@@ -13,11 +13,11 @@ private:
 private:
     void load_prefab(const rapidjson::Value& value, const std::string& name);
     void load_entity(const rapidjson::Value& value);
-    void load_gui();
 
 public:
     SceneLoader(Region* region, const rapidjson::Value& prefabs);
 
     void load(Area* area, const std::string& id);
+    void load_gui();
 };
 

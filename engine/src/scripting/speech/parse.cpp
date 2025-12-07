@@ -13,8 +13,8 @@ namespace shmy { namespace speech { namespace detail {
 static Graph parse_graph(Lexer&& lexer);
 static bool parse_vertex(ParseContext& ctx);
 static void parse_outcome(ParseContext& ctx, size_t vert);
-static void parse_modifiers(ParseContext& ctx, Edge& edge);
-static void parse_pragma(ParseContext& ctx, const std::string& pragma);
+static void parse_modifiers(ParseContext& ctx, _Edge& edge);
+static void parse_pragma(ParseContext& ctx, std::optional<Token> tok);
 
 }
 
@@ -41,7 +41,7 @@ static Graph parse_graph(Lexer&& lexer) {
     while (parse_vertex(ctx));
     for (const auto& [k, v] : ctx.v_LUT) {
         if (!v.init) {
-            throw std::runtime_error("reference to undefined vertex '" + k + "'");
+            throw std::runtime_error("reference to undefined node '" + k + "'");
         }
     }
     return graph;
@@ -51,36 +51,36 @@ static Graph parse_graph(Lexer&& lexer) {
 static bool parse_vertex(ParseContext& ctx) {
     if (!ctx.lexer.peek().has_value()) return false;
     while (ctx.lexer.peek()->type == TokenType::Pragma) {
-        parse_pragma(ctx, ctx.lexer.next()->val);
+        parse_pragma(ctx, ctx.lexer.next());
         if (!ctx.lexer.peek().has_value()) return false;
     }
 
-    const auto key = ctx.unwrap_next((uint32_t)TokenType::Identifier|(uint32_t)TokenType::IntLiteral, "token unwrapped to wrong type - ");
+    const auto key = ctx.unwrap_next((uint32_t)TokenType::Identifier|(uint32_t)TokenType::IntLiteral, "expected <identifier> node id - ");
     size_t current = Graph::EXIT;
     if (key == "entry") {
-        ctx.unwrap_next(TokenType::OpenParen, "'entry' verts must have a condition or 'default' - ");
+        ctx.unwrap_next(TokenType::OpenParen, "'entry' nodes must have a condition or 'default' - ");
         auto& tmp = ctx.graph->eps.emplace_back();
         tmp.condition = ctx.push_next_expr();
         tmp.vert = (uint32_t)ctx.graph->verts.size();
         current = ctx.graph->verts.size();
         ctx.graph->verts.emplace_back();
-        ctx.unwrap_next(TokenType::CloseParen, "shouldn't be possible??? - ");
+        ctx.unwrap_next(TokenType::CloseParen, "ENGINE ERROR UNREACHABLE - ");
 
     } else {
         current = ctx.push_vertex(key, true);
     }
 
     auto& cur = ctx.graph->verts[current];
-    ctx.unwrap_next(TokenType::EqualTo,     "expected '=' after vertex declaration - ");
-    cur.speaker = ctx.push_str(ctx.unwrap_next(TokenType::Identifier,  "vertex definition must start with speaker ID - "));
+    ctx.unwrap_next(TokenType::EqualTo,     "expected '=' after node declaration - ");
+    cur.speaker = ctx.push_str(ctx.unwrap_next(TokenType::Identifier,  "node definition must start with speaker ID - "));
     ctx.unwrap_next(TokenType::Colon,       "expected ':' after speaker ID - ");
-    ctx.unwrap_next(TokenType::OpenBracket, "expected string array here - ");
+    ctx.unwrap_next(TokenType::OpenBracket, "expected string array - ");
 
     while (true) {
         switch (ctx.lexer.peek()->type) {
         case TokenType::CloseBracket:
             ctx.lexer.next();
-            ctx.unwrap_next(TokenType::Arrow, "expected '=>' to denote vertex outcome - ");
+            ctx.unwrap_next(TokenType::Arrow, "expected '=>' to denote node outcome - ");
             parse_outcome(ctx, current);
             return true;
 
@@ -92,14 +92,14 @@ static bool parse_vertex(ParseContext& ctx) {
             break; }
 
         default:
-            throw PARSE_ERROR(ctx.lexer.peek(), "expexted <string> or end of array - ");
+            throw PARSE_ERROR(ctx.lexer.peek(), "strings in lines array must be ',' separated - ");
         };
 
         switch (ctx.lexer.peek()->type) {
         case TokenType::CloseBracket: break;
         case TokenType::Comma: ctx.lexer.next(); break;
         default:
-            throw PARSE_ERROR(ctx.lexer.peek(), "expexted ',' or end of array  - ");
+            throw PARSE_ERROR(ctx.lexer.peek(), "strings in lines array must be ',' separated - ");
         }
     }
 
@@ -116,7 +116,7 @@ static void parse_outcome(ParseContext& ctx, size_t vert) {
             ctx.graph->verts[vert].edges = 0;
 
         } else if (next->val == "exit_into") {
-            ctx.unwrap_next(TokenType::OpenBrace,  "expected '{' after 'exit_into' special vertex - ");
+            ctx.unwrap_next(TokenType::OpenBrace,  "expected '{' after 'exit_into' declarator - ");
             ctx.graph->verts[vert].n_edges = Graph::EXIT;
             ctx.graph->verts[vert].edges = ctx.push_str(ctx.unwrap_next(TokenType::StringLiteral, "'exit_into' block must contain a script name - "));
             ctx.unwrap_next(TokenType::CloseBrace, "expected '}' to end 'exit_into' block - ");
@@ -131,7 +131,7 @@ static void parse_outcome(ParseContext& ctx, size_t vert) {
         break;
 
     default:
-        throw PARSE_ERROR(next, "token unwrapped to wrong type - ");
+        throw PARSE_ERROR(next, "outcome must be <identifier> (goto) or response list - ");
     }
 
     auto& edges = ctx.graph->edges;
@@ -142,8 +142,8 @@ static void parse_outcome(ParseContext& ctx, size_t vert) {
         case TokenType::OpenParen: {
             auto& temp = edges.emplace_back();
             temp.condition = ctx.push_next_expr();
-            ctx.unwrap_next(TokenType::CloseParen, "shouldn't be possible??? - ");
-            temp.line = ctx.push_str(ctx.unwrap_next(TokenType::StringLiteral, "token unwrapped to wrong type - "));
+            ctx.unwrap_next(TokenType::CloseParen, "ENGINE ERROR UNREACHABLE - ");
+            temp.line = ctx.push_str(ctx.unwrap_next(TokenType::StringLiteral, "condition must precede a response line - "));
             ctx.graph->verts[vert].n_edges++;
             break; }
 
@@ -158,38 +158,40 @@ static void parse_outcome(ParseContext& ctx, size_t vert) {
             return;
 
         default:
-            throw PARSE_ERROR(next, "token unwrapped to wrong type - ");
+            throw PARSE_ERROR(next, "expected response or end of response list - ");
         };
 
         auto& resp = edges.back();
 
-        ctx.unwrap_next(TokenType::Arrow, "token unwrapped to wrong type - ");
-        const auto edge = ctx.unwrap_next((uint32_t)TokenType::Identifier|(uint32_t)TokenType::IntLiteral, "token unwrapped to wrong type - ");
+        ctx.unwrap_next(TokenType::Arrow, "expected '=>' to denote response outcome - ");
+        const auto edge = ctx.unwrap_next((uint32_t)TokenType::Identifier|(uint32_t)TokenType::IntLiteral, "expected <identifier> node id - ");
         resp.edge = ctx.push_vertex(edge);
 
-        switch (ctx.lexer.next()->type) {
+        next = ctx.lexer.next();
+        switch (next->type) {
         case TokenType::Comma:
             resp.modifiers = 0;
             break;
 
-        case TokenType::OpenBrace:
+        case TokenType::OpenBrace: {
             parse_modifiers(ctx, resp);
-            switch (ctx.lexer.next()->type) {
+            next = ctx.lexer.next();
+            switch (next->type) {
             case TokenType::CloseBrace: return;
             case TokenType::Comma: break;
             default:
-                throw PARSE_ERROR(next, "token unwrapped to wrong type - ");
+                throw PARSE_ERROR(next, "responses in list must be ',' separated - ");
             }
-            break;
+            break; }
 
         default:
-            throw PARSE_ERROR(next, "token unwrapped to wrong type - ");
+            throw PARSE_ERROR(next, "responses in list must be ',' separated - ");
         }
     }
 }
 
 
-static void parse_modifiers(ParseContext& ctx, Edge& edge) {
+static void parse_modifiers(ParseContext& ctx, _Edge& edge) {
     auto& bytecode = ctx.graph->exprs;
     edge.modifiers = (uint32_t)bytecode.size();
 
@@ -211,15 +213,14 @@ static void parse_modifiers(ParseContext& ctx, Edge& edge) {
             break;
 
         default:
-            throw PARSE_ERROR(next, "expected modifier or end of list - ");
+            throw PARSE_ERROR(next, "expected flag name or end of modifier list - ");
         }
-        ctx.unwrap_next(TokenType::Colon, "expected colon to denote modification - ");
 
         {
         bytecode.push_back(Expr::IPushK);
-        const auto idx = bytecode.size();
-        bytecode.resize(idx + sizeof(size_t));
-        memcpy(bytecode.data() + idx, &key, sizeof(size_t));
+        const auto idx = (uint32_t)bytecode.size();
+        bytecode.resize(idx + sizeof(uint32_t));
+        memcpy(bytecode.data() + idx, &key, sizeof(uint32_t));
         }
 
         bytecode.push_back(Expr::IPushC);
@@ -228,14 +229,14 @@ static void parse_modifiers(ParseContext& ctx, Edge& edge) {
 
         next = ctx.lexer.next();
         switch (next->type) {
-        case TokenType::Add: {
+        case TokenType::PlusEq: {
             const auto val = ctx.unwrap_next(TokenType::IntLiteral, "flag modifier must be integer - ");
             const auto n = std::atoll(val.c_str());
             memcpy(bytecode.data() + idx, &n, sizeof(int64_t));
             bytecode.push_back(Expr::IAddV);
             break; }
 
-        case TokenType::Sub: {
+        case TokenType::SubEq: {
             const auto val = ctx.unwrap_next(TokenType::IntLiteral, "flag modifier must be integer - ");
             const auto n = -std::atoll(val.c_str());
             memcpy(bytecode.data() + idx, &n, sizeof(int64_t));
@@ -243,33 +244,45 @@ static void parse_modifiers(ParseContext& ctx, Edge& edge) {
             break; }
 
         case TokenType::EqualTo: {
-            const auto val = ctx.unwrap_next(TokenType::IntLiteral, "flag modifier must be integer - ");
-            const auto n = std::atoll(val.c_str());
-            memcpy(bytecode.data() + idx, &n, sizeof(int64_t));
+            const auto val = ctx.unwrap_next((uint32_t)TokenType::IntLiteral|(uint32_t)TokenType::Identifier,
+                    "flag modifier must be integer or boolean - ");
+            uint64_t n = 0;
+            if (val == "true") {
+                n = 1;
+            } else if (val == "false") {
+                n = 0;
+            } else if (val == "inf") {
+                n = UINT32_MAX;
+            } else {
+                n = (uint64_t)std::atoll(val.c_str());
+            }
+            memcpy(bytecode.data() + idx, &n, sizeof(uint64_t));
             bytecode.push_back(Expr::ISetV);
             break; }
 
         default:
-            throw PARSE_ERROR(next, "expected '+'|'-'|'=' to specify modifier - ");
+            throw PARSE_ERROR(next, "expected '+='|'-='|'=' to specify modifier - ");
         }
 
         switch (ctx.lexer.peek()->type) {
         case TokenType::CloseBrace: break;
         case TokenType::Comma: ctx.lexer.next(); break;
         default:
-            throw PARSE_ERROR(next, "token unwrapped to wrong type - ");
+            throw PARSE_ERROR(next, "modifiers in list must be ',' separated - ");
         }
     }
 }
 
 
-static void parse_pragma(ParseContext& ctx, const std::string& pragma) {
-    if (pragma == "!SET_OR_CREATE") {
+static void parse_pragma(ParseContext& ctx, std::optional<Token> tok) {
+    if (tok->val == "!SET_OR_CREATE") {
         ctx.set_strict = false;
-    } else if (pragma == "!SET_STRICT") {
+    } else if (tok->val == "!SET_STRICT") {
         ctx.set_strict = true;
-    } else if (pragma == "!LINK_AUDIO") {
+    } else if (tok->val == "!LINK_AUDIO") {
         ctx.link_audio = true;
+    } else {
+        throw PARSE_ERROR(tok, "invalid pragma - ");
     }
 }
 

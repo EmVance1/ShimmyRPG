@@ -47,6 +47,7 @@ public:
 
     void unload_all();
     void update(const sf::FloatRect& frustum);
+    void update_soft(const sf::FloatRect& frustum);
     void draw(sf::RenderTarget& target, sf::RenderStates states) const;
 };
 

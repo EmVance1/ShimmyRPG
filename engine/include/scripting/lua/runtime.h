@@ -21,6 +21,7 @@ public:
     ~Runtime();
 
     Script& spawn_script(const std::filesystem::path& path);
+    void spawn_small(const std::string& str);
 
     void update();
     void set_paused(bool paused);

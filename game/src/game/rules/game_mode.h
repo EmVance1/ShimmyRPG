@@ -9,6 +9,5 @@ enum class GameMode {
     Dialogue,
     Cinematic,
     Combat,
-    Sleep,
 };
 

@@ -1,0 +1,5 @@
+
+entry(_temp:rng3 == 0) = ShimmyPrime: [ "Hey pal, ye shouldn't be back here." ] => exit
+entry(_temp      == 1) = ShimmyPrime: [ "Mate, this is the bar. You don't work here." ] => exit
+entry(_temp      == 2) = ShimmyPrime: [ "You lost, friend? Staff only back here." ] => exit
+

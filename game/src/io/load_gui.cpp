@@ -6,14 +6,11 @@
 
 
 void SceneLoader::load_gui() {
-    const auto viewport = area->render_settings->viewport;
-    auto& gui = area->gui;
+    const auto viewport = region->render_settings->viewport;
+    auto& gui = region->m_gui;
 
-    gui.set_style(region->style());
-    gui.set_size(sf::Vector2f(viewport));
-    gui.set_background_color(sf::Color::Transparent);
     {
-        auto label = gui::Text::create(gui::Position::topcenter({0.f, 50.f}), sf::Vector2f(300, 35), region->style(), area->name);
+        auto label = gui::Text::create(gui::Position::topcenter({0.f, 50.f}), sf::Vector2f(300, 35), region->style(), region->get_active_area().name);
         label->set_text_alignment(gui::Position::Alignment::Center);
         label->set_text_padding(0.f);
         gui.add_widget("area_label", label);
@@ -37,18 +34,20 @@ void SceneLoader::load_gui() {
         tooltip->set_character_size(25);
         tooltip->set_enabled(false);
         tooltip->set_visible(false);
+        tooltip->set_background_texture(sf::IntRect{ {0, 150}, {10, 10} });
         gui.add_widget("tooltip", tooltip);
     }
 
     {
         auto dialogue_gui = gui::Panel::create(
                 gui::Position::bottomcenter({0.f, -250.f}),
-                sf::Vector2f((float)viewport.x - 800.f, 100.f),
+                sf::Vector2f((float)viewport.x - 800.f, 90.f),
                 region->style());
         dialogue_gui->set_enabled(false);
         dialogue_gui->set_visible(false);
+        dialogue_gui->set_background_color(sf::Color::Transparent);
         gui.add_widget("dialogue", dialogue_gui);
-        area->cinematic_mode.dia_gui = dialogue_gui;
+        region->cinematic_mode.dia_gui = dialogue_gui;
 
         auto speaker = gui::Text::create(
                 gui::Position::topright({0.f, -50.f}),
@@ -56,18 +55,20 @@ void SceneLoader::load_gui() {
                 region->style(), "");
         speaker->set_sorting_layer(-1);
         speaker->set_text_alignment(gui::Position::Alignment::Center);
+        speaker->set_background_texture(sf::IntRect{ {0, 150}, {10, 10} });
         dialogue_gui->add_widget("speaker", speaker);
 
         auto line = gui::Text::create(
                 gui::Position::topright({0.f, 0.f}),
-                sf::Vector2f((float)viewport.x - 800.f, 100.f),
+                sf::Vector2f((float)viewport.x - 800.f, 80.f),
                 region->style(), "");
         line->set_text_padding(10.f);
+        line->set_background_texture(sf::IntRect{ {0, 150}, {10, 10} });
         dialogue_gui->add_widget("lines", line);
 
         auto choice = gui::ButtonList::create(
                 gui::Position::bottomright({0.f, 0.f}),
-                sf::Vector2f((float)viewport.x - 800.f, 50.f),
+                sf::Vector2f((float)viewport.x - 800.f, 40.f),
                 region->style()
             );
         choice->set_enabled(false);
@@ -83,7 +84,7 @@ void SceneLoader::load_gui() {
         combat_gui->set_enabled(false);
         combat_gui->set_visible(false);
         gui.add_widget("combat", combat_gui);
-        area->combat_mode.atk_gui = combat_gui;
+        region->combat_mode.atk_gui = combat_gui;
 
         auto actor = gui::Text::create(
                 gui::Position::topleft({0.f, -50.f}),
@@ -100,7 +101,7 @@ void SceneLoader::load_gui() {
                 region->style(),
                 ""
             );
-        end_turn->set_callback([&](){ area->combat_mode.advance_turn = true; printf("called me\n"); });
+        end_turn->set_callback([&](){ region->combat_mode.advance_turn = true; });
         end_turn->set_background_texture(sf::IntRect{ {0, 0}, {150, 150} });
         combat_gui->add_widget("end_turn", end_turn);
 

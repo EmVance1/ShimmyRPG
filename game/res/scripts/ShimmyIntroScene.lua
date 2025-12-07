@@ -1,3 +1,4 @@
+local shmy = shmy
 
 function OnStartAsync()
     local shimmy = shmy.entity("ShimmyPrime")

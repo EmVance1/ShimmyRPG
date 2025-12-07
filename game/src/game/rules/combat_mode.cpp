@@ -1,17 +1,19 @@
 #include "pch.h"
 #include "combat_mode.h"
-#include "world/area.h"
 #include "util/deltatime.h"
-#include "sorting.h"
 #include "gui/gui.h"
+#include "world/area.h"
+#include "world/region.h"
+#include "sorting.h"
+
+
+Area& CombatMode::get_area() {
+    return p_region->get_active_area();
+}
 
 
 Entity& CombatMode::get_active() {
-    return p_area->entities[participants[active_turn].id];
-}
-
-const Entity& CombatMode::get_active() const {
-    return p_area->entities[participants[active_turn].id];
+    return get_area().entities.at(participants[active_turn].id);
 }
 
 
@@ -24,27 +26,29 @@ void CombatMode::update_ai() {
 
 bool CombatMode::active_is_playable() const {
     // return get_active().is_playable();
-    return participants[active_turn].id == p_area->player_id;
+    return participants[active_turn].id == p_region->get_active_area().player_id;
 }
 
 
 void CombatMode::handle_event(const sf::Event& event) {
-    p_area->gui.handle_event(event);
+    auto& area = get_area();
+
+    p_region->m_gui.handle_event(event);
 
     if (const auto kyp = event.getIf<sf::Event::KeyPressed>()) {
         if (kyp->code == sf::Keyboard::Key::E && kyp->control) {
             atk_gui->set_visible(false);
             atk_gui->set_enabled(false);
-            p_area->set_mode(GameMode::Normal);
-            p_area->lua_vm.set_paused(false);
+            area.set_mode(GameMode::Normal);
+            area.lua_vm.set_paused(false);
         }
     } else if (auto mbp = event.getIf<sf::Event::MouseButtonPressed>()) {
         if (mbp->button == sf::Mouse::Button::Left) {
             if (active_is_playable()) {
                 auto& active = get_active();
                 if (!active.is_hovered() && active.get_stats().movement > 0.1f) {
-                    const auto mapped = p_area->camera.mapPixelToWorld(mbp->position, p_area->render_settings->viewport);
-                    const auto iso = p_area->iso_to_cart.transformPoint(mapped);
+                    const auto mapped = area.camera.mapPixelToWorld(mbp->position, p_region->render_settings->viewport);
+                    const auto iso = area.iso_to_cart.transformPoint(mapped);
                     active.get_tracker().start();
                     if (active.get_tracker().set_target_position({ iso.x, iso.y })) {
                         const auto len = active.get_tracker().get_active_path_length();
@@ -53,19 +57,19 @@ void CombatMode::handle_event(const sf::Event& event) {
                     }
                 }
             }
-            if (p_area->gui.has_widget("context_menu")) {
-                p_area->gui.remove_widget("context_menu");
+            if (p_region->m_gui.has_widget("context_menu")) {
+                p_region->m_gui.remove_widget("context_menu");
             }
         }
     } else if (auto mmv = event.getIf<sf::Event::MouseMoved>()) {
-        const auto mapped = p_area->camera.mapPixelToWorld(mmv->position, p_area->render_settings->viewport);
-        const auto iso = p_area->iso_to_cart.transformPoint(mapped);
-        for (Entity* e : p_area->sorted_entities) {
+        const auto mapped = area.camera.mapPixelToWorld(mmv->position, p_region->render_settings->viewport);
+        const auto iso = area.iso_to_cart.transformPoint(mapped);
+        for (Entity* e : area.sorted_entities) {
             e->set_hovered(false);
         }
-        auto tt = std::dynamic_pointer_cast<gui::TextWidget>(p_area->gui.get_widget("tooltip"));
+        auto tt = std::dynamic_pointer_cast<gui::TextWidget>(p_region->m_gui.get_widget("tooltip"));
         tt->set_visible(false);
-        if (auto top = top_contains(p_area->sorted_entities, mapped); top && top->is_interactible()) {
+        if (auto top = top_contains(area.sorted_entities, mapped); top && top->is_interactible()) {
             top->set_hovered(true);
             if (top->is_character()) {
                 tt->set_position(gui::Position::topleft(sf::Vector2f(mmv->position) - sf::Vector2f(0.f, tt->get_size().y)));
@@ -80,29 +84,31 @@ void CombatMode::handle_event(const sf::Event& event) {
                 active.get_tracker().start();
                 if (active.get_tracker().set_target_position({ iso.x, iso.y })) {
                     active.get_tracker().clamp_path_walked(active.get_stats().movement);
+                    p_region->p_cursor->setColor(sf::Color::White);
+                } else {
+                    p_region->p_cursor->setColor(sf::Color::Red);
                 }
                 active.get_tracker().pause();
             }
         }
     } else if (auto scrl = event.getIf<sf::Event::MouseWheelScrolled>()) {
-        const auto zoom = (scrl->delta > 0) ? 0.98f : 1.02f;
-        const auto begin = p_area->get_player().get_sprite().getPosition();
-        p_area->camera.zoom(zoom);
-        const auto end = p_area->get_player().get_sprite().getPosition();
-        p_area->camera.move(begin - end);
+        const auto begin = area.get_player().get_sprite().getPosition();
+        area.camera.zoom(area.camera.getZoom() * ((scrl->delta > 0) ? 0.98f : 1.02f), sfu::Camera::ZoomFunc::Instant);
+        const auto end = area.get_player().get_sprite().getPosition();
+        area.camera.move(begin - end);
     }
 }
 
 void CombatMode::update() {
-    p_area->lua_vm.set_paused(true);
+    auto& area = get_area();
+    area.lua_vm.set_paused(true);
 
     if (advance_turn) {
-        printf("attempt advance, active: %d\n", (int)active_turn);
         get_active().get_tracker().stop();
         active_turn = (active_turn + 1) % participants.size();
         get_active().get_stats().reset_turn();
         get_active().get_tracker().start();
-        p_area->camera.setTrackingPos(get_active().get_sprite().getPosition());
+        area.camera.setTrackingPos(get_active().get_sprite().getPosition());
         advance_turn = false;
 
         if (active_is_playable()) {
@@ -121,10 +127,7 @@ void CombatMode::update() {
     }
 
     if (get_active().get_tracker().is_moving()) {
-        p_area->camera.setTrackingPos(get_active().get_sprite().getPosition());
+        area.camera.setTrackingPos(get_active().get_sprite().getPosition());
     }
-
-    // p_area->camera.update(Time::deltatime());
-    // p_area->gui.update();
 }
 

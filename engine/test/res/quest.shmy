@@ -1,0 +1,12 @@
+
+
+v00 = [ "" ] => {
+    (Taric.DiscussedPit == 1) => v10
+    (Taric.DiscussedPit == 2) => v11
+    (Taric.DiscussedPit == 3) => v12
+}
+
+v30 = {
+    (GoldenOrb.Found) => v40
+}
+

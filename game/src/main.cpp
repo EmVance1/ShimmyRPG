@@ -6,6 +6,7 @@
 #include "util/env.h"
 #include "core/str.h"
 #include "core/split.h"
+#include "flags.h"
 #include "io/load_flags.h"
 
 
@@ -27,7 +28,7 @@ int main() {
     } else if (Settings::antialiasing == 2) {
         ctxt.antiAliasingLevel = 8;
     }
-    const auto video_mode = sf::VideoMode{ { Settings::x_resolution, Settings::y_resolution}, Settings::bitsperpixel };
+    const auto video_mode = sf::VideoMode{ { Settings::x_resolution, Settings::y_resolution }, Settings::bitsperpixel };
     auto window = sf::RenderWindow(video_mode, "Shimmy Player - pre-alpha " VANGO_PKG_VERSION, SCREEN_MODE, ctxt);
     if (Settings::enable_vsync) {
         window.setVerticalSyncEnabled(true);
@@ -57,7 +58,7 @@ int main() {
     target.setSmooth(true);
 
     auto render_settings = RenderSettings((sf::Vector2i)target.getSize());
-    Area::render_settings = &render_settings;
+    Region::render_settings = &render_settings;
 
     auto region = Region();
     auto region_folder = std::string("");
@@ -75,17 +76,17 @@ int main() {
         region.load_from_dir(region_folder, (size_t)std::atoi(starting_area.c_str()));
     }
 
-    // auto& pixelate = render_settings.shaders.emplace_back(std::fs::path("res/shaders/pixelate.frag"), sf::Shader::Type::Fragment);
-    // pixelate.setUniform("u_resolution", (sf::Vector2f)window.getSize());
+    auto& pixelate = render_settings.shaders.emplace_back(shmy::env::pkg_full() / "shaders/pixelate.frag", sf::Shader::Type::Fragment);
+    pixelate.setUniform("u_resolution", (sf::Vector2f)window.getSize());
 
-    // render_settings.shaders.emplace_back(std::fs::path("res/shaders/poster.frag"), sf::Shader::Type::Fragment);
+    render_settings.shaders.emplace_back(shmy::env::pkg_full() / "shaders/poster.frag", sf::Shader::Type::Fragment);
 
-    // auto& CRT = render_settings.shaders.emplace_back(std::fs::path("res/shaders/CRT.frag"), sf::Shader::Type::Fragment);
-    // CRT.setUniform("u_curvature", sf::Vector2f(2.f, 2.f));
+    auto& CRT = render_settings.shaders.emplace_back(shmy::env::pkg_full() / "shaders/CRT.frag", sf::Shader::Type::Fragment);
+    CRT.setUniform("u_curvature", sf::Vector2f(5.f, 5.f));
 
-    // auto& glitch = render_settings.shaders.emplace_back(std::fs::path("res/shaders/glitch.frag"), sf::Shader::Type::Fragment);
-    // glitch.setUniform("u_dist", 3);
-    // glitch.setUniform("u_resolution", (sf::Vector2f)window.getSize());
+    auto& glitch = render_settings.shaders.emplace_back(shmy::env::pkg_full() / "shaders/glitch.frag", sf::Shader::Type::Fragment);
+    glitch.setUniform("u_dist", 3);
+    glitch.setUniform("u_resolution", (sf::Vector2f)window.getSize());
 
     const auto font = sf::Font(shmy::env::app_dir() / "calibri.ttf");
     auto fps_draw = sf::Text(font, "0", 25);
@@ -95,6 +96,7 @@ int main() {
     const auto cursor_tex = sf::Texture(shmy::env::pkg_full() / "textures/cursor.png");
     auto cursor = sf::Sprite(cursor_tex);
     cursor.setOrigin({ 4, 3 });
+    region.p_cursor = &cursor;
 
     Time::reset();
 
@@ -103,12 +105,14 @@ int main() {
 
         fps_draw.setString(std::to_string(Time::framerate()) + " FPS");
 
+        region.exec_scene_swap();
+
         while (auto event = window.pollEvent()) {
             if (event->is<sf::Event::Closed>()) {
                 window.close();
             } else if (const auto kyp = event->getIf<sf::Event::KeyPressed>()) {
                 if (kyp->code == sf::Keyboard::Key::R && kyp->control) {
-                    FlagTable::clear();
+                    FlagTable::clear_all();
                     shmy::flags::load_from_dir(shmy::env::pkg_full() / "flags");
                     const auto temp = region.get_active_area_index();
                     region.load_from_dir(region_folder, temp);

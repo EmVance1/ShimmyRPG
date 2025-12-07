@@ -24,6 +24,13 @@ Script& Runtime::spawn_script(const std::filesystem::path& path) {
     return m_scripts.emplace_back(Script(m_L, path, m_api.c_str()));
 }
 
+
+int init_env(lua_State* p_L, const char* api, const char* str);
+
+void Runtime::spawn_small(const std::string& str) {
+    init_env(m_L, m_api.c_str(), str.c_str());
+}
+
 void Runtime::update() {
     if (m_paused) return;
     for (auto& s : m_scripts) {
