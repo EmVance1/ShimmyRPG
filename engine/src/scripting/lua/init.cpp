@@ -21,15 +21,23 @@ int l_register_handler(lua_State* L) {
 
 int l_register_async_handler(lua_State* L) {
     const auto event = lua_tostring(L, 1);
+
+    auto cb = Runtime::AsyncCallback{};
+
+    cb.thread = lua_newthread(L);
+    lua_getglobal(L, "_AsyncWrapper");
     lua_pushvalue(L, 2);
-    const auto func  = luaL_ref(L, LUA_REGISTRYINDEX);
+    lua_xmove(L, cb.thread, 2);
+    lua_pop(L, 1);
+
+    lua_resume(cb.thread, 1);
 
     lua_getfield(L, LUA_REGISTRYINDEX, "_locstate");
-    const auto state = (int)lua_tointeger(L, -1);
+    cb.state = (int)lua_tointeger(L, -1);
 
     lua_getfield(L, LUA_REGISTRYINDEX, "_runtime");
     const auto runtime = (Runtime*)lua_touserdata(L, -1);
-    runtime->register_async_handler(event, Runtime::Callback{ func, state });
+    runtime->register_async_handler(event, cb);
 
     return 0;
 }

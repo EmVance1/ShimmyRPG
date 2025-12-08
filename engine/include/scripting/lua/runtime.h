@@ -19,11 +19,10 @@ public:
         int state;
     };
     struct AsyncCallback {
-        int func;
-        int state;
         lua_State* thread = nullptr;
-        bool resumable = true;
+        bool in_prog = false;
         float delay = 0;
+        int state;
     };
 
 private:
@@ -45,7 +44,7 @@ public:
     void load_file(const std::filesystem::path& path);
 
     void register_handler(const char* event, Callback cb);
-    void register_async_handler(const char* event, Callback cb);
+    void register_async_handler(const char* event, AsyncCallback cb);
 
     const lua_State* get_state() const { return m_L; }
     lua_State* get_state() { return m_L; }
