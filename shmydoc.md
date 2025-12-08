@@ -44,7 +44,7 @@ v02 = Shimmy: [ "The situation is dire." ]      => exit
 ### Exit Point(s)
 There are two ways of defining ends to dialogue interactions.
 The `exit` keyword denotes a special node that will end the dialogue when reached. Other than that it behaves just like any other node (allowed in gotos, allows modifier lists etc.).
-The other method is to use the `exit_into{ "path/to/script.lua" }` syntax. In addition to ending the dialogue, this loads the provided script file and runs it immediately. At the time of writing this, these statements can be used exclusively as a goto target.
+The other method is to use the `exit_into{ "('{event}', {args})" }` syntax. In addition to ending the dialogue, this invokes the stated event with the stated args. At the time of writing this, these statements can be used exclusively as a goto target.
 
 ## Special Cases
 A couple of flags that can be used in the engine behave in special ways. These are the temp, `once` and `rng` flags.

@@ -1,7 +1,7 @@
 #include "pch.h"
+#include "core/split.h"
 #include "load_flags.h"
 #include "flags.h"
-#include "core/split.h"
 
 
 namespace shmy { namespace flags {

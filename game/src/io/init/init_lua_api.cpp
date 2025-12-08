@@ -91,7 +91,7 @@ void init_engine_api(lua_State* L) {
 }
 
 
-static void create_entity_table(lua_State* L, Entity* e);
+void create_entity_table(lua_State* L, Entity* e);
 
 
 static int l_entity_get(lua_State* L) {
@@ -187,6 +187,14 @@ static int l_entity_set_paused(lua_State* L) {
         entity->get_tracker().start();
     }
     return 0;
+}
+
+static int l_entity_get_id(lua_State* L) {
+    lua_pushstring(L, "ptr");
+    lua_gettable(L, 1);
+    const auto entity = (Entity*)lua_touserdata(L, -1);
+    lua_pushstring(L, entity->script_id().c_str());
+    return 1;
 }
 
 
@@ -370,8 +378,8 @@ static int l_goto_scene(lua_State* L) {
 }
 
 
-static void create_entity_table(lua_State* L, Entity* e) {
-    lua_createtable(L, 0, 7);
+void create_entity_table(lua_State* L, Entity* e) {
+    lua_newtable(L);
 
     lua_pushstring(L, "ptr");
     lua_pushlightuserdata(L, e);
@@ -407,6 +415,10 @@ static void create_entity_table(lua_State* L, Entity* e) {
 
     lua_pushstring(L, "set_pathing_paused");
     lua_pushcfunction(L, l_entity_set_paused);
+    lua_settable(L, -3);
+
+    lua_pushstring(L, "get_id");
+    lua_pushcfunction(L, l_entity_get_id);
     lua_settable(L, -3);
 }
 

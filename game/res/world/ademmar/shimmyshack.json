@@ -26,7 +26,7 @@
         {
             // behind bar
             "rect": [ 192, 0, 342, 100 ],
-            "act_dia": "speech/ShimmyIntroScene.shmy",
+            "act_dia": "speech/ShimmyBehindBar.shmy",
         },
         {
             // curfew blocker

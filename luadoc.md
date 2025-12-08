@@ -3,44 +3,34 @@
 ## Execution Environment
 In order to provide some degree of safety for users executing potentially untrusted scripts, the interface exposes a restricted subset of the lua standard library. The library tables that remain usable are `math`, `string`, `table`, `coroutine`, as well as the functions `print`, `pcall`, `pairs`, `ipairs`, `tonumber`, `tostring`, `type`, `next`, `select` and `unpack`.
 
-## Overridable Functions
-The Shimmy engine expects every script to override one or more of the following event handlers. In order for your scripts to behave predictably, all code that directly interacts with the scene must be inside these event handlers. Some of these handlers are available in both regular and coroutine variants (see section on [yields](#Yields)). If possible, the regular variant should be preferred, as it incurs lower overhead. It is *not* legal to define both versions of the same handler.
-
-### OnCreate
+## Event Handlers
+The Shimmy engine's primary line of communication is with user code is via events. In order for your scripts to behave predictably, all code that directly interacts with the scene must be inside these event handlers. Handlers are given as regular functions, but in some cases must be declared as async (see section on [yields](#Yields)). If possible, the regular variant should be preferred, as it incurs lower overhead. Note that an async handler cannot be invoked if an instance of the same handler is still running.
+All handlers (aside from specific exceptions listed below) take two table arguments:
+- The state table is for the user to store data that is local to the lua file, and is the ideal way you should share data between handlers, like caching entities you reference frequently. Data stored in chunk locals instead of the state table will *not* be serialized on save.
+- The args table contains any relevant information about the specific event that was triggered. If the event is user defined, then this table is aswell.
+Handlers are registered like so:
 ```lua
-function OnCreate() ... end
+RegisterHandler("OnEntityDestinationReached", function(state, args)
+    --- handle event
+end)
+
+RegisterAsyncHandler("OnEntityDestinationReached", function(state, args)
+    --- handle event with yields
+end)
 ```
-If defined, this function is called when the script is loaded into the scene (usually while the scene itself is loading).
+And events can be triggered programatically like so (for other trigger methods see shmy and json docs):
+```lua
+DispatchEvent("OnCustomEventTriggered", { custom_arg="foo" })
+```
 
 ### OnStart
-```lua
-function OnStart() ... end
-```
-If defined, this function is called when the script is activated by a trigger or a dialogue `exit_with{}` statement. If this takes place immediately when the script is loaded in, the function is nonetheless guaranteed to run *after* `OnCreate`.
-
-### OnStartAsync
-```lua
-function OnStartAsync() ... end
-```
-Async (coroutine) variant of `OnStart`. Enables [`yield`](#Yields) functionality. If it yields, this handler *may* run concurrently with other handlers *within the same script*, such as an `OnUpdate` handler.
+`OnStart(state, nil)` event is called when the script is loaded into the scene (usually while the scene itself is loading). `OnStart` does not take any args
 
 ### OnUpdate
-```lua
-function OnUpdate(deltatime) ... end
-```
-If defined, this function is called every frame *after* the `OnStart` event is triggered (but in the case of `OnStartAsync`, potentially before the handler completes). The time delta between frames is passed to the function.
-
-### OnUpdateAsync
-```lua
-function OnUpdateAsync(deltatime) ... end
-```
-Async (coroutine) variant of `OnUpdate`. Enables [`yield`](#Yields) functionality. If `OnUpdateAsync` yields, it will *not* be called in following frames until the yielded call is resumed and executed to completion.
+`OnUpdate(state, dt: float)` event is called every frame *after* the `OnStart` event is triggered. Exceptionally, the only arg to `OnUpdate` is time delta between frames passed as a float.
 
 ### OnExit
-```lua
-function OnExit() ... end
-```
-If defined, this function is called immediately before either the script unloads itself, or the encompassing scene is unloaded. It is illegal for any code to run after this function returns. As such, this handler is guaranteed to run *after* the last call to `OnUpdate`. Any defined coroutine that is in a yielded state at the time of this event will be cut short to prevent invalid accesses.
+`OnExit(state, nil)` event is called immediately before the encompassing scene is unloaded. It is illegal for any code to run after this function returns. As such, this handler is guaranteed to run *after* the last call to `OnUpdate`. Any defined coroutine that is in a yielded state at the time of this event will be cut short to prevent invalid accesses. `OnExit` does not take any args.
 
 ## Engine API
 The Shimmy engine exposes a number of functions for querying and manipulating the active scene through the `shmy` table. This table is in scope by default and doesn't need to be `require`d. These functions can be divided into two categories: synchronous functions and yields. Yields can *only* be called from event handlers labeled 'Async'. They hand control back to the engine for some specified amount of time or for the duration of some action, and are sometimes necessary to make the scene respond to your requests at the correct time.
@@ -76,10 +66,6 @@ Sets a color which is blended (multiplied) with the entire screen (excluding GUI
 shmy.goto_area(index: integer, spawn_pos: Vector2, suppress_triggers: boolean)
 ```
 Sets the active area to the one provided.
-```lua
-shmy.exit()
-```
-Marks the script for termination as soon as control is returned to the engine. This does *not* in itself interrupt the execution of the current event handler (see `shmy.yield_exit()`), but it does guarantee that the calling handler is the last handler to be run or resumed, aside from of course `OnExit`.
 
 ##### Camera
 ```lua
@@ -154,8 +140,4 @@ Note: when spawning dialogue from a script, it is technically legal for said dia
 shmy.yield_to_combat(ally_tags: table, enemy_tags: table)
 ```
 Analogous to `shmy.yield_to_dialogue` - constructs a combat encounter from the provided tag arrays and yields control to the engine until the encounter reaches any valid conclusion state. This conclusion state is saved to the reserved "CombatConclusion" flag which can be queried like any other, and compared against the constants stored in `shmy.combat_conclusions` to handle consequences.
-```lua
-shmy.yield_exit()
-```
-Terminates execution of the current script immediately. Additionally it is guaranteed that the caller is the last handler to be run or resumed, aside from of course `OnExit`.
 

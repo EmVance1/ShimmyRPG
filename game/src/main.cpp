@@ -7,7 +7,7 @@
 #include "core/str.h"
 #include "core/split.h"
 #include "flags.h"
-#include "io/load_flags.h"
+#include "io/init/load_flags.h"
 
 
 #ifdef VANGO_DEBUG
@@ -76,8 +76,8 @@ int main() {
         region.load_from_dir(region_folder, (size_t)std::atoi(starting_area.c_str()));
     }
 
-    auto& pixelate = render_settings.shaders.emplace_back(shmy::env::pkg_full() / "shaders/pixelate.frag", sf::Shader::Type::Fragment);
-    pixelate.setUniform("u_resolution", (sf::Vector2f)window.getSize());
+    // auto& pixelate = render_settings.shaders.emplace_back(shmy::env::pkg_full() / "shaders/pixelate.frag", sf::Shader::Type::Fragment);
+    // pixelate.setUniform("u_resolution", (sf::Vector2f)window.getSize());
 
     render_settings.shaders.emplace_back(shmy::env::pkg_full() / "shaders/poster.frag", sf::Shader::Type::Fragment);
 
@@ -85,7 +85,7 @@ int main() {
     CRT.setUniform("u_curvature", sf::Vector2f(5.f, 5.f));
 
     auto& glitch = render_settings.shaders.emplace_back(shmy::env::pkg_full() / "shaders/glitch.frag", sf::Shader::Type::Fragment);
-    glitch.setUniform("u_dist", 3);
+    glitch.setUniform("u_dist", 2);
     glitch.setUniform("u_resolution", (sf::Vector2f)window.getSize());
 
     const auto font = sf::Font(shmy::env::app_dir() / "calibri.ttf");

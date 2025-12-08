@@ -7,6 +7,11 @@
 
 namespace shmy { namespace lua {
 
+struct EventArgs {
+    bool manage;
+    int ref;
+};
+
 class Runtime {
 public:
     struct Callback {
@@ -23,16 +28,18 @@ public:
 
 private:
     lua_State* m_L;
-    std::string m_api;
+    int m_sandboxref = 0;
     std::unordered_map<std::string, std::vector<Callback>> m_handlers;
     std::unordered_map<std::string, std::vector<AsyncCallback>> m_async_handlers;
     bool m_paused = false;
 
 public:
-    Runtime(const std::string& api);
+    Runtime();
     Runtime(const Runtime&) = delete;
     Runtime(Runtime&& other);
     ~Runtime();
+
+    void init_env(void(*init_api)(lua_State*), const std::string& api);
 
     void load_anon(const std::string& str);
     void load_file(const std::filesystem::path& path);
@@ -43,7 +50,7 @@ public:
     const lua_State* get_state() const { return m_L; }
     lua_State* get_state() { return m_L; }
 
-    void on_event(const std::string& event, int ref);
+    void on_event(const std::string& event, EventArgs args);
     void set_paused(bool paused);
     void update();
 };

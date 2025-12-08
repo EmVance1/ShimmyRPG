@@ -7,15 +7,7 @@
 #include "world/area.h"
 #include "world/region.h"
 #include "load_scene.h"
-
-
-Area::Area() : camera(sf::FloatRect({0, 0}, {0, 0})), lua_vm("shmy") {}
-
-Area::Area(Area&& other) : lua_vm(std::move(other.lua_vm))
-{
-    std::cerr << "Area objects should never be copied or moved\n";
-    abort();
-}
+#include "game/events.h"
 
 
 SceneLoader::SceneLoader(Region* _region, const rapidjson::Value& _prefabs)
@@ -29,7 +21,7 @@ void SceneLoader::load(Area* _area, const std::string& _id) {
     area = _area;
     area->region = region;
 
-    init_engine_api(area->lua_vm.get_state());
+    area->lua_vm.init_env(init_engine_api, "shmy");
     lua_pushlightuserdata(area->lua_vm.get_state(), area);
     lua_setfield(area->lua_vm.get_state(), LUA_REGISTRYINDEX, "_scene");
 
@@ -106,6 +98,6 @@ void SceneLoader::load(Area* _area, const std::string& _id) {
     area->debugger.init(area);
 #endif
 
-    area->lua_vm.on_event("OnStart", -1);
+    area->lua_vm.on_event("OnStart", event_arg::none());
 }
 

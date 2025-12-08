@@ -4,9 +4,18 @@
 #include "util/deltatime.h"
 #include "util/random.h"
 #include "util/env.h"
+#include "game/events.h"
 #include "flags.h"
 #include "region.h"
 #include "sorting.h"
+
+
+Area::Area() : camera(sf::FloatRect({0, 0}, {0, 0})) {}
+
+Area::Area(Area&& other) : lua_vm(std::move(other.lua_vm)) {
+    std::cerr << "ENGINE ERROR: scene object was moved\n";
+    abort();
+}
 
 
 Entity& Area::get_player() {
@@ -37,7 +46,7 @@ void Area::handle_trigger(const Trigger& trigger) {
         break; }
     case 1: {
         const auto doevent = std::get<action::DoEvent>(trigger.action);
-        lua_vm.on_event(doevent.event, -1);
+        lua_vm.on_event(doevent.event, event_arg::none());
         break; }
     case 2: {
         const auto loaddia = std::get<action::LoadDia>(trigger.action);
@@ -79,6 +88,7 @@ void Area::begin_dialogue(shmy::speech::Graph&& graph, const std::string& dia_id
     }
     auto line_gui = dia_gui->get_widget<gui::TextWidget>("lines");
     line_gui->set_label(*line.line);
+    lua_vm.set_paused(true);
 }
 
 void Area::begin_combat(
@@ -187,6 +197,10 @@ void Area::update() {
     for (auto& [_, e] : entities) {
         if (!e.is_offstage()) {
             e.update(cart_to_iso);
+            if (e.get_tracker().reached_dest()) {
+                std::cout << "ello?\n";
+                lua_vm.on_event("OnEntityDestinationReached", event_arg::reached_dest(lua_vm, e));
+            }
         }
     }
     lua_vm.update();

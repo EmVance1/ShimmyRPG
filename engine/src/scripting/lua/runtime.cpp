@@ -1,3 +1,4 @@
+#include "luajit-2.1/lua.h"
 #include "pch.h"
 #include "scripting/lua/runtime.h"
 #include "core/fs.h"
@@ -15,32 +16,22 @@ namespace shmy { namespace lua {
 #define LUA_CHECK(f, pre) f
 #endif
 
-static void init_env(lua_State* m_L, const char* api, const char* str);
+static int s_init_env(lua_State* m_L, const char* api);
 int l_register_handler(lua_State* L);
 int l_register_async_handler(lua_State* L);
 int l_dispatch_event(lua_State* L);
 
 
-Runtime::Runtime(const std::string& api) : m_api(api) {
+Runtime::Runtime() {
     m_L = luaL_newstate();
     luaL_openlibs(m_L);
 
     lua_pushlightuserdata(m_L, this);
     lua_setfield(m_L, LUA_REGISTRYINDEX, "_runtime");
-
-    lua_pushcfunction(m_L, &l_register_handler);
-    lua_setglobal(m_L, "RegisterHandler");
-
-    lua_pushcfunction(m_L, &l_register_async_handler);
-    lua_setglobal(m_L, "RegisterAsyncHandler");
-
-    lua_pushcfunction(m_L, &l_dispatch_event);
-    lua_setglobal(m_L, "DispatchEvent");
 }
 
 Runtime::Runtime(Runtime&& other)
     : m_L(other.m_L),
-    m_api(std::move(other.m_api)),
     m_handlers(std::move(other.m_handlers)),
     m_async_handlers(std::move(other.m_async_handlers))
 {
@@ -52,13 +43,31 @@ Runtime::~Runtime() {
 }
 
 
+void Runtime::init_env(void(*init_api)(lua_State*), const std::string& api) {
+    init_api(m_L);
+    m_sandboxref = s_init_env(m_L, api.c_str());
+}
+
 void Runtime::load_anon(const std::string& str) {
-    init_env(m_L, m_api.c_str(), str.c_str());
+    LUA_CHECK(luaL_loadstring(m_L, str.c_str()), "lua parse error");
+    lua_rawgeti(m_L, LUA_REGISTRYINDEX, m_sandboxref);
+    lua_setfenv(m_L, -2);
+
+    LUA_CHECK(lua_pcall(m_L, 0, 0, 0), "lua pcall error");
 }
 
 void Runtime::load_file(const std::filesystem::path& path) {
     const auto file = core::read_to_string(path).unwrap();
-    init_env(m_L, m_api.c_str(), file.c_str());
+    LUA_CHECK(luaL_loadstring(m_L, file.c_str()), "lua parse error");
+    lua_rawgeti(m_L, LUA_REGISTRYINDEX, m_sandboxref);
+    lua_setfenv(m_L, -2);
+
+    lua_newtable(m_L);
+    const int locstate = luaL_ref(m_L, LUA_REGISTRYINDEX);
+    lua_pushinteger(m_L, locstate);
+    lua_setfield(m_L, LUA_REGISTRYINDEX, "_locstate");
+
+    LUA_CHECK(lua_pcall(m_L, 0, 0, 0), "lua pcall error");
 }
 
 void Runtime::register_handler(const char* event, Callback cb) {
@@ -72,36 +81,36 @@ void Runtime::register_async_handler(const char* event, Callback _cb) {
 }
 
 
-void Runtime::on_event(const std::string& event, int ref) {
+void Runtime::on_event(const std::string& event, EventArgs args) {
     if (m_paused) return;
 
     for (auto& cb : m_handlers[event]) {
         lua_rawgeti(m_L, LUA_REGISTRYINDEX, cb.func);
-        if (ref == -1) {
-            lua_newtable(m_L);
+        lua_rawgeti(m_L, LUA_REGISTRYINDEX, cb.state);
+        if (args.ref == -1) {
+            lua_pushnil(m_L);
         } else {
-            lua_rawgeti(m_L, LUA_REGISTRYINDEX, ref);
+            lua_rawgeti(m_L, LUA_REGISTRYINDEX, args.ref);
         }
-        LUA_CHECK(lua_pcall(m_L, 1, 0, 0), "lua pcall error");
+        LUA_CHECK(lua_pcall(m_L, 2, 0, 0), "lua pcall error");
     }
 
     for (auto& cb : m_async_handlers[event]) {
         if (cb.thread) continue;
 
-        cb.thread = lua_newthread(m_L); // env, co
-        cb.resumable = true;
         cb.delay = 0;
-        lua_rawgeti(m_L, LUA_REGISTRYINDEX, cb.func); // env, co, f   |
-        lua_xmove(m_L, cb.thread, 1);                 // env, co      | f
-        lua_pop(m_L, 1);                              // env          | f
-
-        if (ref == -1) {
-            lua_newtable(cb.thread);
+        cb.thread = lua_newthread(m_L);
+        lua_rawgeti(m_L, LUA_REGISTRYINDEX, cb.func);    // co, f     |
+        lua_rawgeti(m_L, LUA_REGISTRYINDEX, cb.state);   // co, f, s  |
+        if (args.ref == -1) {
+            lua_xmove(m_L, cb.thread, 2);                // co        | f, s
+            lua_pushnil(cb.thread);                      // co        | f, s, nil
         } else {
-            lua_rawgeti(m_L, LUA_REGISTRYINDEX, ref);
-            lua_xmove(m_L, cb.thread, 1);
+            lua_rawgeti(m_L, LUA_REGISTRYINDEX, args.ref);
+            lua_xmove(m_L, cb.thread, 3);                // co        | f, s, a
         }
-        switch (lua_resume(cb.thread, 1)) {
+        lua_pop(m_L, 1);                                 //           | f, s, a
+        switch (lua_resume(cb.thread, 2)) {
         case LUA_YIELD:
             if (const auto nresults = lua_gettop(cb.thread); nresults == 1) {
                 cb.resumable = true;
@@ -127,6 +136,10 @@ void Runtime::on_event(const std::string& event, int ref) {
 #endif
         }
     }
+
+    if (args.manage) {
+        luaL_unref(m_L, LUA_REGISTRYINDEX, args.ref);
+    }
 }
 
 void Runtime::set_paused(bool paused) {
@@ -140,22 +153,22 @@ void Runtime::update() {
 
     for (auto& cb : m_handlers["OnUpdate"]) {
         lua_rawgeti(m_L, LUA_REGISTRYINDEX, cb.func);
+        lua_rawgeti(m_L, LUA_REGISTRYINDEX, cb.state);
         lua_pushnumber(m_L, (lua_Number)deltatime);
-        LUA_CHECK(lua_pcall(m_L, 1, 0, 0), "lua pcall error");
+        LUA_CHECK(lua_pcall(m_L, 2, 0, 0), "lua pcall error");
     }
 
     for (auto& cb : m_async_handlers["OnUpdate"]) {
         if (cb.thread) continue;
 
-        cb.thread = lua_newthread(m_L); // env, co
-        cb.resumable = true;
         cb.delay = 0;
-        lua_rawgeti(m_L, LUA_REGISTRYINDEX, cb.func); // env, co, f   |
-        lua_xmove(m_L, cb.thread, 1);                 // env, co      | f
-        lua_pop(m_L, 1);                              // env          | f
-
-        lua_pushnumber(cb.thread, (lua_Number)deltatime);
-        switch (lua_resume(cb.thread, 1)) {
+        cb.thread = lua_newthread(m_L);                    // co        |
+        lua_rawgeti(m_L, LUA_REGISTRYINDEX, cb.func);      // co, f     |
+        lua_rawgeti(m_L, LUA_REGISTRYINDEX, cb.state);     // co, f, s  |
+        lua_xmove(m_L, cb.thread, 2);                      // co        | f, s
+        lua_pushnumber(cb.thread, (lua_Number)deltatime);  // co        | f, s, dt
+        lua_pop(m_L, 1);                                   //           | f, s, dt
+        switch (lua_resume(cb.thread, 2)) {
         case LUA_YIELD:
             if (const auto nresults = lua_gettop(cb.thread); nresults == 1) {
                 cb.resumable = true;
@@ -225,10 +238,16 @@ static int block_globals(lua_State* L) {
     return 1;
 }
 
-static void init_env(lua_State* m_L, const char* api, const char* str) {
-    LUA_CHECK(luaL_loadstring(m_L, str), "lua parse error"); // chunk
+static int s_init_env(lua_State* m_L, const char* api) {
+    lua_newtable(m_L); // env
 
-    lua_newtable(m_L); // chunk, env
+    lua_pushcfunction(m_L, &l_register_handler);
+    lua_setfield(m_L, -2, "RegisterHandler");
+    lua_pushcfunction(m_L, &l_register_async_handler);
+    lua_setfield(m_L, -2, "RegisterAsyncHandler");
+    lua_pushcfunction(m_L, &l_dispatch_event);
+    lua_setfield(m_L, -2, "DispatchEvent");
+
     lua_getglobal(m_L, api);
     lua_setfield(m_L, -2, api);
     lua_getglobal(m_L, "math");
@@ -259,14 +278,12 @@ static void init_env(lua_State* m_L, const char* api, const char* str) {
     lua_getglobal(m_L, "unpack");
     lua_setfield(m_L, -2, "unpack");
 
-    lua_newtable(m_L);                     // chunk, env, meta
-    lua_pushcfunction(m_L, block_globals);
-    lua_setfield(m_L, -2, "__index");      // chunk, env, meta
-    lua_setmetatable(m_L, -2);             // chunk, env
+    lua_newtable(m_L);                     // env, meta
+    lua_pushcfunction(m_L, block_globals); // env, meta, block
+    lua_setfield(m_L, -2, "__index");      // env, meta
+    lua_setmetatable(m_L, -2);             // env
 
-    lua_setfenv(m_L, -2);                  // chunk
-
-    LUA_CHECK(lua_pcall(m_L, 0, 0, 0), "lua pcall error");
+    return luaL_ref(m_L, LUA_REGISTRYINDEX);
 }
 
 

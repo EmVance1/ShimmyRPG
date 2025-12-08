@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "io/load_scene.h"
+#include "load_scene.h"
 #include "world/area.h"
 #include "world/region.h"
 #include "core/uuid.h"

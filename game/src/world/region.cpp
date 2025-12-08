@@ -4,7 +4,7 @@
 #include "util/deltatime.h"
 #include "util/json.h"
 #include "util/env.h"
-#include "io/load_scene.h"
+#include "io/init/load_scene.h"
 
 
 #define OUTLINE_WIDTH 5
