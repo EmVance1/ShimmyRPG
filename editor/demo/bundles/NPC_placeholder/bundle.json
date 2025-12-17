@@ -1,0 +1,6 @@
+{
+    "player":    { "outline": true, "smooth": true, "click": true, "dims": [1, 1] },
+    "neutral":   { "outline": true, "smooth": true, "click": true, "dims": [1, 1] },
+    "friendly":  { "outline": true, "smooth": true, "click": true, "dims": [1, 1] },
+    "anim_test": { "outline": true, "smooth": true, "click": true, "dims": [4, 5] },
+}

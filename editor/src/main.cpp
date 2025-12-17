@@ -1,237 +1,229 @@
-#include "imgui/imgui.h"
 #include "pch.h"
-#include "iso_math.h"
-#include "texmap.h"
-#include "repr.h"
-#include "sorting.h"
-#include "uuid.h"
-#include "sf_json.h"
-
-namespace nl = nlohmann;
+#include "util/iso_math.h"
+#include "util/files.h"
+#include "navedit/editor.h"
 
 
-struct Level {
-    std::string texfile;
-    sf::Sprite background;
+struct Scene {
+    std::vector<sf::Texture> bg_textures;
+    std::vector<sf::Sprite> background;
+    sf::FloatRect bounds;
+    sf::Vector2f origin;
+
     std::unordered_map<std::string, Entity> entities;
     std::vector<Trigger> triggers;
-    sf::RenderTexture pathmap;
-    sf::Vector2f topleft;
-    float scale = 1.f;
-
-    Level(const sf::Texture& tex) : background(tex) {}
 };
 
 enum class Layer {
-    Trigger = 1 << 0,
-    Entity  = 1 << 1,
-    PathMap = 1 << 2,
-};
-
-enum class EditMode {
-    Object = 1 << 0,
-    Paint  = 1 << 1,
+    Entity  = 1 << 0,
+    Trigger = 1 << 1,
+    NavMesh = 1 << 2,
 };
 
 
-Level load_level_file(const std::string& filename) {
-    auto area_file = std::ifstream(filename);
-    auto area = nl::json::parse(area_file);
+Scene load_scene(const std::filesystem::path& dir) {
+    auto result = Scene{};
+    auto mintl = sf::Vector2f(0, 0);
+    auto maxbr = sf::Vector2f(0, 0);
 
-    TextureMap::load_texture("background", area["world"]["background"]);
-    auto level = Level(TextureMap::get_texture("background"));
-    auto _ = level.pathmap.resize({1920, 1080});
-    level.texfile = area["world"]["background"];
-    level.topleft = json_to_vector2f(area["world"]["topleft"]);
-    level.scale = area["world"]["scale"];
-    for (const auto& e : area["entities"]) {
-        const auto uuid = Uuid::generate_v4();
-        level.entities[uuid] = Entity::from_json(e);
-        level.entities[uuid].uuid = uuid;
+    for (const auto& f : std::filesystem::directory_iterator(dir)) {
+        if (f.path().extension() != ".png") continue;
+        result.bg_textures.emplace_back(f.path());
     }
-    for (const auto& t : area["triggers"]) {
-        level.triggers.push_back(Trigger::from_json(t));
-    }
-    return level;
-}
-
-void save_level_file(const std::string& filename, const Level& level) {
-    auto json = nm::json();
-
-    json["world"]["topleft"] = vector2f_to_json(level.topleft);
-    json["world"]["scale"] = level.scale;
-    json["world"]["background"] = level.texfile;
-
-    json["entities"] = nm::json::array();
-    for (const auto& [_, e] : level.entities) {
-        json["entities"].push_back(e.into_json());
-    }
-    json["triggers"] = nm::json::array();
-    for (const auto& t : level.triggers) {
-        json["triggers"].push_back(t.into_json());
+    size_t i = 0;
+    for (const auto& f : std::filesystem::directory_iterator(dir)) {
+        if (f.path().extension() != ".png") continue;
+        const auto stem = f.path().stem().string();
+        const auto split = stem.find('_');
+        const auto x_idx = std::atoi(stem.substr(0, split).c_str());
+        const auto y_idx = std::atoi(stem.substr(split+1).c_str());
+        const auto& tex = result.bg_textures[i];
+        const auto size = tex.getSize();
+        auto& sprite = result.background.emplace_back(tex);
+        const auto tl = sf::Vector2f(x_idx * size.x, y_idx * size.y);
+        const auto br = tl + (sf::Vector2f)size;
+        mintl.x = std::min(tl.x, mintl.x);
+        mintl.y = std::min(tl.y, mintl.y);
+        maxbr.x = std::max(br.x, maxbr.x);
+        maxbr.y = std::max(br.y, maxbr.y);
+        sprite.setPosition(tl);
+        i++;
     }
 
-    auto file = std::ofstream("res/world/" + filename + ".json");
-    file << json.dump(2);
+    result.bounds = sf::FloatRect(mintl, maxbr - mintl);
+    result.origin = result.bounds.position + result.bounds.size * 0.5f;
+    return result;
 }
 
 
+struct ScaleMarker {
+    sf::Vector2f begin;
+    float size = 100;
+    int meters = 1;
 
-void EntityMenu(Entity& e, bool is_active, const sf::Vector2f& topleft, float scale) {
-    ImGui::Begin("Entity Editor", &is_active, ImGuiWindowFlags_MenuBar);
+    bool left_held  = false;
+    bool right_held = false;
+    bool total_held = false;
+    float drag_offset = 0;
 
-    ImGui::DragFloat2("position", (float*)&e.position.pos);
-
-    Position last = e.position;
-    if (ImGui::RadioButton("grid",      (int*)&e.position.mode, (int)Position::Mode::Grid) ||
-        ImGui::RadioButton("world",     (int*)&e.position.mode, (int)Position::Mode::World) ||
-        ImGui::RadioButton("world_iso", (int*)&e.position.mode, (int)Position::Mode::WorldIso)) {
-        e.position = map_spaces(last, e.position.mode, topleft, scale);
+    // units (bg pixels) per meter
+    float get_scale() const {
+        return size / meters;
     }
 
-    ImGui::BeginListBox("tags");
-    for (auto& t : e.tags) {
-        ImGui::Text("%s", t.c_str());
+    void render(sf::RenderTarget& target) const {
+        const auto boxh = 4.f;
+        const auto hanh = 5.f;
+        auto shape = sf::RectangleShape();
+        shape.setPosition({ begin.x, begin.y - boxh * 0.5f });
+        shape.setSize({ size, boxh });
+        shape.setFillColor(sf::Color::Cyan);
+        target.draw(shape);
+        auto handle = sf::CircleShape();
+        handle.setPosition(begin);
+        handle.setOrigin({ hanh, hanh });
+        handle.setRadius(hanh);
+        handle.setFillColor(sf::Color(0, 150, 150));
+        target.draw(handle);
+        handle.move({ size, 0 });
+        target.draw(handle);
     }
-    ImGui::EndListBox();
-    static std::string input_tag = "";
-    ImGui::InputText("new tag", &input_tag);
-    if (ImGui::Button("+")) {
-        e.tags.push_back(input_tag);
-        input_tag = "";
-    }
-
-    ImGui::End();
-}
-
-void TriggerMenu(Trigger& t, bool is_active, bool& delete_active) {
-    ImGui::Begin("Trigger Editor", &is_active, ImGuiWindowFlags_MenuBar);
-
-    ImGui::InputText("name", &t.id);
-    ImGui::DragFloat2("position", (float*)&t.bounds.position);
-    ImGui::DragFloat2("size",     (float*)&t.bounds.size);
-    ImGui::InputText("active_if", &t.active_if);
-
-    ImGui::End();
-}
+};
 
 
 int main() {
     auto ctx = sf::ContextSettings();
-    ctx.antiAliasingLevel = 8;
+    ctx.antiAliasingLevel = 4;
     auto window = sf::RenderWindow(sf::VideoMode({1920, 1080}), "Shimmy Editor", sf::Style::Default, sf::State::Windowed, ctx);
     window.setPosition({0, 0});
     auto clock = sf::Clock();
+    auto view = sf::View(sf::FloatRect{ { 0, 0 }, { 0, 0 } });
 
     auto _ = ImGui::SFML::Init(window);
     ImGui::GetIO().Fonts->Clear();
-    ImGui::GetIO().Fonts->AddFontFromFileTTF("res/fonts/calibri.ttf", 20.f);
+    ImGui::GetIO().Fonts->AddFontFromFileTTF("res/calibri.ttf", 20.f);
     ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     _ = ImGui::SFML::UpdateFontTexture();
 
-    auto active_layer = EditMode::Object;
-    auto visible_layers = (int)Layer::Trigger|(int)Layer::Entity|(int)Layer::PathMap;
+    auto visible_layers = (int)Layer::Entity|(int)Layer::Trigger|(int)Layer::NavMesh;
+    auto drag_held = false;
 
-    auto texture_file = std::ifstream("res/world/ademmar/textures.json");
-    auto textures = nl::json::parse(texture_file);
-    for (const auto& [k, v] : textures.items()) {
-        TextureMap::load_texture(k, v);
+    auto working_dir = std::filesystem::path();
+    if (auto dir = select_folder(window.getNativeHandle())) {
+        working_dir = *dir;
+    } else {
+        return 1;
     }
 
-    auto level = load_level_file("res/world/ademmar/fountainroad.json");
+    auto scene = load_scene(working_dir);
+    view.setSize(sf::Vector2f(1920, 1080) * 2.f);
+    view.setCenter(scene.origin);
 
-    auto grid_to_cart = grid_to_cartesian(level.scale);
-    auto cart_to_iso  = cartesian_to_isometric(level.topleft);
-    auto grid_to_iso  = grid_to_isometric(level.topleft, level.scale);
-    auto iso_to_cart  = isometric_to_cartesian(level.topleft);
-    auto iso_to_grid  = isometric_to_grid(level.topleft, level.scale);
+    auto scale_marker = ScaleMarker();
+    scale_marker.begin = scene.origin;
 
-    auto bg_map    = sf::Sprite(TextureMap::get_texture("pathmap"));
+    auto nav_editor = NavmeshEditor();
+    nav_editor.load_file(working_dir / "shapes.txt");
+    scale_marker.size = nav_editor.get_world_scale();
 
-    Trigger* active_trigger = nullptr;
-    Entity* active_entity = nullptr;
-    Trigger* selected_trigger = nullptr;
-    Entity* selected_entity = nullptr;
-    bool mouse_held = false;
-    sf::Vector2f clickdiff;
+    auto into_iso  = cart_to_iso(scene.origin, 1.f);
+    auto into_cart = iso_to_cart(scene.origin, 1.f);
 
-    bool show_export = false;
-    std::string filename = "";
+    nav_editor.set_world_transform(into_cart);
+
+    auto origin_marker = sf::ConvexShape(8);
+    origin_marker.setFillColor(sf::Color(255, 150, 0));
+    origin_marker.setPosition(scene.origin);
+    origin_marker.setPoint(0, {   0, -25 });
+    origin_marker.setPoint(2, {  25,   0 });
+    origin_marker.setPoint(4, {   0,  25 });
+    origin_marker.setPoint(6, { -25,   0 });
+    origin_marker.setPoint(1, {   3,  -3 });
+    origin_marker.setPoint(3, {   3,   3 });
+    origin_marker.setPoint(5, {  -3,   3 });
+    origin_marker.setPoint(7, {  -3,  -3 });
+
+    auto font = sf::Font("res/calibri.ttf");
+    auto scale_bg = sf::RectangleShape({ 100, 30 });
+    scale_bg.setPosition({ 15, 15 });
+    scale_bg.setFillColor(sf::Color::Black);
+    auto scale_display = sf::Text(font, "", 25);
+    scale_display.setString("scale: " + std::to_string((int)scale_marker.get_scale()) + "p/m");
+    scale_display.setPosition({ 20, 20 });
 
     while (auto event = window.waitEvent()) {
         const auto deltatime = clock.restart();
 
         ImGui::SFML::ProcessEvent(window, *event);
 
+        nav_editor.handle_event(*event, window);
+
         if (event->is<sf::Event::Closed>()) {
             window.close();
             ImGui::SFML::Shutdown();
             return 0;
-        } else if (auto kyp = event->getIf<sf::Event::KeyPressed>()) {
-            if (kyp->code == sf::Keyboard::Key::E && kyp->control) {
-                show_export = true;
-            }
-        } else if (auto mbp = event->getIf<sf::Event::MouseButtonPressed>()) {
-            selected_trigger = nullptr;
-            selected_entity = nullptr;
-            mouse_held = true;
-            clickdiff = sf::Vector2f(0, 0);
-            if (active_layer == EditMode::Object) {
-                const auto cart = iso_to_cart.transformPoint(sf::Vector2f(mbp->position));
-                for (auto& t : level.triggers) {
-                    if (t.bounds.contains(cart)) {
-                        if (active_trigger) {
-                            active_trigger->outline.setOutlineThickness(1.f);
-                        }
-                        if (selected_entity) {
-                            selected_entity->outline.setOutlineThickness(1.f);
-                            selected_entity = nullptr;
-                        }
-                        selected_trigger = &t;
-                        active_trigger = &t;
-                        clickdiff = cart - t.bounds.position;
-                        t.outline.setOutlineThickness(2.f);
-                    }
-                }
-                for (auto& [_, e] : level.entities) {
-                    if (e.outline.getGlobalBounds().contains(sf::Vector2f(mbp->position))) {
-                        if (active_entity) {
-                            active_entity->outline.setOutlineThickness(1.f);
-                        }
-                        if (selected_trigger) {
-                            selected_trigger->outline.setOutlineThickness(1.f);
-                            selected_trigger = nullptr;
-                        }
-                        selected_entity = &e;
-                        active_entity = &e;
-                        clickdiff = sf::Vector2f(mbp->position) - e.outline.getPosition();
-                        e.outline.setOutlineThickness(2.f);
-                    }
-                }
-            } else {
-            }
-        } else if (auto mmv = event->getIf<sf::Event::MouseMoved>()) {
-            if (mouse_held) {
-                const auto cart = iso_to_cart.transformPoint(sf::Vector2f(mmv->position));
-                if (selected_trigger) {
-                    selected_trigger->bounds.position = cart - clickdiff;
-                } else if (selected_entity) {
-                    switch (selected_entity->position.mode) {
-                    case Position::Mode::Grid: {
-                        const auto grid = iso_to_grid.transformPoint(sf::Vector2f(mmv->position) - clickdiff);
-                        selected_entity->position.pos = grid;
-                        break; }
-                    case Position::Mode::World:
-                        selected_entity->position.pos = cart - clickdiff;
-                        break;
-                    case Position::Mode::WorldIso:
-                        selected_entity->position.pos = sf::Vector2f(mmv->position) - clickdiff;
-                        break;
-                    }
+
+        } else if (const auto kyp = event->getIf<sf::Event::KeyPressed>()) {
+            if (kyp->control) {
+                if (kyp->code == sf::Keyboard::Key::S) {
+                    nav_editor.save_file(working_dir / "shapes.txt");
+                } else if (kyp->code == sf::Keyboard::Key::E) {
+                    nav_editor.export_file(working_dir / "scene.nav");
                 }
             }
-        } else if (auto mbr = event->getIf<sf::Event::MouseButtonReleased>()) {
-            mouse_held = false;
+        } else if (const auto mbp = event->getIf<sf::Event::MouseButtonPressed>()) {
+            const auto world_pos = window.mapPixelToCoords(mbp->position, view);
+            if (mbp->button == sf::Mouse::Button::Left) {
+                const auto end = scale_marker.begin + sf::Vector2f(scale_marker.size, 0);
+                if ((scale_marker.begin - world_pos).lengthSquared() < 40.f) {
+                    scale_marker.left_held = true;
+                } else if ((end - world_pos).lengthSquared() < 40.f) {
+                    scale_marker.right_held = true;
+                } else {
+                    const auto tl = scale_marker.begin - sf::Vector2f(5, 5);
+                    const auto br = scale_marker.begin + sf::Vector2f(scale_marker.size + 5, 5);
+                    const auto box = sf::FloatRect(tl, br - tl);
+                    if (box.contains(world_pos)) {
+                        scale_marker.total_held = true;
+                        scale_marker.drag_offset = world_pos.x - scale_marker.begin.x;
+                    }
+                }
+            } else if (mbp->button == sf::Mouse::Button::Middle) {
+                drag_held = true;
+            }
+
+        } else if (const auto mmv = event->getIf<sf::Event::MouseMoved>()) {
+            const auto world_pos = window.mapPixelToCoords(mmv->position, view);
+            if (drag_held) {
+                view.setCenter((sf::Vector2f)mmv->position);
+            } else if (scale_marker.total_held) {
+                scale_marker.begin = sf::Vector2f(world_pos.x - scale_marker.drag_offset, world_pos.y);
+            } else if (scale_marker.left_held) {
+                scale_marker.size -= world_pos.x - scale_marker.begin.x;
+                scale_marker.begin.x = world_pos.x;
+                scale_display.setString("scale: " + std::to_string((int)scale_marker.get_scale()) + "p/m");
+            } else if (scale_marker.right_held) {
+                scale_marker.size = world_pos.x - scale_marker.begin.x;
+                scale_display.setString("scale: " + std::to_string((int)scale_marker.get_scale()) + "p/m");
+            }
+        } else if (event->is<sf::Event::MouseButtonReleased>()) {
+            if (scale_marker.left_held || scale_marker.right_held) {
+                scale_marker.left_held  = false;
+                scale_marker.right_held = false;
+                if (scale_marker.size < 0) {
+                    scale_marker.begin.x += scale_marker.size;
+                    scale_marker.size *= -1;
+                }
+                nav_editor.set_world_scale(scale_marker.get_scale());
+                scale_display.setString("scale: " + std::to_string((int)scale_marker.get_scale()) + "p/m");
+            }
+            scale_marker.total_held = false;
+            drag_held = false;
+        } else if (const auto scrl = event->getIf<sf::Event::MouseWheelScrolled>()) {
+            const auto begin = window.mapPixelToCoords(scrl->position, view);
+            view.zoom((scrl->delta > 0) ? 0.98f : 1.02f);
+            const auto end = window.mapPixelToCoords(scrl->position, view);
+            view.move(begin - end);
         }
 
         ImGui::SFML::Update(window, deltatime);
@@ -239,79 +231,21 @@ int main() {
         // ImGuiID dockspace_id = ImGui::GetID("dockspace");
         // ImGui::DockSpaceOverViewport(dockspace_id, ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
 
-        bool delete_active_trigger = false;
-        if (active_entity) {
-            EntityMenu(*active_entity, true, level.topleft, level.scale);
-        } else {
-            auto temp = Entity("player_placeholder");
-            EntityMenu(temp, true, level.topleft, level.scale);
-        }
-        if (active_trigger) {
-            TriggerMenu(*active_trigger, true, delete_active_trigger);
-        } else {
-            auto temp = Trigger();
-            TriggerMenu(temp, true, delete_active_trigger);
-        }
-
-        if (show_export) {
-            ImGui::Begin("Export", &show_export);
-            ImGui::InputText("filename", &filename);
-            if (ImGui::Button("save")) {
-                show_export = false;
-                save_level_file(filename, level);
-            }
-            ImGui::End();
-        }
-        ImGui::Begin("world");
-        if (ImGui::DragFloat2("top left", (float*)&level.topleft)) {
-            cart_to_iso  = cartesian_to_isometric(level.topleft);
-            grid_to_iso  = grid_to_isometric(level.topleft, level.scale);
-            iso_to_cart  = isometric_to_cartesian(level.topleft);
-            iso_to_grid  = isometric_to_grid(level.topleft, level.scale);
-        }
-        ImGui::End();
-
         window.clear();
-        window.draw(level.background);
 
-        auto entities = sprites_topo_sort(level.entities);
+        window.setView(view);
 
-        if (visible_layers & (int)Layer::PathMap) {
-            level.pathmap.draw(bg_map, grid_to_cart);
-            level.pathmap.display();
-            auto pm = sf::Sprite(level.pathmap.getTexture());
-            pm.setColor(sf::Color(255, 255, 255, 100));
-            window.draw(pm, cart_to_iso);
+        for (const auto& sp : scene.background) {
+            window.draw(sp);
         }
-        if (visible_layers & (int)Layer::Trigger) {
-            for (auto& trigger : level.triggers) {
-                trigger.outline.setPosition(trigger.bounds.position);
-                trigger.outline.setSize(trigger.bounds.size);
-                window.draw(trigger.outline, cart_to_iso);
-            }
-        }
-        if (visible_layers & (int)Layer::Entity) {
-            for (auto& entity : entities) {
-                switch (entity->position.mode) {
-                case Position::Mode::Grid:
-                    entity->sprite.setPosition(grid_to_iso.transformPoint(entity->position.pos));
-                    entity->outline.setPosition(grid_to_iso.transformPoint(entity->position.pos));
-                    break;
-                case Position::Mode::World:
-                    entity->sprite.setPosition(cart_to_iso.transformPoint(entity->position.pos));
-                    entity->outline.setPosition(cart_to_iso.transformPoint(entity->position.pos));
-                    break;
-                case Position::Mode::WorldIso:
-                    entity->sprite.setPosition(entity->position.pos);
-                    entity->outline.setPosition(entity->position.pos);
-                    break;
-                }
-                entity->collider.setPosition(iso_to_cart.transformPoint(entity->sprite.getPosition()));
-                window.draw(entity->collider, cart_to_iso);
-                window.draw(entity->sprite);
-                window.draw(entity->outline);
-            }
-        }
+
+        nav_editor.render(window, into_iso);
+        scale_marker.render(window);
+        window.draw(origin_marker);
+
+        window.setView(window.getDefaultView());
+        window.draw(scale_display);
+        window.setView(view);
 
         ImGui::SFML::Render(window);
 

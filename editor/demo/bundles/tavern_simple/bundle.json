@@ -1,0 +1,5 @@
+{
+    "table_long":  { "outline": true, "smooth": true, "click": true, "dims": [1, 1] },
+    "table_round": { "outline": true, "smooth": true, "click": true, "dims": [1, 1] },
+    "door_single": { "outline": true, "smooth": true, "click": true, "dims": [1, 1] },
+}

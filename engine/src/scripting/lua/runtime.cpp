@@ -1,4 +1,3 @@
-#include "luajit-2.1/lua.h"
 #include "pch.h"
 #include "scripting/lua/runtime.h"
 #include "core/fs.h"
@@ -7,7 +6,7 @@
 
 namespace shmy { namespace lua {
 
-#ifdef VANGO_DEBUG
+#ifdef SHMY_DEBUG
 #define LUA_CHECK(f, pre) if (f != LUA_OK) { \
         std::cerr << pre << " - " << lua_tostring(m_L, -1) << "\n"; \
         exit(1); \
@@ -32,14 +31,14 @@ Runtime::Runtime() {
     luaL_dostring(m_L,
         "function _AsyncWrapper(worker)\n"
         "    while true do\n"
-        "       state, args = coroutine.yield(-1)\n"
+        "       state, args = coroutine.yield()\n"
         "       worker(state, args)\n"
         "    end\n"
         "end\n"
     );
 }
 
-Runtime::Runtime(Runtime&& other)
+Runtime::Runtime(Runtime&& other) noexcept
     : m_L(other.m_L),
     m_handlers(std::move(other.m_handlers)),
     m_async_handlers(std::move(other.m_async_handlers))
@@ -75,15 +74,19 @@ void Runtime::load_file(const std::filesystem::path& path) {
     const int locstate = luaL_ref(m_L, LUA_REGISTRYINDEX);
     lua_pushinteger(m_L, locstate);
     lua_setfield(m_L, LUA_REGISTRYINDEX, "_locstate");
+    m_states.push_back(locstate);
 
     LUA_CHECK(lua_pcall(m_L, 0, 0, 0), "lua pcall error");
+
+    lua_pushnil(m_L);
+    lua_setfield(m_L, LUA_REGISTRYINDEX, "_locstate");
 }
 
 void Runtime::register_handler(const char* event, Callback cb) {
     m_handlers[event].push_back(cb);
 }
 
-void Runtime::register_async_handler(const char* event, AsyncCallback cb) {
+void Runtime::register_handler(const char* event, AsyncCallback cb) {
     m_async_handlers[event].push_back(cb);
 }
 
@@ -103,7 +106,7 @@ void Runtime::on_event(const std::string& event, EventArgs args) {
     }
 
     for (auto& cb : m_async_handlers[event]) {
-        if (!cb.thread || cb.in_prog) continue;
+        if (cb.in_prog) continue;
 
         lua_rawgeti(m_L, LUA_REGISTRYINDEX, cb.state);     // s    |
         if (args.ref == -1) {
@@ -114,19 +117,20 @@ void Runtime::on_event(const std::string& event, EventArgs args) {
             lua_xmove(m_L, cb.thread, 2);                  //      | s, a
         }
         switch (lua_resume(cb.thread, 2)) {
-        case LUA_YIELD:
-            if (const auto nresults = lua_gettop(cb.thread); nresults == 1) {
+        case LUA_YIELD: {
+            const auto nresults = lua_gettop(cb.thread);
+            if (nresults == 0) {
+                cb.delay = 0;
+                cb.in_prog = false;
+                break;
+            } else if (nresults == 1) {
                 cb.delay = (float)lua_tonumber(cb.thread, -1);
-                if (cb.delay >= 0) {
-                    cb.in_prog = true;
-                } else {
-                    cb.in_prog = false;
-                    cb.delay = 0;
-                }
-                lua_pop(cb.thread, nresults);
+                cb.in_prog = true;
+                lua_pop(cb.thread, 1);
                 break;
             }
-#ifdef VANGO_DEBUG
+            }
+#ifdef SHMY_DEBUG
             std::cerr << "lua coroutine error - (internal) coroutine.yield nresults != 1\n";
             exit(1);
         case LUA_OK:
@@ -161,25 +165,26 @@ void Runtime::update() {
     }
 
     for (auto& cb : m_async_handlers["OnUpdate"]) {
-        if (!cb.thread || cb.in_prog) continue;
-                                                           //   |
+        if (cb.in_prog) continue;
+
         lua_rawgeti(m_L, LUA_REGISTRYINDEX, cb.state);     // s |
         lua_xmove(m_L, cb.thread, 1);                      //   | s
         lua_pushnumber(cb.thread, (lua_Number)deltatime);  //   | s, dt
         switch (lua_resume(cb.thread, 2)) {
-        case LUA_YIELD:
-            if (const auto nresults = lua_gettop(cb.thread); nresults == 1) {
+        case LUA_YIELD: {
+            const auto nresults = lua_gettop(cb.thread);
+            if (nresults == 0) {
+                cb.delay = 0;
+                cb.in_prog = false;
+                break;
+            } else if (nresults == 1) {
                 cb.delay = (float)lua_tonumber(cb.thread, -1);
-                if (cb.delay >= 0) {
-                    cb.in_prog = true;
-                } else {
-                    cb.in_prog = false;
-                    cb.delay = 0;
-                }
-                lua_pop(cb.thread, nresults);
+                cb.in_prog = true;
+                lua_pop(cb.thread, 1);
                 break;
             }
-#ifdef VANGO_DEBUG
+            }
+#ifdef SHMY_DEBUG
             std::cerr << "lua coroutine error - (internal) coroutine.yield nresults != 1\n";
             exit(1);
         case LUA_OK:
@@ -194,24 +199,25 @@ void Runtime::update() {
 
     for (auto& [ev, handlers] : m_async_handlers) {
         for (auto& cb : handlers) {
-            if (!cb.thread || !cb.in_prog) continue;
+            if (!cb.in_prog) continue;
             cb.delay -= deltatime;
             if (cb.delay > 0) continue;
 
             switch (lua_resume(cb.thread, 0)) {
-            case LUA_YIELD:
-                if (const auto nresults = lua_gettop(cb.thread); nresults == 1) {
+            case LUA_YIELD: {
+                const auto nresults = lua_gettop(cb.thread);
+                if (nresults == 0) {
+                    cb.delay = 0;
+                    cb.in_prog = false;
+                    break;
+                } else if (nresults == 1) {
                     cb.delay = (float)lua_tonumber(cb.thread, -1);
-                    if (cb.delay >= 0) {
-                        cb.in_prog = true;
-                    } else {
-                        cb.in_prog = false;
-                        cb.delay = 0;
-                    }
-                    lua_pop(cb.thread, nresults);
+                    cb.in_prog = true;
+                    lua_pop(cb.thread, 1);
                     break;
                 }
-#ifdef VANGO_DEBUG
+                }
+#ifdef SHMY_DEBUG
                 std::cerr << "lua coroutine error - (internal) coroutine.yield nresults != 1\n";
                 exit(1);
             case LUA_OK:

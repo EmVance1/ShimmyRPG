@@ -1,0 +1,3 @@
+
+entry(default) = Narrator: [ "This is a table" ] => exit
+

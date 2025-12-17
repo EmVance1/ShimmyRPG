@@ -25,9 +25,10 @@ struct Style {
     bool textured = false;
     float outline_width = 0.f;
     sf::Texture background_texture;
+    sf::Texture cursor_texture;
     sf::Font font;
 
-    Style();
+    Style() = default;
     Style(const std::filesystem::path& dir);
     Style(const Style&) = delete;
     Style(Style&&) = delete;

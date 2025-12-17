@@ -1,3 +1,4 @@
+#pragma once
 #include "iter.h"
 #include "option.h"
 #include "str.h"

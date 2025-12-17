@@ -5,8 +5,9 @@ lang = "C++20"
 pch = "pch.h"
 
 [dependencies]
-SFML { path="../../_Libs/SFML-3" },
-ImGUI { path="../../_Libs/imgui" },
-SFUtil { path="../../sfutil" },
-nlohmannjson { headers="../deps/nlohmannjson/include" }
+SFML    = { path="../../_Libs/SFML-3" }
+ImGUI   = { path="../../_Libs/imgui-sfml" }
+SFUtil  = { path="../../sfutil" }
+NavMesh = { path="../../navmesh" }
+nlohmannjson = { headers="../libs/nlohmannjson/include" }
 

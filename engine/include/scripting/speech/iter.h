@@ -11,6 +11,9 @@ class Line;
 class Vertex;
 
 class Edge{
+public:
+    enum class Outcome { Edge, Exit, ExitWith };
+
 private:
     const Graph* G = nullptr;
     size_t vert = 0;
@@ -26,6 +29,8 @@ public:
     Edge next() const;
     const std::string& line() const;
     Vertex next_vertex() const;
+    Outcome next_type() const;
+    const std::string& exits_with() const;
     int64_t eval_condition(Callback ctxt) const;
     void    eval_modifiers(Callback ctxt) const;
 

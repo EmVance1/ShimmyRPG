@@ -2,6 +2,7 @@
 #include <vangotest/asserts2.h>
 #include <audio/lib.h>
 #include <stdio.h>
+#include <Windows.h>
 
 
 vango_test(shmy_buf_api) {
@@ -26,7 +27,7 @@ vango_test(shmy_buf_api) {
     shmy::audio::destroy_context();
 }
 
-vango_test(shmy_stream_api) {
+vango_test(shmy_stream_wav) {
     vg_assert_eq(shmy::audio::create_context(), 0);
 
     {
@@ -41,14 +42,6 @@ vango_test(shmy_stream_api) {
         getchar();
 
         buf->stop();
-
-        printf("press enter to continue...");
-        getchar();
-
-        buf->start();
-
-        printf("press enter to continue...");
-        getchar();
     }
 
     shmy::audio::destroy_context();
@@ -69,11 +62,30 @@ vango_test(shmy_stream_ogg) {
         getchar();
 
         buf->stop();
+    }
 
-        printf("press enter to continue...");
-        getchar();
+    shmy::audio::destroy_context();
+}
+
+vango_test(shmy_stream_spin) {
+    vg_assert_eq(shmy::audio::create_context(), 0);
+
+    {
+        auto buf = shmy::audio::Source::stream_from_file("test/res/Optimism.ogg", true);
+        vg_assert(buf.has_value());
+
+        vg_assert(!buf->try_copy().has_value());
 
         buf->start();
+
+        auto t = 0.f;
+        while (true) {
+            auto x = std::cos(t);
+            auto y = std::sin(t);
+            buf->set_position({ x, y, 0.f });
+            Sleep(10);
+            t += 0.05f;
+        }
 
         printf("press enter to continue...");
         getchar();

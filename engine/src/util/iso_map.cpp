@@ -1,19 +1,15 @@
 #include "pch.h"
 
 
-sf::Transform cartesian_to_isometric(const sf::Vector2f& topleft) {
+sf::Transform world_to_screen(const sf::Vector2f& origin, float scale, float angle) {
     auto t = sf::Transform();
-    t.translate(topleft);
-    t.scale({std::sqrt(2.f), 1.f});
-    t.rotate(sf::degrees(45));
+    t.translate(origin);
+    t.scale({std::sqrt(2.f) * scale, scale});
+    t.rotate(sf::degrees(angle));
     return t;
 }
 
-sf::Transform isometric_to_cartesian(const sf::Vector2f& topleft) {
-    auto t = sf::Transform();
-    t.rotate(sf::degrees(-45));
-    t.scale({1.f / std::sqrt(2.f), 1.f});
-    t.translate(-topleft);
-    return t;
+sf::Transform screen_to_world(const sf::Vector2f& origin, float scale, float angle) {
+    return world_to_screen(origin, scale, angle).getInverse();
 }
 

@@ -20,7 +20,7 @@ String& String::operator=(const String& other) {
     return *this;
 }
 
-String::String(String&& other)
+String::String(String&& other) noexcept
     : m_data(other.m_data), m_cap(other.m_cap), m_size(other.m_size)
 {
     other.m_data = nullptr;
@@ -29,7 +29,7 @@ String::~String() {
     free(m_data);
 }
 
-String& String::operator=(String&& other) {
+String& String::operator=(String&& other) noexcept {
     m_data = other.m_data;
     m_cap = other.m_cap;
     m_size = other.m_size;

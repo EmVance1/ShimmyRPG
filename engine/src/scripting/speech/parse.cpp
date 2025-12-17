@@ -37,7 +37,8 @@ static Graph parse_graph(Lexer&& lexer) {
     graph.exprs.push_back(Expr::IEndOf); // 0 = false / no modifiers
     graph.exprs.push_back(Expr::IEndOf); // 1 = true
     auto ctx = ParseContext{ std::move(lexer), &graph };
-    ctx.v_LUT["exit"] = { Graph::EXIT, true };
+    ctx.v_LUT["exit"]      = { Graph::EXIT,      true };
+    ctx.v_LUT["exit_with"] = { Graph::EXIT_WITH, true };
     while (parse_vertex(ctx));
     for (const auto& [k, v] : ctx.v_LUT) {
         if (!v.init) {
@@ -115,11 +116,11 @@ static void parse_outcome(ParseContext& ctx, size_t vert) {
             ctx.graph->verts[vert].n_edges = Graph::EXIT;
             ctx.graph->verts[vert].edges = 0;
 
-        } else if (next->val == "exit_into") {
-            ctx.unwrap_next(TokenType::OpenBrace,  "expected '{' after 'exit_into' declarator - ");
-            ctx.graph->verts[vert].n_edges = Graph::EXIT;
-            ctx.graph->verts[vert].edges = ctx.push_str(ctx.unwrap_next(TokenType::StringLiteral, "'exit_into' block must contain a script name - "));
-            ctx.unwrap_next(TokenType::CloseBrace, "expected '}' to end 'exit_into' block - ");
+        } else if (next->val == "exit_with") {
+            ctx.unwrap_next(TokenType::OpenBrace,  "expected '{' after 'exit_with' declarator - ");
+            ctx.graph->verts[vert].n_edges = Graph::EXIT_WITH;
+            ctx.graph->verts[vert].edges = ctx.push_str(ctx.unwrap_next(TokenType::StringLiteral, "'exit_with' block must contain an event hook - "));
+            ctx.unwrap_next(TokenType::CloseBrace, "expected '}' to end 'exit_with' block - ");
 
         } else {
             ctx.graph->verts[vert].n_edges = 0;
@@ -165,13 +166,36 @@ static void parse_outcome(ParseContext& ctx, size_t vert) {
 
         ctx.unwrap_next(TokenType::Arrow, "expected '=>' to denote response outcome - ");
         const auto edge = ctx.unwrap_next((uint32_t)TokenType::Identifier|(uint32_t)TokenType::IntLiteral, "expected <identifier> node id - ");
-        resp.edge = ctx.push_vertex(edge);
+        if (edge == "exit") {
+            resp.edge = Graph::EXIT;
+        } else if (edge == "exit_with") {
+            ctx.unwrap_next(TokenType::OpenBrace,  "expected '{' after 'exit_with' declarator - ");
+            resp.edge = Graph::EXIT_WITH;
+            resp.modifiers = ctx.push_str(ctx.unwrap_next(TokenType::StringLiteral, "'exit_with' block must contain a script name - "));
+            ctx.unwrap_next(TokenType::CloseBrace, "expected '}' to end 'exit_with' block - ");
+            next = ctx.lexer.next();
+            switch (next->type) {
+            case TokenType::Comma:
+                continue;
+            case TokenType::CloseBrace:
+                return;
+
+            default:
+                throw PARSE_ERROR(next, "responses in list must be ',' separated - ");
+            }
+        } else {
+            resp.edge = ctx.push_vertex(edge);
+        }
 
         next = ctx.lexer.next();
         switch (next->type) {
         case TokenType::Comma:
             resp.modifiers = 0;
             break;
+
+        case TokenType::CloseBrace:
+            resp.modifiers = 0;
+            return;
 
         case TokenType::OpenBrace: {
             parse_modifiers(ctx, resp);

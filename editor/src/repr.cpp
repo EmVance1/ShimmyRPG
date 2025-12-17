@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "repr.h"
-#include "sf_json.h"
-#include "texmap.h"
+#include "util/sf_json.h"
 
 
 Trigger::Trigger() {
@@ -12,11 +11,9 @@ Trigger::Trigger() {
 
 Trigger Trigger::from_json(const nm::json& val) {
     auto result = Trigger();
-    result.id = val["id"];
     result.bounds = json_to_floatrect(val["bounds"]);
-    result.active_if = val["active_if"];
+    result.condition = val["condition"];
     // action = json_to_action(val["action"]);
-    result.single_use = val["single_use"];
 
     result.outline.setPosition(result.bounds.position);
     result.outline.setSize(result.bounds.size);
@@ -25,11 +22,9 @@ Trigger Trigger::from_json(const nm::json& val) {
 
 nm::json Trigger::into_json() const {
     auto result = nm::json();
-    result["id"] = id;
     result["bounds"] = floatrect_to_json(bounds);
-    result["active_if"] = active_if;
+    result["condition"] = condition;
     // result["action"] = action_to_json(action);
-    result["single_use"] = single_use;
     return result;
 }
 
@@ -59,15 +54,12 @@ sf::Vector2f SortBoundary::get_center_of_mass() const {
 
 Position Position::from_json(const nm::json& val) {
     auto result = Position();
-    if (val.contains("grid")) {
-        result.mode = Mode::Grid;
-        result.pos = sf::Vector2f(json_to_vector2i(val["grid"]));
-    } else if (val.contains("world")) {
+    if (val.contains("world")) {
         result.mode = Mode::World;
         result.pos = json_to_vector2f(val["world"]);
     } else if (val.contains("world_iso")) {
-        result.mode = Mode::WorldIso;
-        result.pos = json_to_vector2f(val["world_iso"]);
+        result.mode = Mode::Iso;
+        result.pos = json_to_vector2f(val["iso"]);
     }
     return result;
 }
@@ -75,14 +67,11 @@ Position Position::from_json(const nm::json& val) {
 nm::json Position::into_json() const {
     auto result = nm::json();
     switch (mode) {
-    case Mode::Grid:
-        result["grid"] = vector2f_to_json(pos);
-        break;
     case Mode::World:
         result["world"] = vector2f_to_json(pos);
         break;
-    case Mode::WorldIso:
-        result["world_iso"] = vector2f_to_json(pos);
+    case Mode::Iso:
+        result["iso"] = vector2f_to_json(pos);
         break;
     }
     return result;
@@ -90,18 +79,18 @@ nm::json Position::into_json() const {
 
 
 Entity::Entity()
-    : texture("player_placeholder"), sprite(TextureMap::get_texture(texture))
+    : texture("player_placeholder") //, sprite(TextureMap::get_texture(texture))
 {
-    outline.setSize(sf::Vector2f(TextureMap::get_texture(texture).getSize()));
+    // outline.setSize(sf::Vector2f(TextureMap::get_texture(texture).getSize()));
     outline.setFillColor(sf::Color::Transparent);
     outline.setOutlineColor(sf::Color::Magenta);
     outline.setOutlineThickness(1.f);
 }
 
 Entity::Entity(const std::string& _texture)
-    : texture(_texture), sprite(TextureMap::get_texture(_texture))
+    : texture(_texture) //, sprite(TextureMap::get_texture(_texture))
 {
-    outline.setSize(sf::Vector2f(TextureMap::get_texture(texture).getSize()));
+    // outline.setSize(sf::Vector2f(TextureMap::get_texture(texture).getSize()));
     outline.setFillColor(sf::Color::Transparent);
     outline.setOutlineColor(sf::Color::Magenta);
     outline.setOutlineThickness(1.f);
@@ -115,13 +104,13 @@ Entity::Entity(const std::string& _texture)
 
 Entity Entity::from_json(const nm::json& val) {
     auto result = Entity(val["texture"]);
-    const auto texsize = result.sprite.getTexture().getSize();
+    // const auto texsize = result.sprite.getTexture().getSize();
     result.position = Position::from_json(val["position"]);
     if (val.contains("controller")) {
         result.controller.mode = Controller::Mode::Npc;
         result.controller.speed = val["controller"]["speed"];
-        result.sprite.setOrigin({ (float)texsize.x * 0.5f, (float)texsize.y * 0.9f });
-        result.outline.setOrigin({ (float)texsize.x * 0.5f, (float)texsize.y * 0.9f });
+        // result.sprite.setOrigin({ (float)texsize.x * 0.5f, (float)texsize.y * 0.9f });
+        // result.outline.setOrigin({ (float)texsize.x * 0.5f, (float)texsize.y * 0.9f });
     } else {
         result.collider.setOutlineColor(sf::Color::Transparent);
     }
@@ -134,7 +123,7 @@ Entity Entity::from_json(const nm::json& val) {
         result.boundary.right = json_to_vector2f(val["boundary"][1]);
         result.boundary.is_point = false;
     } else {
-        result.boundary.left = sf::Vector2f((float)texsize.x * 0.5f, (float)texsize.y * 0.9f);
+        // result.boundary.left = sf::Vector2f((float)texsize.x * 0.5f, (float)texsize.y * 0.9f);
         result.boundary.is_point = true;
     }
     for (const auto& tag : val["tags"]) {

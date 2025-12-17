@@ -19,9 +19,9 @@ private:
     String& operator=(const String& other);
 
 public:
-    String(String&& other);
+    String(String&& other) noexcept;
     ~String();
-    String& operator=(String&& other);
+    String& operator=(String&& other) noexcept;
 
     static String make();
     static String with_capacity(usize cap);

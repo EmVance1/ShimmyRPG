@@ -2,11 +2,9 @@
 #include <SFML/Graphics.hpp>
 #include <sfutil/sfutil.h>
 #include <navmesh/lib.h>
-#include "sfutil/animation.h"
-#include "util/vechash.h"
-#include "action.h"
+#include <unordered_set>
+#include "game/action.h"
 #include "stats.h"
-#include "item.h"
 
 
 struct SortBoundary {
@@ -52,10 +50,9 @@ private:
     std::unordered_set<std::string> m_tags;
     std::vector<ContextAction> m_actions;
     std::string m_dialogue_file;
+    std::string m_examine_file;
 
-    std::unordered_map<sf::Vector2u, ItemEntry> m_inventory;
     EntityStats m_stats;
-    uint32_t m_coin = 0;
 
 private:
     static const sfu::TextureAtlas& default_texture() { static sfu::TextureAtlas tex(sf::Image({1, 1}, sf::Color::White), {1, 1}); return tex; }
@@ -66,8 +63,7 @@ public:
            const sfu::TextureAtlas& texture,
            const sfu::TextureAtlas& outline,
            const sfu::AlphaMap& bitmap,
-           const nav::Mesh* pathfinder,
-           bool character);
+           const nav::Mesh* pathfinder);
 
     const std::string& id() const;
     const sfu::AnimatedSprite& get_sprite() const;
@@ -76,7 +72,8 @@ public:
     sfu::FloatCircle get_trigger_collider() const;
 
     void set_animation(size_t index);
-    void set_position(const sf::Vector2f& position, const sf::Transform& cart_to_iso);
+    void set_position(const sf::Vector2f& position, const sf::Transform& world_to_screen);
+    nav::Vector2f get_world_position(const sf::Transform& screen_to_world) const;
     void set_sprite_position(const sf::Vector2f& position);
 
     void set_sorting_boundary(const sf::Vector2f& pos);
@@ -91,6 +88,9 @@ public:
 
     void set_dialogue(const std::string& filename);
     const std::string& get_dialogue() const;
+
+    void set_examination(const std::string& filename);
+    const std::string& get_examination() const;
 
     const nav::Agent& get_tracker() const { return m_tracker; }
     nav::Agent& get_tracker() { return m_tracker; }
@@ -117,6 +117,6 @@ public:
     void set_hovered(bool hovered);
     bool is_hovered() const { return m_is_hovered; }
 
-    void update(const sf::Transform& cart_to_iso);
+    void update(const sf::Transform& world_to_screen);
 };
 

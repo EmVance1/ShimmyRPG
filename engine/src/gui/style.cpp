@@ -5,10 +5,6 @@
 
 namespace gui {
 
-Style::Style() {
-    // auto _ = font.openFromFile("calibri.ttf");
-}
-
 Style::Style(const std::filesystem::path& dir) {
     load_from_dir(dir);
 }
@@ -28,13 +24,15 @@ bool Style::load_from_dir(const std::filesystem::path& dir) {
     text_color_3 = shmy::json::into_color(doc["text_color_3"].GetArray());
     outline_width = doc["outline_width"].GetFloat();
     default_cell = shmy::json::into_intrect(doc["default_cell"].GetArray());
-    if (doc["textured"].IsTrue()) {
-        const auto b = background_texture.loadFromFile(dir / "atlas.png");
-        background_texture.setSmooth(true);
-        textured = true;
-        return b && font.openFromFile(dir / doc["font"].GetString());
+    const auto _cursor = cursor_texture.loadFromFile(dir / "cursor.png");
+    const auto _font = font.openFromFile(dir / doc["font"].GetString());
+    if (!doc["textured"].IsTrue()) {
+        return _cursor && _font;
     }
-    return font.openFromFile(dir / doc["font"].GetString());
+    textured = true;
+    const auto _atlas = background_texture.loadFromFile(dir / "atlas.png");
+    background_texture.setSmooth(true);
+    return _cursor && _font && _atlas;
 }
 
 

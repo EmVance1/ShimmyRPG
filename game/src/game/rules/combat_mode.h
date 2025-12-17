@@ -3,8 +3,8 @@
 #include "gui/gui.h"
 
 
-class Region;
-struct Area;
+class Game;
+struct Scene;
 class Entity;
 
 enum class CombatFaction {
@@ -32,7 +32,7 @@ struct CombatParticipant {
 
 class CombatMode {
 private:
-    Region* p_region = nullptr;
+    Game* p_game = nullptr;
 
 public:
     std::vector<CombatParticipant> participants;
@@ -43,7 +43,7 @@ public:
     std::shared_ptr<gui::Panel> atk_gui;
 
 private:
-    Area& get_area();
+    Scene& get_scene();
 
     const Entity& get_active() const;
     Entity& get_active();
@@ -53,7 +53,7 @@ private:
 public:
     CombatMode() = default;
 
-    void init(Region* _region) { p_region = _region; }
+    void init(Game* _game) { p_game = _game; }
 
     void handle_event(const sf::Event& event);
     void update();

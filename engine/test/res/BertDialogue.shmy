@@ -65,5 +65,5 @@ bigsus = BertPrime: [ "Oh well then I must insist you stay with me. It's my plea
 }
 
 sus5 = BertPrime: [ "But of course it does. Just ask Big Bird. But I'm sure we'll be seeing each other again. Farewell." ] => exit
-bigsus2 = BertPrime: [ "Splendid splendid. Come to my lodge down the street." ] => exit_into{ "scripts/BertExitShack.lua" }
+bigsus2 = BertPrime: [ "Splendid splendid. Come to my lodge down the street." ] => exit_with{ "('OnBertExitShack', {})" }
 

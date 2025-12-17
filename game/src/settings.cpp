@@ -7,6 +7,7 @@ uint32_t Settings::y_resolution;
 uint32_t Settings::bitsperpixel;
 uint32_t Settings::antialiasing;
 bool     Settings::enable_vsync;
+shmy::env::Env Settings::env;
 
 
 void Settings::init(const std::filesystem::path& path) {
@@ -17,6 +18,7 @@ void Settings::init(const std::filesystem::path& path) {
     Settings::bitsperpixel = modes[0].bitsPerPixel;
     Settings::antialiasing = 0;
     Settings::enable_vsync = false;
+    Settings::env = shmy::env::Env::LocalAppData;
 
     auto fi = std::ifstream(path);
     if (fi.is_open()) {
@@ -25,6 +27,7 @@ void Settings::init(const std::filesystem::path& path) {
         fi.read((char*)&Settings::bitsperpixel, sizeof(Settings::bitsperpixel));
         fi.read((char*)&Settings::antialiasing, sizeof(Settings::antialiasing));
         fi.read((char*)&Settings::enable_vsync, sizeof(Settings::enable_vsync));
+        fi.read((char*)&Settings::env, sizeof(shmy::env::Env));
         fi.close();
     } else {
         auto fo = std::ofstream(path);
@@ -33,7 +36,10 @@ void Settings::init(const std::filesystem::path& path) {
         fo.write((char*)&Settings::bitsperpixel, sizeof(Settings::bitsperpixel));
         fo.write((char*)&Settings::antialiasing, sizeof(Settings::antialiasing));
         fo.write((char*)&Settings::enable_vsync, sizeof(Settings::enable_vsync));
+        fo.write((char*)&Settings::env, sizeof(shmy::env::Env));
         fo.close();
     }
+
+    shmy::env::init(Settings::env);
 }
 

@@ -22,7 +22,7 @@ A dialogue script requires one or more entry-point nodes. An entry point has no 
 entry(Shimmy.Approval >= 10) = Shimmy: [ ...
 entry(default)               = Shimmy: [ ...
 ```
-Entry points are evaluated top to bottom, and only one is ever selected, meaning that if more than one entry point condition is met, the first one evaulated is the one that is chosen. Therefore, you should list your entry points in order of priority, or ensure that conditions are mutually exclusive. It is an error if on start no entry point is eligible.
+Entry points are evaluated top to bottom, and only one is ever selected, meaning that if more than one entry point condition is met, the first one evaulated is the one that is chosen. Therefore, you should list your entry points in order of priority, or ensure that conditions are mutually exclusive. It is an error if on start no entry point is eligible. `default` nodes are not mandatory if you can ensure this is never the case.
 
 ### Gotos
 One tool provided for code reuse is the ability to bypass player responses and jump straight from the end of one NPC line to the start of another. The following shmy code:
@@ -44,7 +44,7 @@ v02 = Shimmy: [ "The situation is dire." ]      => exit
 ### Exit Point(s)
 There are two ways of defining ends to dialogue interactions.
 The `exit` keyword denotes a special node that will end the dialogue when reached. Other than that it behaves just like any other node (allowed in gotos, allows modifier lists etc.).
-The other method is to use the `exit_into{ "('{event}', {args})" }` syntax. In addition to ending the dialogue, this invokes the stated event with the stated args. At the time of writing this, these statements can be used exclusively as a goto target.
+The other method is to use the `exit_with{ "('{event}', {args})" }` syntax. In addition to ending the dialogue, this invokes the stated event with the stated args (see lua chapter for more information about events).
 
 ## Special Cases
 A couple of flags that can be used in the engine behave in special ways. These are the temp, `once` and `rng` flags.

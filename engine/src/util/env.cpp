@@ -1,4 +1,5 @@
 #include "pch.h"
+#include <filesystem>
 #include "util/env.h"
 
 
@@ -14,17 +15,16 @@ static std::fs::path s_pkg_full;
 static void initlocalappdata();
 
 
-void init(const std::string& env) {
+void init(Env env) {
     initlocalappdata();
-    if (env == "DEV") {
-        s_app_dir = "./res";
+    s_app_dir = "./res";
+    switch (env) {
+        case Env::CWD:
         s_user_dir = ".";
-    } else if (env == "CWD") {
-        s_app_dir = "./res";
-        s_user_dir = ".";
-    } else if (env == "LOCALDATA") {
-        s_app_dir = "./res";
+        break;
+    case Env::LocalAppData:
         s_user_dir = s_localappdata;
+        break;
     }
 }
 
@@ -40,6 +40,17 @@ const std::fs::path& pkg() {
 }
 const std::fs::path& pkg_full() {
     return s_pkg_full;
+}
+
+std::vector<std::fs::path> pkg_list() {
+    auto res = std::vector<std::fs::path>();
+    auto it = std::fs::directory_iterator(s_user_dir);
+    for (const auto& p : it) {
+        if (p.is_directory() && std::fs::exists(p.path() / ".module")) {
+            res.push_back(p);
+        }
+    }
+    return res;
 }
 
 void set_pkg(const std::fs::path& pkg) {

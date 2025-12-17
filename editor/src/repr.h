@@ -14,11 +14,9 @@ struct GotoArea    { size_t index; sf::Vector2f spawnpos; bool suppress_triggers
 using TriggerAction = std::variant<BeginScript, Popup, GotoRegion, GotoArea>;
 
 struct Trigger {
-    std::string id;
     sf::FloatRect bounds;
-    std::string active_if;
+    std::string condition;
     TriggerAction action;
-    bool single_use;
 
     sf::RectangleShape outline;
 
@@ -51,8 +49,8 @@ struct SortBoundary {
 };
 
 struct Position {
-    enum class Mode { Grid, World, WorldIso };
-    Mode mode = Mode::Grid;
+    enum class Mode { World, Iso };
+    Mode mode = Mode::World;
     sf::Vector2f pos;
 
     static Position from_json(const nm::json& val);
@@ -81,21 +79,21 @@ struct Entity {
     std::vector<std::string> tags;
 
     sf::RectangleShape outline;
-    sf::Sprite sprite;
+    // sf::Sprite sprite;
     sf::CircleShape collider;
     sf::VertexArray draw_boundary;
 
     Entity();
     Entity(const std::string& tex);
 
-    sf::FloatRect get_AABB() const { return sprite.getGlobalBounds(); }
-    SortBoundary get_boundary() const {
-        return {
-            boundary.left + sprite.getPosition(),
-            boundary.right + sprite.getPosition(),
-            boundary.is_point
-        };
-    }
+    // sf::FloatRect get_AABB() const { return sprite.getGlobalBounds(); }
+    // SortBoundary get_boundary() const {
+    //     return {
+    //         boundary.left + sprite.getPosition(),
+    //         boundary.right + sprite.getPosition(),
+    //         boundary.is_point
+    //     };
+    // }
 
     static Entity from_json(const nm::json& val);
     nm::json into_json() const;

@@ -1,52 +1,80 @@
 #include "pch.h"
 #include "graphics/background.h"
-#include "util/json.h"
-#include "util/env.h"
 
 
 namespace shmy {
 
-AsyncBackground::AsyncBackground(const AsyncBackground& other)
-    : m_margin(other.m_margin)
-{
-    m_tiles.reserve(other.m_tiles.size());
-    for (const auto& tile : other.m_tiles) {
-        m_tiles.emplace_back(
-            tile.filename,
-            tile.bounds
-        );
-    }
+static uint32_t read_be32(std::ifstream& f) {
+    unsigned char b[4];
+    f.read((char*)b, 4);
+    return ((uint32_t)b[0] << 24) |
+           ((uint32_t)b[1] << 16) |
+           ((uint32_t)b[2] << 8)  |
+            (uint32_t)b[3];
 }
 
-AsyncBackground::AsyncBackground(AsyncBackground&& other)
+BackgroundStream::BackgroundStream(BackgroundStream&& other) noexcept
     : m_tiles(std::move(other.m_tiles)), m_margin(other.m_margin)
 {}
 
 
-void AsyncBackground::load_from_json(const rapidjson::Value& value, float margin) {
-    m_tiles.reserve(value.GetArray().Size());
-    for (const auto& pair : value.GetArray()) {
-        m_tiles.emplace_back(
-            shmy::env::pkg_full() / pair["file"].GetString(),
-            shmy::json::into_floatrect(pair["bounds"])
-        );
+void BackgroundStream::load_from_folder(const std::filesystem::path& path) {
+    auto mintl = sf::Vector2f(0, 0);
+    auto maxbr = sf::Vector2f(0, 0);
+
+    for (const auto& f : std::filesystem::directory_iterator(path)) {
+        if (f.path().extension() != ".png") continue;
+        const auto stem = f.path().stem().string();
+        const auto split = stem.find('_');
+        const auto x_idx = std::atoi(stem.substr(0, split).c_str());
+        const auto y_idx = std::atoi(stem.substr(split+1).c_str());
+        auto file = std::ifstream(f.path(), std::ios::binary);
+        file.seekg(8 + 4 + 4);
+        const auto w = read_be32(file);
+        const auto h = read_be32(file);
+        file.close();
+        const auto size = sf::Vector2f((float)w, (float)h);
+        const auto tl = sf::Vector2f((float)x_idx * size.x, (float)y_idx * size.y);
+        const auto br = tl + (sf::Vector2f)size;
+        mintl.x = std::min(tl.x, mintl.x);
+        mintl.y = std::min(tl.y, mintl.y);
+        maxbr.x = std::max(br.x, maxbr.x);
+        maxbr.y = std::max(br.y, maxbr.y);
+        const auto bounds = sf::FloatRect(tl, br - tl);
+        m_tiles.emplace_back(f.path(), bounds);
     }
 
+    m_bounds = sf::FloatRect(mintl, maxbr - mintl);
+}
+
+void BackgroundStream::set_frustum_margin(float margin) {
     m_margin = margin;
 }
 
+const sf::FloatRect& BackgroundStream::get_bounds() const {
+    return m_bounds;
+}
 
-void AsyncBackground::unload_all() {
+
+void BackgroundStream::unload_all() {
     for (auto& tile : m_tiles) {
-        if (tile.load_state == LoadState::LOADED) {
+        switch (tile.load_state) {
+        case LoadState::LOADED:
             tile.load_state = LoadState::UNLOADED;
             tile.texture = sf::Texture();
+            break;
+        case LoadState::LOADING:
+            tile.load_state = LoadState::UNLOADED;
+            tile.progress = std::future<sf::Image>{};
+            break;
+        default:
+            break;
         }
     }
 }
 
 
-void AsyncBackground::update(const sf::FloatRect& frustum) {
+void BackgroundStream::update(const sf::FloatRect& frustum) {
     const auto frustum_wide = sf::FloatRect{ frustum.position - frustum.size * m_margin * 0.5f, frustum.size * (1.f + m_margin) };
     auto tasks = std::vector<Tile*>();
     int uploads_this_frame = 0;
@@ -55,7 +83,7 @@ void AsyncBackground::update(const sf::FloatRect& frustum) {
         // LOAD IN CURRENT THREAD
         if (tile.bounds.findIntersection(frustum)) {
             if (tile.load_state == LoadState::UNLOADED) {
-                tile.progress = m_pool.enqueue([&](){ return sf::Image(tile.filename); });
+                tile.progress = m_pool.enqueue([&](){ return sf::Image(tile.path); });
                 tile.load_state = LoadState::LOADING;
                 tasks.push_back(&tile);
             } else if (tile.load_state == LoadState::LOADING) {
@@ -65,7 +93,7 @@ void AsyncBackground::update(const sf::FloatRect& frustum) {
         // LOAD IN BACKGROUND THREAD
         } else if (tile.bounds.findIntersection(frustum_wide)) {
             if (tile.load_state == LoadState::UNLOADED) {
-                tile.progress = m_pool.enqueue([&](){ return sf::Image(tile.filename); });
+                tile.progress = m_pool.enqueue([&](){ return sf::Image(tile.path); });
                 tile.load_state = LoadState::LOADING;
             } else if (tile.load_state == LoadState::LOADING && tile.progress.wait_for(std::chrono::seconds(0)) == std::future_status::ready &&
                     uploads_this_frame++ < 2) {
@@ -75,8 +103,8 @@ void AsyncBackground::update(const sf::FloatRect& frustum) {
             }
 
         // UNLOAD IN CURRENT THREAD
-        } else if (tile.load_state == LoadState::LOADING && tile.progress.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
-            tile.progress.get();
+        } else if (tile.load_state == LoadState::LOADING) {
+            tile.progress = std::future<sf::Image>{};
             tile.load_state = LoadState::UNLOADED;
         } else if (tile.load_state == LoadState::LOADED) {
             tile.texture = sf::Texture();
@@ -91,14 +119,14 @@ void AsyncBackground::update(const sf::FloatRect& frustum) {
     }
 }
 
-void AsyncBackground::update_soft(const sf::FloatRect& frustum) {
+void BackgroundStream::update_soft(const sf::FloatRect& frustum) {
     int uploads_this_frame = 0;
 
     for (auto& tile : m_tiles) {
         // LOAD IN BACKGROUND THREAD
         if (tile.bounds.findIntersection(frustum)) {
             if (tile.load_state == LoadState::UNLOADED) {
-                tile.progress = m_pool.enqueue([&](){ return sf::Image(tile.filename); });
+                tile.progress = m_pool.enqueue([&](){ return sf::Image(tile.path); });
                 tile.load_state = LoadState::LOADING;
             } else if (tile.load_state == LoadState::LOADING && tile.progress.wait_for(std::chrono::seconds(0)) == std::future_status::ready &&
                     uploads_this_frame++ < 2) {
@@ -108,8 +136,8 @@ void AsyncBackground::update_soft(const sf::FloatRect& frustum) {
             }
 
         // UNLOAD IN CURRENT THREAD
-        } else if (tile.load_state == LoadState::LOADING && tile.progress.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
-            tile.progress.get();
+        } else if (tile.load_state == LoadState::LOADING) {
+            tile.progress = std::future<sf::Image>{};
             tile.load_state = LoadState::UNLOADED;
         } else if (tile.load_state == LoadState::LOADED) {
             tile.texture = sf::Texture();
@@ -118,7 +146,7 @@ void AsyncBackground::update_soft(const sf::FloatRect& frustum) {
     }
 }
 
-void AsyncBackground::draw(sf::RenderTarget& target, sf::RenderStates states) const {
+void BackgroundStream::draw(sf::RenderTarget& target, sf::RenderStates states) const {
     for (auto& tile : m_tiles) {
         if (tile.load_state == LoadState::LOADED) {
             auto sprite = sf::Sprite(tile.texture);

@@ -9,11 +9,14 @@ iso-compliant = true
 
 [profile.debug]
 # sanitize.address = true
+defines = [ "SHMY_DEBUG" ]
 
+[profile.release]
+# defines = [ "SHMY_DEBUG" ]
 
 [dependencies]
 engine  = { path="../engine" }
-# audio   = { path="../audio" }
+audio   = { path="../audio" }
 SFUtil  = { path="../../SFUtil" }
 NavMesh = { path="../../NavMesh" }
 SFML    = { path="../../_Libs/SFML-3", features=[ "graphics" ] }

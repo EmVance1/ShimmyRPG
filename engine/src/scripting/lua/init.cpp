@@ -6,15 +6,18 @@ namespace shmy { namespace lua {
 
 int l_register_handler(lua_State* L) {
     const auto event = lua_tostring(L, 1);
+
+    auto cb = Runtime::Callback{};
+
     lua_pushvalue(L, 2);
-    const auto func  = luaL_ref(L, LUA_REGISTRYINDEX);
+    cb.func  = luaL_ref(L, LUA_REGISTRYINDEX);
 
     lua_getfield(L, LUA_REGISTRYINDEX, "_locstate");
-    const auto state = (int)lua_tointeger(L, -1);
+    cb.state = (int)lua_tointeger(L, -1);
 
     lua_getfield(L, LUA_REGISTRYINDEX, "_runtime");
     const auto runtime = (Runtime*)lua_touserdata(L, -1);
-    runtime->register_handler(event, Runtime::Callback{ func, state });
+    runtime->register_handler(event, cb);
 
     return 0;
 }
@@ -29,7 +32,6 @@ int l_register_async_handler(lua_State* L) {
     lua_pushvalue(L, 2);
     lua_xmove(L, cb.thread, 2);
     lua_pop(L, 1);
-
     lua_resume(cb.thread, 1);
 
     lua_getfield(L, LUA_REGISTRYINDEX, "_locstate");
@@ -37,7 +39,7 @@ int l_register_async_handler(lua_State* L) {
 
     lua_getfield(L, LUA_REGISTRYINDEX, "_runtime");
     const auto runtime = (Runtime*)lua_touserdata(L, -1);
-    runtime->register_async_handler(event, cb);
+    runtime->register_handler(event, cb);
 
     return 0;
 }

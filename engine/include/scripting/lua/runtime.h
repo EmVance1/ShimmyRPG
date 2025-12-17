@@ -30,12 +30,13 @@ private:
     int m_sandboxref = 0;
     std::unordered_map<std::string, std::vector<Callback>> m_handlers;
     std::unordered_map<std::string, std::vector<AsyncCallback>> m_async_handlers;
+    std::vector<int> m_states;
     bool m_paused = false;
 
 public:
     Runtime();
     Runtime(const Runtime&) = delete;
-    Runtime(Runtime&& other);
+    Runtime(Runtime&& other) noexcept;
     ~Runtime();
 
     void init_env(void(*init_api)(lua_State*), const std::string& api);
@@ -44,7 +45,7 @@ public:
     void load_file(const std::filesystem::path& path);
 
     void register_handler(const char* event, Callback cb);
-    void register_async_handler(const char* event, AsyncCallback cb);
+    void register_handler(const char* event, AsyncCallback cb);
 
     const lua_State* get_state() const { return m_L; }
     lua_State* get_state() { return m_L; }

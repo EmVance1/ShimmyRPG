@@ -3,15 +3,15 @@
 #include "gui/panel.h"
 
 
-class Region;
-struct Area;
+class Game;
+struct Scene;
 
 class NormalMode {
 private:
-    Region* p_region = nullptr;
+    Game* p_game = nullptr;
     gui::Panel* gui;
 
-    Area& get_area();
+    Scene& get_scene();
 
     void move_to_action(const std::string& target);
     void speak_action(const std::string& target, const std::string& speech);
@@ -19,7 +19,7 @@ private:
 public:
     NormalMode() = default;
 
-    void init(Region* _region);
+    void init(Game* _game);
 
     void handle_event(const sf::Event& event);
     void update();

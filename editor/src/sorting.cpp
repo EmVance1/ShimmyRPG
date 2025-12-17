@@ -8,6 +8,7 @@ std::vector<Entity*> sprites_topo_sort(std::unordered_map<std::string, Entity>& 
     auto S = std::unordered_set<std::string>();
     auto result = std::vector<Entity*>();
 
+    /*
     for (const auto& [k, e] : entities) {
         for (const auto& [l, f] : entities) {
             if (k != l && e.get_AABB().findIntersection(f.get_AABB()).has_value() && e.get_boundary() < f.get_boundary()) {
@@ -32,6 +33,7 @@ std::vector<Entity*> sprites_topo_sort(std::unordered_map<std::string, Entity>& 
             }
         }
     }
+    */
 
     return result;
 }

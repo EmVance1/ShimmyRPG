@@ -1,24 +1,21 @@
 #include "pch.h"
 #include "settings.h"
-#include "world/region.h"
-#include "world/area.h"
-#include "util/deltatime.h"
+#include "world/game.h"
+#include "world/scene.h"
 #include "util/env.h"
-#include "core/str.h"
-#include "core/split.h"
-#include "flags.h"
-#include "io/init/load_flags.h"
+#include "util/deltatime.h"
 
 
-#ifdef VANGO_DEBUG
+#ifdef SHMY_DEBUG
     #define SCREEN_MODE sf::State::Windowed
 #else
     #define SCREEN_MODE sf::State::Fullscreen
 #endif
 
 
-int main() {
-    Settings::init(".sets");
+
+int main(int argc, char** argv) {
+    Settings::init(".boot");
 
     auto ctxt = sf::ContextSettings();
     if (Settings::antialiasing == 0) {
@@ -34,9 +31,10 @@ int main() {
         window.setVerticalSyncEnabled(true);
     }
     window.setMouseCursorVisible(false);
-#ifdef VANGO_DEBUG
+#ifdef SHMY_DEBUG
     window.setPosition({0, 0});
 #endif
+
 
     auto render_view = window.getDefaultView();
     /*
@@ -57,83 +55,51 @@ int main() {
     std::ignore = target.resize(window.getSize());
     target.setSmooth(true);
 
-    auto render_settings = RenderSettings((sf::Vector2i)target.getSize());
-    Region::render_settings = &render_settings;
-
-    auto region = Region();
-    auto region_folder = std::string("");
-
-    {
-        auto startup_file = std::ifstream(".boot");
-        auto startup_env = std::string();
-        startup_file >> startup_env;
-        auto tokens = shmy::core::split(startup_env, ':');
-        shmy::env::init(tokens[0]);
-        shmy::env::set_pkg(tokens[1]);
-        region_folder = tokens[2];
-        shmy::flags::load_from_dir(shmy::env::pkg_full() / "flags");
-        const auto starting_area = tokens[3];
-        region.load_from_dir(region_folder, (size_t)std::atoi(starting_area.c_str()));
+    auto game = Game(&window);
+    const auto mod_list = shmy::env::pkg_list();
+    const auto module = (argc == 1) ? mod_list[0] : std::fs::path(argv[1]);
+    if (argc == 1) {
+        std::cout << "loading detected module: " << module << "\n";
+    } else if (std::fs::exists(module / ".module")) {
+        std::cout << "loading specified module: " << module << "\n";
+    } else {
+        std::cout << "specified module: " << module << " does not exist\n";
+        return 1;
     }
+    game.reload(module);
 
     // auto& pixelate = render_settings.shaders.emplace_back(shmy::env::pkg_full() / "shaders/pixelate.frag", sf::Shader::Type::Fragment);
     // pixelate.setUniform("u_resolution", (sf::Vector2f)window.getSize());
 
-    render_settings.shaders.emplace_back(shmy::env::pkg_full() / "shaders/poster.frag", sf::Shader::Type::Fragment);
+    // render_settings.shaders.emplace_back(shmy::env::pkg_full() / "shaders/poster.frag", sf::Shader::Type::Fragment);
 
-    auto& CRT = render_settings.shaders.emplace_back(shmy::env::pkg_full() / "shaders/CRT.frag", sf::Shader::Type::Fragment);
-    CRT.setUniform("u_curvature", sf::Vector2f(5.f, 5.f));
+    // auto& CRT = render_settings.shaders.emplace_back(shmy::env::pkg_full() / "shaders/CRT.frag", sf::Shader::Type::Fragment);
+    // CRT.setUniform("u_curvature", sf::Vector2f(5.f, 5.f));
 
-    auto& glitch = render_settings.shaders.emplace_back(shmy::env::pkg_full() / "shaders/glitch.frag", sf::Shader::Type::Fragment);
-    glitch.setUniform("u_dist", 2);
-    glitch.setUniform("u_resolution", (sf::Vector2f)window.getSize());
+    // auto& glitch = render_settings.shaders.emplace_back(shmy::env::pkg_full() / "shaders/glitch.frag", sf::Shader::Type::Fragment);
+    // glitch.setUniform("u_dist", 2);
+    // glitch.setUniform("u_resolution", (sf::Vector2f)window.getSize());
 
-    const auto font = sf::Font(shmy::env::app_dir() / "calibri.ttf");
-    auto fps_draw = sf::Text(font, "0", 25);
-    fps_draw.setPosition({ 10, 10 });
-    fps_draw.setFillColor(sf::Color::White);
-
-    const auto cursor_tex = sf::Texture(shmy::env::pkg_full() / "textures/cursor.png");
-    auto cursor = sf::Sprite(cursor_tex);
-    cursor.setOrigin({ 4, 3 });
-    region.p_cursor = &cursor;
 
     Time::reset();
 
     while (window.isOpen()) {
         Time::set_frame();
 
-        fps_draw.setString(std::to_string(Time::framerate()) + " FPS");
-
-        region.exec_scene_swap();
-
-        while (auto event = window.pollEvent()) {
-            if (event->is<sf::Event::Closed>()) {
-                window.close();
-            } else if (const auto kyp = event->getIf<sf::Event::KeyPressed>()) {
-                if (kyp->code == sf::Keyboard::Key::R && kyp->control) {
-                    FlagTable::clear_all();
-                    shmy::flags::load_from_dir(shmy::env::pkg_full() / "flags");
-                    const auto temp = region.get_active_area_index();
-                    region.load_from_dir(region_folder, temp);
-                }
-            }
-
-            region.get_active_area().handle_event(*event);
-        }
-
-        region.update_all();
-
+        game.exec_scene_swap();
+        game.handle_events();
+        game.update();
 
         window.clear(sf::Color::Black);
-        target.clear(sf::Color::Black);
-        region.get_active_area().render_world(target);
+        target.clear(sf::Color(10, 10, 10));
 
+
+        game.get_active_scene().render(target);
 
         const auto viewcache = target.getView();
         target.setView(render_view);
         target.display();
-        for (const auto& shader : render_settings.shaders) {
+        for (const auto& shader : game.render_settings.shaders) {
             auto tex = sf::Texture(target.getTexture());
             const auto buff = sf::Sprite(tex);
             target.clear();
@@ -142,26 +108,14 @@ int main() {
         }
         target.setView(viewcache);
 
-
         auto target_sp = sf::Sprite(target.getTexture());
-        target_sp.setTextureRect((sf::IntRect)render_settings.crop);
-        target_sp.setPosition((sf::Vector2f)render_settings.crop.position);
-        target_sp.setColor(render_settings.overlay);
+        target_sp.setTextureRect((sf::IntRect)game.render_settings.crop);
+        target_sp.setPosition((sf::Vector2f)game.render_settings.crop.position);
+        target_sp.setColor(game.render_settings.overlay);
+
+
         window.draw(target_sp);
-
-
-        target.clear(sf::Color::Transparent);
-        region.get_active_area().render_overlays(target);
-        target.setView(render_view);
-        const auto mouse = sf::Mouse::getPosition(window);
-        cursor.setPosition(sf::Vector2f(mouse));
-        target.draw(cursor);
-        target.draw(fps_draw);
-
-        target.display();
-        target_sp = sf::Sprite(target.getTexture());
-        window.draw(target_sp);
-
+        game.render(window);
 
         window.display();
     }

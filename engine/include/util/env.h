@@ -1,5 +1,4 @@
 #pragma once
-#include <string>
 #include <filesystem>
 namespace std { namespace fs = filesystem; }
 
@@ -10,8 +9,10 @@ const std::fs::path& app_dir();
 const std::fs::path& user_dir();
 const std::fs::path& pkg();
 const std::fs::path& pkg_full();
+std::vector<std::fs::path> pkg_list();
 
-void init(const std::string& env);
+enum class Env { CWD, LocalAppData };
+void init(Env env);
 void set_pkg(const std::fs::path& pkg);
 
 } }

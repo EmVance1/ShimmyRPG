@@ -18,7 +18,7 @@ sf::Color into_color(const rapidjson::Value& arr);
 
 rapidjson::Document load_from_file(const std::filesystem::path& filename);
 
-#ifdef VANGO_DEBUG
+#ifdef SHMY_DEBUG
 
 template<typename T>
 T debug_get_number(const rapidjson::Value& object, const char* name) {
@@ -43,7 +43,7 @@ const rapidjson::Value& debug_get(const rapidjson::Value& object, const char* na
 
 } }
 
-#ifdef VANGO_DEBUG
+#ifdef SHMY_DEBUG
 
 #define JSON_GET_INT(object, name)    shmy::json::debug_get_number<int32_t>(object, name)
 #define JSON_GET_INT64(object, name)  shmy::json::debug_get_number<int64_t>(object, name)

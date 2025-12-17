@@ -70,7 +70,7 @@ rj::Document load_from_file(const std::fs::path& filename) {
     char readBuffer[65536];
     rj::FileReadStream is(fp, readBuffer, sizeof(readBuffer));
     rj::Document doc;
-#ifdef VANGO_DEBUG
+#ifdef SHMY_DEBUG
     constexpr auto FLAGS = rj::kParseTrailingCommasFlag|rj::kParseCommentsFlag|rj::kParseNanAndInfFlag|rj::kParseValidateEncodingFlag;
     rj::ParseResult ok = doc.ParseStream<FLAGS>(is);
     fclose(fp);
@@ -87,7 +87,7 @@ rj::Document load_from_file(const std::fs::path& filename) {
 }
 
 
-#ifdef VANGO_DEBUG
+#ifdef SHMY_DEBUG
 
 const char* debug_get_str(const rj::Value& object, const char* name) {
     if (!object.HasMember(name)) {

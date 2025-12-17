@@ -1,20 +1,20 @@
 #include "pch.h"
 #include "cinematic_mode.h"
 #include "normal_mode.h"
-#include "world/region.h"
-#include "world/area.h"
+#include "world/game.h"
+#include "world/scene.h"
 #include "util/env.h"
 
 
-Area& CinematicMode::get_area() {
-    return p_region->get_active_area();
+Scene& CinematicMode::get_scene() {
+    return p_game->get_active_scene();
 }
 
 void CinematicMode::handle_event(const sf::Event& event) {
-    auto& area = get_area();
+    auto& scene = get_scene();
 
     if (dialogue.get_state() == Dialogue::State::Player) {
-        p_region->m_gui.handle_event(event);
+        p_game->gui.handle_event(event);
     } else {
         if (auto kyp = event.getIf<sf::Event::KeyPressed>()) {
             if (kyp->code == sf::Keyboard::Key::Space && dialogue.is_playing()) {
@@ -38,7 +38,7 @@ void CinematicMode::handle_event(const sf::Event& event) {
                 if (*line->speaker == "Narrator") {
                     std::dynamic_pointer_cast<gui::TextWidget>(speaker_gui)->set_label("Narrator");
                 } else {
-                    std::dynamic_pointer_cast<gui::TextWidget>(speaker_gui)->set_label(area.get_entity_by_script_id(*line->speaker).story_id());
+                    std::dynamic_pointer_cast<gui::TextWidget>(speaker_gui)->set_label(scene.get_entity_by_script_id(*line->speaker).story_id());
                 }
                 auto line_gui = dia_gui->get_widget("lines");
                 line_gui->set_visible(true);
@@ -59,18 +59,18 @@ void CinematicMode::handle_event(const sf::Event& event) {
             auto choice_gui = dia_gui->get_widget("choices");
             choice_gui->set_enabled(false);
             choice_gui->set_visible(false);
-            area.set_mode(dialogue.get_init_mode());
+            scene.set_mode(dialogue.get_init_mode());
             dia_gui->set_enabled(false);
             dia_gui->set_visible(false);
-            get_area().lua_vm.set_paused(false);
+            get_scene().lua_vm.set_paused(false);
             if (const auto fu = dialogue.get_followup()) {
-                area.lua_vm.load_anon(std::string("DispatchEvent") + fu.value());
+                scene.lua_vm.load_anon(std::string("DispatchEvent") + fu.value());
             }
         }
     }
 }
 
 void CinematicMode::update() {
-    get_area().lua_vm.set_paused(dialogue.is_playing());
+    get_scene().lua_vm.set_paused(dialogue.is_playing());
 }
 

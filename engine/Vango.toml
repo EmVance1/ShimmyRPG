@@ -8,8 +8,14 @@ pch = "pch.h"
 warn-level = "high"
 iso-compliant = true
 
+[profile.debug]
+defines = [ "SHMY_DEBUG" ]
+
+[profile.release]
+# defines = [ "SHMY_DEBUG" ]
+
 [dependencies]
-# audio  = { path="../audio" }
+audio  = { path="../audio" }
 SFML   = { path="../../_Libs/SFML-3" }
 LuaJIT = { path="../../_Libs/luajit" }
 SFUtil = { path="../../sfutil" }

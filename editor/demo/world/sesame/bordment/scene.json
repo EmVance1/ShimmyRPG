@@ -1,0 +1,82 @@
+{
+    "label": "Big Bird's Basement",
+    "scripts": [
+        "scripts/SacrificialSpawn.lua",
+    ],
+    "triggers": [
+        {
+            // bigbord back door
+            "rect": [ -120, 200, 120, 30 ],
+            "act_portal": { "index": 0, "spawnpos": [ 90, 10 ], "suppress_triggers": false },
+        },
+        {
+            // sacrifice cutscene
+            "rect": [ 480, 1700, 200, 200 ],
+            "act_event": "OnPlayerCaptured",
+            "condition": "Player.BeingSacrificed & once"
+        },
+        {
+            // zoom in
+            "rect": [ 505, 1100, 160, 30 ],
+            "act_func": "shmy.camera.set_zoom(1.0)",
+        },
+        {
+            // zoom out
+            "rect": [ 505, 1200, 160, 30 ],
+            "act_func": "shmy.camera.set_zoom(1.4)",
+        }
+    ],
+    "entities": [
+        {
+            "texture": "NPC_placeholder.player", "position": { "world": [ -50, 100 ] }, "tags": [ "player" ],
+            "trait_scriptable": { "script_id": "player", "story_id": "-" },
+            "trait_movement": { "speed": 2.5 }
+        },
+        {
+            "texture": "NPC_placeholder.bigbord", "position": { "world": [ 590, 1750 ] }, "tags": [ "npc" ],
+            "trait_scriptable": { "script_id": "Bigbord", "story_id": "Big Bird" },
+            "trait_movement": { "speed": 2.0 },
+            "is_offstage": true
+        },
+        {
+            "texture": "NPC_placeholder.bert", "position": { "world": [ 630, 1800 ] }, "tags": [ "npc" ],
+            "trait_scriptable": { "script_id": "Bert", "story_id": "Bert" },
+            "trait_movement": { "speed": 2.0 },
+            "is_offstage": true
+        },
+        {
+            "texture": "NPC_placeholder.cookiemonster", "position": { "world": [ 430, 1800 ] }, "tags": [ "npc" ],
+            "trait_scriptable": { "script_id": "Cookmon", "story_id": "Cookie Monster" },
+            "trait_movement": { "speed": 2.0 },
+            "is_offstage": true
+        },
+        {
+            "texture": "NPC_placeholder.priest", "position": { "world": [ 380, 1800 ] }, "tags": [ "npc" ],
+            "trait_scriptable": { "script_id": "Priest1", "story_id": "Elmo Priest 1" },
+            "trait_movement": { "speed": 1.5 },
+            "is_offstage": true
+        },
+        {
+            "texture": "NPC_placeholder.priest", "position": { "world": [ 580, 1600 ] }, "tags": [ "npc" ],
+            "trait_scriptable": { "script_id": "Priest2", "story_id": "Elmo Priest 2" },
+            "trait_movement": { "speed": 1.5 },
+            "is_offstage": true
+        },
+        {
+            "texture": "NPC_placeholder.priest", "position": { "world": [ 580, 2000 ] }, "tags": [ "npc" ],
+            "trait_scriptable": { "script_id": "Priest3", "story_id": "Elmo Priest 3" },
+            "trait_movement": { "speed": 1.5 },
+            "is_offstage": true
+        },
+        {
+            "texture": "NPC_placeholder.priest", "position": { "world": [ 780, 1800 ] }, "tags": [ "npc" ],
+            "trait_scriptable": { "script_id": "Priest4", "story_id": "Elmo Priest 4" },
+            "trait_movement": { "speed": 1.5 },
+            "is_offstage": true
+        },
+        {
+            "texture": "tavern_simple.door_single", "position": { "iso": [ 2180, 145 ] }, "tags": [ "door", "wood", "simple_lock" ],
+            "trait_customsort": [ [0, 155], [99, 204] ]
+        }
+    ]
+}

@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "dialogue.h"
-#include "flags.h"
+#include "assets/flags.h"
 #include "game/rules/game_mode.h"
 
 
@@ -40,13 +40,21 @@ void Dialogue::advance(dia::Edge resp) {
 
     case State::Player:
         resp.eval_modifiers(FlagTable::callback);
-        if (resp.next_vertex().outcome() == dia::Vertex::Outcome::Exit) {
+        switch (resp.next_type()) {
+        case dia::Edge::Outcome::Exit:
             m_state = State::Empty;
             FlagTable::clear_temps();
-        } else {
+            break;
+        case dia::Edge::Outcome::ExitWith:
+            m_state = State::EmptyWithFollowup;
+            m_followup = resp.exits_with();
+            FlagTable::clear_temps();
+            break;
+        case dia::Edge::Outcome::Edge:
             m_state = State::Lines;
             m_vert = resp.next_vertex();
             m_line = m_vert.first_line();
+            break;
         }
         break;
 

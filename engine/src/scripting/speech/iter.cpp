@@ -23,6 +23,21 @@ Vertex Edge::next_vertex() const {
     return { G, G->edges[G->verts[vert].edges + index].edge };
 }
 
+Edge::Outcome Edge::next_type() const {
+    const auto n = G->edges[G->verts[vert].edges + index].edge;
+    if (n == Graph::EXIT) {
+        return Outcome::Exit;
+    } else if (n == Graph::EXIT_WITH) {
+        return Outcome::ExitWith;
+    } else {
+        return Outcome::Edge;
+    }
+}
+
+const std::string& Edge::exits_with() const {
+    return G->strs[G->edges[G->verts[vert].edges + index].modifiers];
+}
+
 int64_t Edge::eval_condition(Callback ctxt) const {
     const auto n = G->edges[G->verts[vert].edges + index].condition;
     if (n == 0) return 0;
@@ -92,7 +107,7 @@ Edge Vertex::end_edge() const {
 
 size_t Vertex::edge_count() const {
     const auto n = G->verts[index].n_edges;
-    return n == Graph::EXIT ? 0 : n;
+    return (n >= Graph::EXIT_WITH) ? 0 : n;
 }
 
 Vertex::Outcome Vertex::outcome() const {
@@ -100,11 +115,9 @@ Vertex::Outcome Vertex::outcome() const {
     if (n == 0) {
         return Outcome::Goto;
     } else if (n == Graph::EXIT) {
-        if (G->verts[index].edges == 0) {
-            return Outcome::Exit;
-        } else {
-            return Outcome::ExitWith;
-        }
+        return Outcome::Exit;
+    } else if (n == Graph::EXIT_WITH) {
+        return Outcome::ExitWith;
     } else {
         return Outcome::Edges;
     }

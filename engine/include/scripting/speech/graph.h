@@ -8,7 +8,7 @@ namespace shmy { namespace speech {
 
 struct _Edge {
     uint32_t condition = 1;
-    uint32_t modifiers = 0;
+    uint32_t outcome = 0;
     uint32_t edge;
     uint32_t line;
 };
@@ -27,7 +27,8 @@ struct _Entry {
 };
 
 struct Graph {
-    constexpr inline static size_t EXIT = UINT32_MAX;
+    constexpr inline static size_t EXIT      = UINT32_MAX;
+    constexpr inline static size_t EXIT_WITH = UINT32_MAX-1;
     using Callback = uint64_t*(*)(const char* key, bool strict);
 
     std::vector<_Entry> eps;

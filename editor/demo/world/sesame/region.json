@@ -1,0 +1,24 @@
+{
+    "prefabs": {
+        "door_simple_wooden_single": {
+            "texture": "tavern_simple.door_single", "tags": [ "wood", "door", "simple_lock" ],
+            "trait_customsort": [ [0, 145], [80, 195] ]
+        },
+        "door_simple_wooden_double": {
+            "texture": "tavern_simple.door_double", "tags": [ "wood", "door", "simple_lock" ],
+            "trait_customsort": [ [0, 150], [80, 200] ]
+        },
+        "table_simple_wooden_round": {
+            "texture": "tavern_simple.table_round", "tags": [ "wood", "furniture" ],
+            "trait_customsort": [ [-10, 99], [146, 99] ]
+        },
+        "crate_simple_wooden_small": {
+            "texture": "tavern_simple.crate_small", "tags": [ "wood", "box", "small_inventory" ],
+            "trait_customsort": [ [0, 99], [132, 99] ]
+        }
+    },
+    "gui_style": "culty",
+    "areas": [
+        "bordment",
+    ]
+}

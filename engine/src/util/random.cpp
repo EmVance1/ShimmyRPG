@@ -2,6 +2,7 @@
 #include "util/random.h"
 
 
+
 std::random_device Random::seeder;
 std::mt19937 Random::gen{ Random::seeder() };
 
