@@ -1,13 +1,14 @@
 #include <SFML/Graphics.hpp>
 #include <sfutil/alphamap.h>
 #include <sfutil/atlas.h>
+#include <audio/lib.h>
 #include <unordered_map>
 #include <string>
 #include <filesystem>
 
 
 class AssetManager {
-public:
+private:
     struct TextureDef {
         std::filesystem::path file;
         sf::Vector2u dims;
@@ -15,9 +16,17 @@ public:
         bool smooth;
         bool click;
     };
-    using BundleDef = std::unordered_map<std::string, TextureDef>;
+    struct SoundDef {
+        std::filesystem::path file;
+        bool stream;
+    };
+    using TextureList = std::unordered_map<std::string, TextureDef>;
+    using SoundList = std::unordered_map<std::string, SoundDef>;
+    struct BundleDef {
+        TextureList textures;
+        SoundList sounds;
+    };
 
-private:
     class Bundle {
     private:
         int refcount = 0;
@@ -25,6 +34,8 @@ private:
         std::unordered_map<std::string, sf::Texture> textures;
         std::unordered_map<std::string, sfu::TextureAtlas> atlases;
         std::unordered_map<std::string, sfu::AlphaMap> alphamaps;
+        std::unordered_map<std::string, shmy::audio::Buffer> sounds;
+        std::unordered_map<std::string, shmy::audio::Stream> streams;
 
         Bundle(Bundle&& other) noexcept;
         Bundle& operator=(Bundle&& other) noexcept;
@@ -38,6 +49,8 @@ private:
         const sf::Texture& get_texture(const std::string& name) const;
         const sfu::TextureAtlas& get_atlas(const std::string& name) const;
         const sfu::AlphaMap& get_alphamap(const std::string& name) const;
+        const shmy::audio::Buffer& get_sound(const std::string& name) const;
+        shmy::audio::Stream& get_stream(const std::string& name);
 
         friend class AssetManager;
     };
@@ -68,6 +81,8 @@ public:
     static const sf::Texture& get_texture(const std::string& path);
     static const sfu::TextureAtlas& get_atlas(const std::string& path);
     static const sfu::AlphaMap& get_alphamap(const std::string& path);
+    static const shmy::audio::Buffer& get_sound(const std::string& path);
+    static shmy::audio::Stream& get_stream(const std::string& path);
     static const sf::Texture& nulltex();
 };
 

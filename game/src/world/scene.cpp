@@ -98,13 +98,11 @@ void Scene::begin_dialogue(shmy::speech::Graph&& graph, const std::string& dia_i
         speaker_gui->set_label("Narrator");
     } else {
         const auto& e = get_entity_by_script_id(*line.speaker);
-        const auto& _e = e.story_id();
-        speaker_gui->set_label(_e);
+        speaker_gui->set_label(e.name());
     }
 
     auto line_gui = dia_gui->get_widget<gui::TextWidget>("lines");
     line_gui->set_label(*line.line);
-    lua_vm.set_paused(true);
 }
 
 void Scene::begin_combat(

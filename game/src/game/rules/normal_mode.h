@@ -1,6 +1,7 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 #include "gui/panel.h"
+#include "game/action.h"
 
 
 class Game;
@@ -13,8 +14,9 @@ private:
 
     Scene& get_scene();
 
-    void move_to_action(const std::string& target);
-    void speak_action(const std::string& target, const std::string& speech);
+    void move_to_action(const MoveToAction& action);
+    void speak_action(const SpeakAction& action);
+    void examine_action(const ExamineAction& action);
 
 public:
     NormalMode() = default;

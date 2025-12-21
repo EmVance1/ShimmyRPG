@@ -18,10 +18,10 @@ void NormalMode::init(Game* _game) {
 }
 
 
-void NormalMode::move_to_action(const std::string& target) {
+void NormalMode::move_to_action(const MoveToAction& action) {
     auto& scene = get_scene();
 
-    const auto& t = scene.entities.at(target);
+    const auto& t = scene.entities.at(action.target);
     const auto thresh = 1.f;
     if (t.is_character()) {
         scene.get_player().get_tracker().set_target_position(t.get_tracker().get_position());
@@ -34,26 +34,30 @@ void NormalMode::move_to_action(const std::string& target) {
     }
 }
 
-void NormalMode::speak_action(const std::string& target, const std::string& speech) {
+void NormalMode::speak_action(const SpeakAction& action) {
     auto& scene = get_scene();
 
-    const auto& t = scene.entities.at(target);
     const float thresh = 1.f;
+    const auto& t = scene.entities.at(action.target);
     const auto dist = scene.get_player().get_tracker().get_position() - t.get_world_position(scene.screen_to_world);
-    if (sf::Vector2f(dist.x, dist.y).lengthSquared() < (thresh * thresh * 1.1f)) {
-        if (speech.ends_with(".shmy")) {
-            scene.begin_dialogue(shmy::speech::Graph::load_from_file(shmy::env::pkg_full() / speech), speech);
-            scene.set_mode(GameMode::Dialogue);
-        } else {
-            scene.begin_dialogue(shmy::speech::Graph::create_from_line(t.script_id(), speech), t.script_id());
-            scene.set_mode(GameMode::Dialogue);
-        }
+    if (sf::Vector2f(dist.x, dist.y).lengthSquared() > (thresh * thresh * 1.1f)) {
+        move_to_action(MoveToAction{ action.target });
+        scene.queued = ContextAction{ action };
+        return;
+    }
+
+    if (action.speech.ends_with(".shmy")) {
+        scene.begin_dialogue(shmy::speech::Graph::load_from_file(shmy::env::pkg_full() / action.speech), action.speech);
+        scene.set_mode(GameMode::Dialogue);
     } else {
-        move_to_action(target);
-        scene.queued = ContextAction{ SpeakAction{ target, speech } };
+        scene.begin_dialogue(shmy::speech::Graph::create_from_line(t.get_script_id(), action.speech), t.get_script_id());
+        scene.set_mode(GameMode::Dialogue);
     }
 }
 
+void NormalMode::examine_action(const ExamineAction& action) {
+    speak_action(SpeakAction{ action.target, action.speech });
+}
 
 
 void NormalMode::handle_event(const sf::Event& event) {
@@ -93,23 +97,23 @@ void NormalMode::handle_event(const sf::Event& event) {
                     );
                     for (const auto& action : e->get_actions()) {
                         const auto act = action.to_string();
-                        if (action.index() == ContextAction::ActionID::MoveTo) {
-                            const auto& id = e->id();
-                            ctx_menu->add_button(act, [&, id](){ move_to_action(id); })
+                        switch (action.index()) {
+                        case ContextAction::ActionID::MoveTo:
+                            ctx_menu->add_button(act, [&](){ move_to_action(action.get<MoveToAction>()); })
                                 ->set_background_texture(sf::IntRect{ {0, 150}, {10, 10} });
-                        } else if (action.index() == ContextAction::ActionID::Speak) {
-                            const auto& id = e->id();
-                            const auto& sp = e->get_dialogue();
-                            ctx_menu->add_button(act, [&, id, sp](){ speak_action(id, sp); })
+                            break;
+                        case ContextAction::ActionID::Speak:
+                            ctx_menu->add_button(act, [&](){ speak_action(action.get<SpeakAction>()); })
                                 ->set_background_texture(sf::IntRect{ {0, 150}, {10, 10} });
-                        } else if (action.index() == ContextAction::ActionID::Examine) {
-                            const auto& id = e->id();
-                            const auto& sp = e->get_examination();
-                            ctx_menu->add_button(act, [&, id, sp](){ speak_action(id, sp); })
+                            break;
+                        case ContextAction::ActionID::Examine:
+                            ctx_menu->add_button(act, [&](){ examine_action(action.get<ExamineAction>()); })
                                 ->set_background_texture(sf::IntRect{ {0, 150}, {10, 10} });
-                        } else {
+                            break;
+                        default:
                             ctx_menu->add_button(action.to_string())
                                 ->set_background_texture(sf::IntRect{ {0, 150}, {10, 10} });
+                            break;
                         }
                     }
                     gui->add_widget("context_menu", ctx_menu);
@@ -125,11 +129,9 @@ void NormalMode::handle_event(const sf::Event& event) {
         tt->set_visible(false);
         if (auto top = top_contains(scene.sorted_entities, mapped); top && top->is_interactible()) {
             top->set_hovered(true);
-            if (top->is_character()) {
-                tt->set_position(gui::Position::topleft(sf::Vector2f(mmv->position) - sf::Vector2f(0.f, tt->get_size().y)));
-                tt->set_label(top->story_id());
-                tt->set_visible(true);
-            }
+            tt->set_position(gui::Position::topleft(sf::Vector2f(mmv->position) - sf::Vector2f(0.f, tt->get_size().y)));
+            tt->set_label(top->name());
+            tt->set_visible(true);
         }
 
         auto& player = scene.get_player();
@@ -162,8 +164,7 @@ void NormalMode::update() {
     auto& scene = get_scene();
 
     if (scene.queued.has_value() && !scene.get_player().get_tracker().is_moving()) {
-        const auto act = std::get<SpeakAction>(scene.queued->get_inner());
-        speak_action(act.target, act.speech);
+        speak_action(scene.queued->get<SpeakAction>());
         scene.queued = {};
     }
 

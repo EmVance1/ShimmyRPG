@@ -24,4 +24,6 @@ LuaJIT  = { path="../../_Libs/luajit" }
 thread_pool = { headers="../libs/thread_pool/include" }
 rapidjson   = { headers="../libs/rapidjson/include" }
 utfcpp      = { headers="../libs/utfcpp/source" }
+libogg    = { path="../../_Libs/libogg" }
+libvorbis = { path="../../_Libs/vorbis" }
 

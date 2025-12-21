@@ -28,18 +28,19 @@ sf::Vector2f SortBoundary::get_center_of_mass() const {
 
 Entity::Entity(
         const std::string& id,
+        const std::string& name,
         const sfu::TextureAtlas& texture,
         const sfu::TextureAtlas& outline,
         const sfu::AlphaMap& bitmap,
         const nav::Mesh* pathfinder)
     : m_id(id),
+    m_name(name),
     m_bitmap(bitmap),
     m_sprite(texture),
     m_outline_sprite(outline),
-    m_tracker(pathfinder),
-    m_is_character(pathfinder != nullptr)
+    m_tracker(pathfinder)
 {
-    if (m_is_character) {
+    if (is_character()) {
         m_sprite.setOrigin(sf::Vector2f((float)texture.getCellSize().x * 0.5f, (float)texture.getCellSize().y - 10.f));
         m_outline_sprite.setOrigin(m_sprite.getOrigin());
         m_collider.radius = (float)texture.getCellSize().x / pathfinder->display_scale / 4;
@@ -58,6 +59,10 @@ Entity::Entity(
 
 const std::string& Entity::id() const {
     return m_id;
+}
+
+const std::string& Entity::name() const {
+    return m_name;
 }
 
 const sfu::AnimatedSprite& Entity::get_sprite() const {
@@ -94,7 +99,7 @@ void Entity::set_sprite_position(const sf::Vector2f& position) {
 }
 
 nav::Vector2f Entity::get_world_position(const sf::Transform& screen_to_world) const {
-    if (m_is_character) {
+    if (is_character()) {
         return m_tracker.get_position();
     } else {
         const auto topl = m_sprite.getPosition() - m_sprite.getOrigin();
@@ -123,23 +128,6 @@ SortBoundary Entity::get_sorting_boundary() const {
 }
 
 
-void Entity::set_dialogue(const std::string& filename) {
-    m_dialogue_file = filename;
-}
-
-const std::string& Entity::get_dialogue() const {
-    return m_dialogue_file;
-}
-
-void Entity::set_examination(const std::string& filename) {
-    m_examine_file = filename;
-}
-
-const std::string& Entity::get_examination() const {
-    return m_examine_file;
-}
-
-
 bool Entity::contains(const sf::Vector2f& point) const {
     if (!get_AABB().contains(point)) {
         return false;
@@ -158,7 +146,7 @@ void Entity::set_hovered(bool hovered) {
 
 
 void Entity::update(const sf::Transform& world_to_screen) {
-    if (m_is_character) {
+    if (is_character()) {
         m_tracker.update(Time::deltatime());
         const auto pos = m_tracker.get_position();
         m_sprite.setPosition(world_to_screen.transformPoint({pos.x, pos.y}));

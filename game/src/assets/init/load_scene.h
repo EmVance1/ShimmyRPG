@@ -7,13 +7,13 @@
 class SceneLoader {
 private:
     Game* game;
-    const rapidjson::Value& prefabs;
+    const rapidjson::Value& props;
 
     Scene* scene;
     std::vector<size_t> portals;
 
 private:
-    void load_from_prefab(const rapidjson::Value& value, const std::string& name);
+    void load_from_prop(const rapidjson::Value& value, const std::string& name);
     void load_entity(const rapidjson::Value& value);
 
 public:

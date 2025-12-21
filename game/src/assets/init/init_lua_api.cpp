@@ -193,7 +193,7 @@ static int l_entity_get_id(lua_State* L) {
     lua_pushstring(L, "ptr");
     lua_gettable(L, 1);
     const auto entity = (Entity*)lua_touserdata(L, -1);
-    lua_pushstring(L, entity->script_id().c_str());
+    lua_pushstring(L, entity->get_script_id().c_str());
     return 1;
 }
 

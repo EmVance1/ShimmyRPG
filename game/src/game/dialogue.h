@@ -9,7 +9,6 @@ class Dialogue {
 public:
     enum class State {
         Empty,
-        EmptyWithFollowup,
         Player,
         Lines,
     };
@@ -30,15 +29,16 @@ private:
 
     State m_state = State::Empty;
     bool  m_applied = true;
-    std::string m_followup = "";
+    bool  m_hashook = false;
+    std::string m_sethook = "";
 
 public:
     Dialogue() = default;
 
-    bool is_playing() const { return m_state != State::Empty && m_state != State::EmptyWithFollowup; }
+    bool is_playing() const { return m_state != State::Empty; }
     State get_state() const { return m_state; }
     GameMode get_init_mode() const { return m_init_mode; }
-    std::optional<std::string> get_followup() const { if (m_state != State::EmptyWithFollowup) { return {}; } return m_followup; }
+    std::optional<std::string> take_hook() { if (m_hashook) { m_hashook = false; return m_sethook; } else { return {}; } }
 
     void begin(shmy::speech::Graph&& graph, GameMode init_mode, const std::string& id);
     void advance(shmy::speech::Edge resp = {});

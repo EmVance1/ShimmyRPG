@@ -17,23 +17,28 @@ AssetManager::Bundle::Bundle(Bundle&& other) noexcept
     LRUindex(other.LRUindex),
     textures(std::move(other.textures)),
     atlases(std::move(other.atlases)),
-    alphamaps(std::move(other.alphamaps))
+    alphamaps(std::move(other.alphamaps)),
+    sounds(std::move(other.sounds)),
+    streams(std::move(other.streams))
 {}
 AssetManager::Bundle& AssetManager::Bundle::operator=(Bundle&& other) noexcept {
     refcount = other.refcount;
     LRUindex = other.LRUindex;
-    textures = std::move(other.textures);
+    textures  = std::move(other.textures);
     textures  = std::move(other.textures);
     atlases   = std::move(other.atlases);
     alphamaps = std::move(other.alphamaps);
+    sounds    = std::move(other.sounds);
+    streams   = std::move(other.streams);
     return *this;
 }
+
 
 AssetManager::Bundle AssetManager::Bundle::load(const BundleDef& def) {
     constexpr int OUTLINE_WIDTH = 5;
     auto result = Bundle();
 
-    for (const auto& [name, v] : def) {
+    for (const auto& [name, v] : def.textures) {
         const auto img = sf::Image(v.file);
         std::ignore = result.atlases[name].loadFromImage(img, v.dims);
         result.atlases[name].setSmooth(v.smooth);
@@ -47,6 +52,14 @@ AssetManager::Bundle AssetManager::Bundle::load(const BundleDef& def) {
             result.alphamaps[name].loadFromImage(
                 (img.getSize().x < 200) ? shmy::filter::clickmap(img, OUTLINE_WIDTH) : shmy::filter::clickmap_threaded(img, OUTLINE_WIDTH)
             );
+        }
+    }
+
+    for (const auto& [name, v] : def.sounds) {
+        if (v.stream) {
+            result.streams[name] = *shmy::audio::Stream::open_file(v.file);
+        } else {
+            result.sounds[name] = *shmy::audio::Buffer::load_file(v.file);
         }
     }
 
@@ -64,6 +77,14 @@ const sfu::TextureAtlas& AssetManager::Bundle::get_atlas(const std::string& name
 
 const sfu::AlphaMap& AssetManager::Bundle::get_alphamap(const std::string& name) const {
     return alphamaps.at(name);
+}
+
+const shmy::audio::Buffer& AssetManager::Bundle::get_sound(const std::string& name) const {
+    return sounds.at(name);
+}
+
+shmy::audio::Stream& AssetManager::Bundle::get_stream(const std::string& name) {
+    return streams.at(name);
 }
 
 // size_t AssetManager::Bundle::sizeof_textures() {
@@ -117,12 +138,20 @@ void AssetManager::init(const std::filesystem::path& path) {
             if (img_types.contains(ext)) {
                 const auto  name = f.path().stem().string();
                 const auto& fdef = JSON_GET(specs, name.c_str());
-                def[name] = AssetManager::TextureDef{
+                def.textures[name] = AssetManager::TextureDef{
                     .file = f.path(),
                     .dims = shmy::json::into_vector2u(JSON_GET(fdef, "dims")),
                     .outline = JSON_IS_TRUE(fdef, "outline"),
                     .smooth  = JSON_IS_TRUE(fdef, "smooth"),
                     .click   = JSON_IS_TRUE(fdef, "click"),
+                };
+            }
+            if (aud_types.contains(ext)) {
+                const auto  name = f.path().stem().string();
+                const auto& fdef = JSON_GET(specs, name.c_str());
+                def.sounds[name] = AssetManager::SoundDef{
+                    .file = f.path(),
+                    .stream  = JSON_IS_TRUE(fdef, "stream"),
                 };
             }
         }
@@ -201,6 +230,16 @@ const sfu::TextureAtlas& AssetManager::get_atlas(const std::string& path) {
 const sfu::AlphaMap& AssetManager::get_alphamap(const std::string& path) {
     const auto parts = shmy::core::split(path, '.');
     return store[parts[0]].get_alphamap(parts[1]);
+}
+
+const shmy::audio::Buffer& AssetManager::get_sound(const std::string& path) {
+    const auto parts = shmy::core::split(path, '.');
+    return store[parts[0]].get_sound(parts[1]);
+}
+
+shmy::audio::Stream& AssetManager::get_stream(const std::string& path) {
+    const auto parts = shmy::core::split(path, '.');
+    return store[parts[0]].get_stream(parts[1]);
 }
 
 const sf::Texture& AssetManager::nulltex() {

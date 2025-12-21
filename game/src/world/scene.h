@@ -31,6 +31,7 @@ struct Scene {
     sf::Transform world_to_screen;
     sf::Transform screen_to_world;
     std::unordered_set<std::string> refs;
+    std::unordered_set<std::string> tracks;
 
     // entities, scripts, triggers
     shmy::lua::Runtime lua_vm;

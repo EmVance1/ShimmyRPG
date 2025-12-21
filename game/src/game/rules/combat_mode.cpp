@@ -71,11 +71,9 @@ void CombatMode::handle_event(const sf::Event& event) {
         tt->set_visible(false);
         if (auto top = top_contains(scene.sorted_entities, mapped); top && top->is_interactible()) {
             top->set_hovered(true);
-            if (top->is_character()) {
-                tt->set_position(gui::Position::topleft(sf::Vector2f(mmv->position) - sf::Vector2f(0.f, tt->get_size().y)));
-                tt->set_label(top->story_id());
-                tt->set_visible(true);
-            }
+            tt->set_position(gui::Position::topleft(sf::Vector2f(mmv->position) - sf::Vector2f(0.f, tt->get_size().y)));
+            tt->set_label(top->name());
+            tt->set_visible(true);
         }
 
         if (active_is_playable()) {
@@ -112,7 +110,7 @@ void CombatMode::update() {
         advance_turn = false;
 
         if (active_is_playable()) {
-            atk_gui->get_widget<gui::Text>("current_actor")->set_label(get_active().story_id());
+            atk_gui->get_widget<gui::Text>("current_actor")->set_label(get_active().name());
             atk_gui->set_visible(true);
             atk_gui->set_enabled(true);
         } else {

@@ -3,6 +3,9 @@
     "scripts": [
         "scripts/ShimmyIntroScene.lua"
     ],
+    "tracks": [
+        "tavern_simple.optimism"
+    ],
     "triggers": [
         {
             // front door
@@ -30,64 +33,89 @@
     ],
     "entities": [
         {
-            "texture": "NPC_placeholder.player", "position": { "world": [ 2, 3.8 ] }, "tags": [ "player" ],
-            "trait_scriptable": { "script_id": "player", "story_id": "Stanza" },
-            "trait_movement": { "speed": 1.3 }
+            "name": "Stanza", "texture": "NPC_placeholder.player", "position": { "world": [ 2, 3.8 ] }, "tags": [],
+            "trait_scriptable": { "id": "player" },
+            "trait_playable": { "active": true },
+            "trait_movement": { "speed": 1.3 },
+
+            // speculative, better composability
+            "trait_inventory": { "id": "player_inventory" },
         },
         {
-            "texture": "NPC_placeholder.friendly", "position": { "world": [ 2, -0.8 ] }, "tags": [ "shimmy_staff" ],
-            "trait_scriptable": { "script_id": "ShimmyPrime", "story_id": "Shimmy" },
+            "name": "Shimmy", "texture": "NPC_placeholder.friendly", "position": { "world": [ 2, -0.8 ] }, "tags": [ "shimmy_staff" ],
+            "trait_scriptable": { "id": "ShimmyPrime" },
             "trait_movement": { "speed": 1.0 },
-            "trait_speech": { "file": "speech/ShimmyDialogue.shmy" },
+            "trait_speech": { "source": "speech/ShimmyDialogue.shmy" },
+
+            // speculative, should ensure no overlapping entity instances
+            "trait_variant": { "npc": "Shimmy", "version": "prime" },
+        },
+        {
+            "name": "Brian", "texture": "NPC_placeholder.friendly", "position": { "world": [ 3.5, 1 ] }, "tags": [ "shimmy_customer" ],
+            "trait_scriptable": { "id": "BrianPrime" },
+            "trait_movement": { "speed": 1.0 },
+            "trait_speech": { "source": "speech/BrianDialogue.shmy" }
+        },
+        {
+            "name": "Sally", "texture": "NPC_placeholder.neutral", "position": { "world": [ 2.2, 0 ] }, "tags": [ "shimmy_customer" ],
+            "trait_scriptable": { "id": "Sally" },
+            "trait_movement": { "speed": 1.0 },
+            "trait_speech": { "source": "This curfew nonsense is a bad fucking joke..." }
+        },
+        {
+            "name": "Bill", "texture": "NPC_placeholder.neutral", "position": { "world": [ 2.8, 0 ] }, "tags": [ "shimmy_customer" ],
+            "trait_scriptable": { "id": "Bill" },
+            "trait_movement": { "speed": 1.0 },
+            "trait_speech": { "source": "Shimmy really knows how to brew a strong drink." }
+        },
+        {
+            "name": "Table", "texture": "tavern_simple.table_long", "position": { "iso": [ 558, 478 ] }, "tags": [ "furniture" ],
+            "trait_customsort": [ [0, 265], [378, 110] ],
 
             // speculative
-            "trait_inventory": { "id": "shimmy_inventory" },
-            "trait_playable": null,
-            "trait_": null,
+            "trait_breakable": { "hp": 20, "material": "wood" },
+            "trait_pickup": { "item_id": "table_long" },
         },
+
+        // current prop system is more or less exactly instancing behaviour i want. speculative structure:
+        /*
+        // fully featured entity with every bell and whistle *available* (composable). may or may not be playable
         {
-            "texture": "NPC_placeholder.friendly", "position": { "world": [ 3.5, 1 ] }, "tags": [ "shimmy_customer" ],
-            "trait_scriptable": { "script_id": "BrianPrime", "story_id": "Brian" },
-            "trait_movement": { "speed": 1.0 },
-            "trait_speech": { "file": "speech/BrianDialogue.shmy" }
+            "character": "player", "position": { "world": [ 0, 0 ] }
         },
+
+        // basically characters that can be duplicated. strictly non-playable. generally spawned from scripts, not authored
         {
-            "texture": "NPC_placeholder.neutral", "position": { "world": [ 2.2, 0 ] }, "tags": [ "shimmy_customer" ],
-            "trait_scriptable": { "script_id": "Sally", "story_id": "Sally" },
-            "trait_movement": { "speed": 1.0 },
-            "trait_speech": { "line": "This curfew nonsense is a bad fucking joke..." }
+            "mob": "spider", "position": { "world": [ 0, 0 ] }
         },
+
+        // props cannot speak or pathfind, may have inventory (boxes)
         {
-            "texture": "NPC_placeholder.neutral", "position": { "world": [ 2.8, 0 ] }, "tags": [ "shimmy_customer" ],
-            "trait_scriptable": { "script_id": "Bill", "story_id": "Bill" },
-            "trait_movement": { "speed": 1.0 },
-            "trait_speech": { "line": "Shimmy really knows how to brew a strong drink." }
-        },
-        {
-            "texture": "tavern_simple.table_long", "position": { "iso": [ 558, 478 ] }, "tags": [ "furniture", "wood" ],
-            "trait_customsort": [ [0, 265], [378, 110] ]
-        },
-        {
-            "prefab": "table_simple_wooden_round",
+            "prop": "table_simple_wooden_round", "position": { "iso": [ 737, 749 ] }
             "trait_examine": { "file": "speech/table.shmy" },
-            "position": { "iso": [ 737, 749 ] }
+        },
+
+        // scenery is just a sprite. foliage, dynamic backgrounds etc.
+        {
+            "scenery": "berry_bush_small", "position": { "iso": [ 737, 749 ] }
+        },
+        */
+
+        {
+            "prop": "table_simple_wooden_round", "position": { "iso": [ 737, 749 ] },
+            "trait_examine": { "file": "speech/table.shmy" },
         },
         {
-            "prefab": "table_simple_wooden_round",
-            "position": { "iso": [ 959, 649 ] }
+            "prop": "table_simple_wooden_round", "position": { "iso": [ 959, 649 ] }
         },
         {
-            "prefab": "table_simple_wooden_round",
-            "position": { "iso": [ 909, 870 ] }
+            "prop": "table_simple_wooden_round", "position": { "iso": [ 909, 870 ] }
         },
         {
-            "prefab": "table_simple_wooden_round",
-            "position": { "iso": [ 1114, 790 ] }
+            "prop": "table_simple_wooden_round", "position": { "iso": [ 1114, 790 ] }
         },
         {
-            "prefab": "door_simple_wooden_single",
-            "position": { "iso": [ 1060, 273 ] },
-            "tags": [ "locked", "-y" ]
+            "prop": "door_simple_wooden_single", "position": { "iso": [ 1060, 273 ] }, "tags": [ "locked", "-y" ]
         }
     ]
 }

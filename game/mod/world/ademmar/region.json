@@ -1,20 +1,51 @@
 {
-    "prefabs": {
+    "characters": {
+        "player": {
+            "texture": "NPC_placeholder.player", "name": "${player}", "tags": [],
+            "trait_movement": { "speed": 1.3 },
+
+            // speculative, better composability
+            "trait_inventory": { "initial": [], "type": "basic" },
+            "trait_playable": { "current": true },
+        },
+        "shimmy": {
+            "texture": "NPC_placeholder.friendly", "name": "Shimmy", "tags": [ "shimmy_staff" ],
+            "trait_movement": { "speed": 1.0 },
+            "trait_speech": { "file": "speech/ShimmyDialogue.shmy" },
+
+            // speculative
+            "trait_inventory": { "initial": [], "type": "trader" },
+            "trait_variant": { "version": "prime" }, // should ensure no overlapping entity instances
+        },
+    },
+    "props": {
         "door_simple_wooden_single": {
-            "texture": "tavern_simple.door_single", "tags": [ "wood", "door", "simple_lock" ],
-            "trait_customsort": [ [0, 145], [80, 195] ]
+            "name": "Door", "texture": "tavern_simple.door_single", "tags": [],
+            "trait_customsort": [ [0, 145], [80, 195] ],
+
+            // would be on entity instance, not prop def
+            "trait_door": { "lock": "some_lock", "exit": "some_place" },
         },
         "door_simple_wooden_double": {
-            "texture": "tavern_simple.door_double", "tags": [ "wood", "door", "simple_lock" ],
-            "trait_customsort": [ [0, 150], [80, 200] ]
+            "name": "Double door", "texture": "tavern_simple.door_double", "tags": [],
+            "trait_customsort": [ [0, 150], [80, 200] ],
         },
         "table_simple_wooden_round": {
-            "texture": "tavern_simple.table_round", "tags": [ "wood", "furniture" ],
-            "trait_customsort": [ [-10, 99], [146, 99] ]
+            "name": "Table", "texture": "tavern_simple.table_round", "tags": [ "furniture" ],
+            "trait_customsort": [ [-10, 99], [146, 99] ],
+
+            // speculative
+            "trait_breakable": { "hp": 20, "material": "wood" },
+            "trait_pickup": { "item_id": "table_round" },
         },
         "crate_simple_wooden_small": {
-            "texture": "tavern_simple.crate_small", "tags": [ "wood", "box", "small_inventory" ],
-            "trait_customsort": [ [0, 99], [132, 99] ]
+            "name": "Crate", "texture": "tavern_simple.crate_small", "tags": [ "furniture" ],
+            "trait_customsort": [ [0, 99], [132, 99] ],
+
+            // speculative
+            "trait_inventory": { "initial": [] },
+            "trait_breakable": { "hp": 20, "material": "wood" },
+            "trait_pickup": { "item_id": "crate" },
         }
     },
     "gui_style": "wooden",

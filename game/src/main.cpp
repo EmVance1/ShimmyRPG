@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "audio/lib.h"
 #include "settings.h"
 #include "world/game.h"
 #include "world/scene.h"
@@ -15,6 +16,8 @@
 
 
 int main(int argc, char** argv) {
+    shmy::audio::create_context();
+
     Settings::init(".boot");
 
     auto ctxt = sf::ContextSettings();

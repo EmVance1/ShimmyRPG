@@ -60,7 +60,7 @@ void Game::reload(const std::fs::path& _module, int start_area) {
 
     const auto& jscenes = doc["areas"].GetArray();
     scenes.reserve(jscenes.Size());
-    auto loader = SceneLoader(this, doc["prefabs"]);
+    auto loader = SceneLoader(this, doc["props"]);
 
     int i = 0;
     for (const auto& scene : jscenes) {
@@ -74,8 +74,15 @@ void Game::reload(const std::fs::path& _module, int start_area) {
 #else
         scenes.emplace_back(loader, region, scene.GetString());
 #endif
+        const auto FADETIME = 400;
         if (i == active_scene) {
             scenes[(size_t)i].set_sleeping(false);
+            for (const auto& t : scenes[(size_t)i].tracks) {
+                tracks[t] = shmy::audio::Player(AssetManager::get_stream(t));
+                tracks[t].set_looping(true);
+                tracks[t].start();
+                tracks[t].fade(0.f, 1.f, FADETIME);
+            }
         }
 
         portalgraph[scene.GetString()] = loader.get_portals();
@@ -108,6 +115,25 @@ void Game::exec_scene_swap() {
     auto& scene = get_active_scene();
     scene.camera.setCenter(scene.world_to_screen.transformPoint(swap_pos));
     scene.background.update_soft(scene.camera.getFrustum());
+
+    const auto FADETIME = 500;
+    for (const auto& t : last.tracks) {
+        if (!scene.tracks.contains(t)) {
+            tracks[t].fade(0.f,  FADETIME);
+            tracks[t].stop_after(FADETIME);
+        }
+    }
+    for (const auto& t : scene.tracks) {
+        if (!last.tracks.contains(t) || !tracks.contains(t)) {
+            auto& track = tracks[t] = shmy::audio::Player(AssetManager::get_stream(t));
+            track.set_looping(true);
+            track.seek(0);
+            track.start();
+            track.stop_at(0);
+            track.fade(0.f, 1.f, FADETIME);
+        }
+    }
+
     last.set_sleeping(true);
     scene.get_player().set_position(swap_pos, scene.world_to_screen);
     gui.get_widget<gui::Text>("area_label")->set_label(scene.name);

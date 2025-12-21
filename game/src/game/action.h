@@ -3,7 +3,7 @@
 #include <string>
 
 
-struct MoveToAction   {};
+struct MoveToAction   { std::string target; };
 struct SpeakAction    { std::string target; std::string speech; };
 struct ExamineAction  { std::string target; std::string speech; };
 struct AttackAction   {};
@@ -13,7 +13,16 @@ struct LockpickAction {};
 struct PickUpAction   {};
 class ContextAction {
 public:
-    using ContextAction_T = std::variant<MoveToAction, SpeakAction, ExamineAction, AttackAction, OpenDoorAction, OpenInvAction, LockpickAction, PickUpAction>;
+    using ContextAction_T = std::variant<
+        MoveToAction,
+        SpeakAction,
+        ExamineAction,
+        AttackAction,
+        OpenDoorAction,
+        OpenInvAction,
+        LockpickAction,
+        PickUpAction
+    >;
 
     enum class ActionID {
         MoveTo,
@@ -61,5 +70,16 @@ public:
         }
         return "";
     }
+
+    template<typename T>
+    T& get() { return std::get<T>(m_impl); }
+    template<typename T>
+    const T& get() const { return std::get<T>(m_impl); }
 };
+
+bool operator==(const ContextAction& lhs, const ContextAction& rhs);
+
+namespace std { template<> struct hash<ContextAction> {
+    size_t operator()(const ContextAction& act) const noexcept { return std::hash<size_t>()((size_t)act.get_inner().index()); }
+}; }
 

@@ -3,7 +3,6 @@
 #include "normal_mode.h"
 #include "world/game.h"
 #include "world/scene.h"
-#include "util/env.h"
 
 
 Scene& CinematicMode::get_scene() {
@@ -28,6 +27,9 @@ void CinematicMode::handle_event(const sf::Event& event) {
     }
 
     if (dialogue.apply_advance()) {
+        if (const auto hook = dialogue.take_hook()) {
+            scene.lua_vm.load_anon(std::string("DispatchEvent") + hook.value());
+        }
         if (dialogue.is_playing()) {
             const auto elem = dialogue.get_current_element();
             if (auto line = std::get_if<Dialogue::Line>(&elem)) {
@@ -38,7 +40,7 @@ void CinematicMode::handle_event(const sf::Event& event) {
                 if (*line->speaker == "Narrator") {
                     std::dynamic_pointer_cast<gui::TextWidget>(speaker_gui)->set_label("Narrator");
                 } else {
-                    std::dynamic_pointer_cast<gui::TextWidget>(speaker_gui)->set_label(scene.get_entity_by_script_id(*line->speaker).story_id());
+                    std::dynamic_pointer_cast<gui::TextWidget>(speaker_gui)->set_label(scene.get_entity_by_script_id(*line->speaker).name());
                 }
                 auto line_gui = dia_gui->get_widget("lines");
                 line_gui->set_visible(true);
@@ -62,15 +64,9 @@ void CinematicMode::handle_event(const sf::Event& event) {
             scene.set_mode(dialogue.get_init_mode());
             dia_gui->set_enabled(false);
             dia_gui->set_visible(false);
-            get_scene().lua_vm.set_paused(false);
-            if (const auto fu = dialogue.get_followup()) {
-                scene.lua_vm.load_anon(std::string("DispatchEvent") + fu.value());
-            }
         }
     }
 }
 
-void CinematicMode::update() {
-    get_scene().lua_vm.set_paused(dialogue.is_playing());
-}
+void CinematicMode::update() {}
 

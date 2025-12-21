@@ -1,6 +1,7 @@
 {
     "label": "Fountain Road",
     "scripts": [],
+    "tracks": [],
     "triggers": [
         {
             // shimmy front door
@@ -10,13 +11,20 @@
     ],
     "entities": [
         {
-            "texture": "NPC_placeholder.player", "position": { "world": [ 0, 0 ] }, "tags": [ "player" ],
-            "trait_scriptable": { "script_id": "player", "story_id": "-" },
-            "trait_movement": { "speed": 1.3 }
+            "name": "Stanza", "texture": "NPC_placeholder.player", "position": { "world": [ 0, 0 ] }, "tags": [],
+            "trait_scriptable": { "id": "player" },
+            "trait_playable": { "active": true },
+            "trait_movement": { "speed": 1.3 },
+
+            // speculative, better composability
+            "trait_inventory": { "id": "player_inventory" },
         },
         {
-            "texture": "tavern_simple.door_single", "position": { "iso": [ 1160, 240 ] }, "tags": [ "door", "wood", "simple_lock" ],
-            "trait_customsort": [ [0, 155], [99, 204] ]
+            "name": "Shimmy's Shack", "texture": "tavern_simple.door_single", "position": { "iso": [ 1160, 240 ] }, "tags": [],
+            "trait_customsort": [ [0, 155], [99, 204] ],
+
+            // speculative
+            "trait_door": { "lock": "some_lock", "exit": "some_place" },
         }
     ]
 }

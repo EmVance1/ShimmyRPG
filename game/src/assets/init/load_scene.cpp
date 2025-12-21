@@ -62,12 +62,15 @@ void SceneLoader::load(Scene* _scene, const std::string& r_id, const std::string
     for (const auto& s : JSON_GET_ARRAY(doc, "scripts")) {
         scene->lua_vm.load_file(shmy::env::pkg_full() / s.GetString());
     }
+    for (const auto& t : JSON_GET_ARRAY(doc, "tracks")) {
+        scene->tracks.emplace(t.GetString());
+    }
 
     for (const auto& e : JSON_GET_ARRAY(doc, "entities")) {
         load_entity(e);
     }
 
-    if (scene->player_id == "") { throw std::runtime_error("exactly one entity MUST be designated 'player'\n"); }
+    if (scene->player_id == "") throw std::runtime_error("exactly one entity MUST be designated 'active = true'\n");
 
     for (const auto& e : JSON_GET_ARRAY(doc, "triggers")) {
         auto& t = scene->triggers.emplace_back();

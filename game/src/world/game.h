@@ -1,5 +1,6 @@
 #pragma once
 #include <sfutil/sfutil.h>
+#include <audio/lib.h>
 #include <unordered_map>
 #include <string>
 #include "scene.h"
@@ -37,6 +38,8 @@ private:
     CinematicMode cinematic_mode;
     CombatMode combat_mode;
     GameMode gamemode = GameMode::Normal;
+
+    std::unordered_map<std::string, shmy::audio::Player> tracks;
 
 public:
     gui::Panel gui;

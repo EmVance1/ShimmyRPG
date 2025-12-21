@@ -35,26 +35,28 @@ void Dialogue::advance(dia::Edge resp) {
     m_applied = false;
 
     switch (m_state) {
-    case State::Empty: case State::EmptyWithFollowup:
+    case State::Empty:
         throw std::invalid_argument("no active dialogue");
 
     case State::Player:
-        resp.eval_modifiers(FlagTable::callback);
-        switch (resp.next_type()) {
-        case dia::Edge::Outcome::Exit:
+        switch (resp.outcome()) {
+        case dia::Edge::Outcome::Hook:
+            m_sethook = resp.get_hook();
+            m_hashook = true;
+            break;
+        case dia::Edge::Outcome::Modifier:
+            resp.eval_modifiers(FlagTable::callback);
+            break;
+        default:
+            break;
+        }
+        if (resp.next_vertex().is_exit()) {
             m_state = State::Empty;
             FlagTable::clear_temps();
-            break;
-        case dia::Edge::Outcome::ExitWith:
-            m_state = State::EmptyWithFollowup;
-            m_followup = resp.exits_with();
-            FlagTable::clear_temps();
-            break;
-        case dia::Edge::Outcome::Edge:
+        } else {
             m_state = State::Lines;
             m_vert = resp.next_vertex();
             m_line = m_vert.first_line();
-            break;
         }
         break;
 
@@ -63,21 +65,23 @@ void Dialogue::advance(dia::Edge resp) {
         if (m_line != m_vert.end_line()) return;
 
         switch (m_vert.outcome()) {
+        case dia::Vertex::Outcome::Edges:
+            m_state = State::Player;
+            break;
         case dia::Vertex::Outcome::Goto:
-            m_vert = m_vert.goes_to();
+            m_vert = m_vert.get_goto();
             m_line = m_vert.first_line();
             break;
         case dia::Vertex::Outcome::Exit:
             m_state = State::Empty;
             FlagTable::clear_temps();
             break;
-        case dia::Vertex::Outcome::ExitWith:
-            m_state = State::EmptyWithFollowup;
-            m_followup = m_vert.exits_with();
+        case dia::Vertex::Outcome::ExitHook:
+            m_state = State::Empty;
             FlagTable::clear_temps();
+            m_hashook = true;
+            m_sethook = m_vert.get_hook();
             break;
-        case dia::Vertex::Outcome::Edges:
-            m_state = State::Player;
         }
         break;
     }
@@ -94,7 +98,7 @@ bool Dialogue::apply_advance() {
 
 Dialogue::Element Dialogue::get_current_element() const {
     switch (m_state) {
-    case State::Empty: case State::EmptyWithFollowup:
+    case State::Empty:
         throw std::invalid_argument("no active dialogue");
 
     case State::Player: {
