@@ -1,0 +1,11 @@
+
+module main
+
+START = match (rng3) with
+    (0) <Shimmy: "Hey pal, ye shouldn't be back here.">         => EXIT
+    (1) <Shimmy: "Mate, this is the bar. You don't work here."> => EXIT
+    (_) <Shimmy: "You lost, friend? Staff only back here.">     => EXIT
+end
+
+endmod
+

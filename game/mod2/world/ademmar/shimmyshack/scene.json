@@ -1,0 +1,74 @@
+{
+    "label": "Shimmy's Shack",
+    "scripts": [
+        "scripts/ShimmyIntroScene.lua"
+    ],
+    "tracks": [
+        // "tavern_simple.optimism"
+    ],
+    "portals": [
+        {
+            "id": "front_door",
+            "position": [ 1.7, 4.0 ],
+            "entrypos": [ 1.8, 3.8 ],
+            "exit": "fountainroad.shimmy_shack",
+            "icon": "nav_icons.door",
+            "mouseover_radius": 1.0,
+            "preload_radius": 1.0,
+        },
+    ],
+    "triggers": [
+        {
+            // welcome cutscene
+            "rect": [ 0, -1.2, 4, 3.5 ],
+            "condition": "once",
+            "act_event": "OnShimmyIntroCutsceneTriggered",
+        },
+        {
+            // behind bar
+            "rect": [ 0.45, -1.2, 3.55, 0.9 ],
+            "act_dia": "speech/ShimmyBehindBar.shmy",
+        },
+    ],
+    "entities": [
+        { "character": "player",      "position": { "world": [ 2.0,  3.8 ] } },
+        { "character": "Shimmy",      "position": { "world": [ 2.0, -0.8 ] } },
+        { "character": "BrianPrime",  "position": { "world": [ 3.5,  1.0 ] } },
+        { "character": "Sally",       "position": { "world": [ 2.2,  0.0 ] } },
+        { "character": "Bill",        "position": { "world": [ 2.8,  0.0 ] } },
+        {
+            "prop": "table_simple_wooden_long", "position": { "iso": [ 558, 478 ] },
+            "trait_examine": { "source": "speech/table.shmy" },
+        },
+        { "prop": "table_simple_wooden_round", "position": { "iso": [ 737, 749 ] } },
+        { "prop": "table_simple_wooden_round", "position": { "iso": [ 959, 649 ] } },
+        { "prop": "table_simple_wooden_round", "position": { "iso": [ 909, 870 ] } },
+        { "prop": "table_simple_wooden_round", "position": { "iso": [ 1114, 790 ] } },
+        { "prop": "door_simple_wooden_single", "position": { "iso": [ 1060, 273 ] }, "name": "Basement" },
+        // { "prop": "door_simple_wooden_single", "position": { "iso": [ 745,  835 ] }, "name": "Fountain Road" },
+
+        // current prop system is more or less exactly instancing behaviour i want. speculative structure:
+        /*
+        // fully featured entity with every bell and whistle *available* (composable). may or may not be playable
+        {
+            "character": "player", "position": { "world": [ 0, 0 ] }
+        },
+
+        // basically characters that can be duplicated. strictly non-playable. generally spawned from scripts, not authored
+        {
+            "mob": "spider", "position": { "world": [ 0, 0 ] }
+        },
+
+        // props cannot speak or pathfind, may have inventory (boxes)
+        {
+            "prop": "table_simple_wooden_round", "position": { "iso": [ 737, 749 ] }
+            "trait_examine": { "file": "speech/table.shmy" },
+        },
+
+        // scenery is just a sprite. foliage, animated backgrounds, asset reuse etc.
+        {
+            "scenery": "berry_bush_small", "position": { "iso": [ 737, 749 ] }
+        },
+        */
+    ]
+}

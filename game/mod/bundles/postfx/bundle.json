@@ -1,0 +1,7 @@
+{
+    "glitch":    { "u_texture": null, "u_resolution": null, "u_dist": 2.0 },
+    "poster":    { "u_texture": null, },
+    // "pixelate":  {  "u_texture": null, "u_resolution": null },
+    // "crt":       {  "u_texture": null, "u_curvature": [ 5.0, 5.0 ] },
+    // "grayscale": {  "u_texture": null, "u_curvature": [ 5.0, 5.0 ] },
+}

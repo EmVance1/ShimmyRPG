@@ -10,13 +10,12 @@ namespace action {
 
 struct DoString { std::string str;  };
 struct DoEvent  { std::string event; };
-struct LoadDia  { std::string file; };
+struct LoadDia  { std::string modpath; };
 struct Popup    { std::string msg;  };
-struct Portal   { size_t index; sf::Vector2f spawnpos; std::string lock_id; };
 
 }
 
-using TriggerAction = std::variant<action::DoString, action::DoEvent, action::LoadDia, action::Popup, action::Portal>;
+using TriggerAction = std::variant<action::DoString, action::DoEvent, action::LoadDia, action::Popup>;
 
 struct Trigger {
     sfu::RotatedFloatRect bounds;

@@ -1,0 +1,65 @@
+### Gambling.shmy
+
+# 'Brian' is a graph with 3 different exit transitions
+module Brian(eWin, eDraw, eLose)
+
+# ensures consistent global state
+require [ Player.Win ]
+
+
+START = BrianPrime: [ "Why don't you pick a card, any card." ] (
+    "*Pick a card*" => pick( _pick = rng(3) )
+)
+
+pick = match (_pick) with
+    (0) Narrator: [ "*You draw an ace.*" ] => BrianPrime: [ "Lucky lucky." ] => eWin( Player.Win = true )
+    (1) Narrator: [ "*You draw a 3.*" ] => BrianPrime: [ "Bad luck friend." ] => eLose
+    (2) Narrator: [ "*You draw a 9. As did Brian.*" ] => BrianPrime: [ "Well well." ] => eDraw
+end
+
+endmod
+
+
+### Brian.shmy
+
+# 'Brian' is a graph with no exit transitions
+module Brian()
+
+# ensures consistent global state
+require [ Player.Origin, Player.Class ]
+
+# 'game' binds as opaque reference to Gambling.shmy/Brian, START -> game, eWin, eDraw, eLost -> EXIT
+game = import Gambling.Brian(EXIT, EXIT, EXIT)
+
+
+START = if (ShimmyIntroScene.IsActive && once) then
+    BrianPrime: [ "Oh hello there. Fancy a game of cards?" ] (
+        "Love to. Names ${player} by the way."       => BrianPrime: [ "Good on ye ${player}." ] => game
+        "If that's what counts for fun around here." => chat
+    )
+else
+    BrianPrime: [ "Lovely spot this, don't you think?" ] => EXIT
+end
+
+chat = BrianPrime: [ "Ok slow down pal, you just got here. Where are you from?" ] (
+    if (Player.Origin == Amnesiac) then
+        "I move from place to place" => BrianPrime: [ "Fascinating." ] => game
+    else
+        match (Player.Origin) with
+          (Twinvayne) "Twinvayne" => BrianPrime: [ "A lovely place." ] => game
+          (Domali)    "Domali"    => BrianPrime: [ "A horrid place." ] => game
+        end
+    end
+
+    # syntax sugar for 'if - then - end'
+    (Player.Class == Barbarian) "I move from place to place" => vert
+
+    # syntax sugar for 'v1 => v2; v2 => v3'
+    "Nowhere"   => BrianPrime: [ "Whatever you say." ] => game
+}
+
+vert = BrianPrime: [ "Fascinating." ] => game
+
+
+endmod
+

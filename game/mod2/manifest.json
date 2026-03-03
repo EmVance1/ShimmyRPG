@@ -1,0 +1,16 @@
+{
+    "initial_scene": "ademmar/shimmyshack",
+    "post_process": "posteffects",
+    "gui_style": "gui_wooden",
+
+    "difficulty_opts": [ // ideas:
+        // "ai_strength",
+        // "money_scaling",
+        // "hp_scaling",
+        // "skill_bonus",
+        // "permadeath",
+    ],
+
+    "game_rules": [
+    ],
+}

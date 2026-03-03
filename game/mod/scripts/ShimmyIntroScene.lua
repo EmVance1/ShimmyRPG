@@ -2,30 +2,36 @@ local shmy = shmy
 
 
 RegisterHandler("OnStart", function(state, _)
-    state.shimmy = shmy.entity("ShimmyPrime")
+    state.shimmy = shmy.entity("Shimmy")
+    state.brian  = shmy.entity("BrianPrime")
 end)
 
 RegisterAsyncHandler("OnShimmyIntroCutsceneTriggered", function(state, _)
+    shmy.set_mode(shmy.mode.CINEMATIC, true)
     shmy.camera.set_target(state.shimmy:get_position())
-    shmy.set_mode(shmy.mode.CINEMATIC)
     shmy.yield_seconds(1.0)
-    shmy.yield_to_dialogue("speech/ShimmyIntroScene.shmy")
+
+    -- shmy.yield_to_dialogue("speech/ShimmyDialogue.IntroScene")
+    shmy.yield_to_dialogue("speech/experiments/fib.Default")
 end)
 
 RegisterAsyncHandler("OnShimmyIntroCutsceneFinished", function(state, _)
-    shmy.flags["ShimmyIntroScene.HasPlayed"] = 1
+    shmy.flags["ShimmyIntroScene.HasPlayed"] = true
     state.shimmy:set_path({ x=2.4, y=-0.8 })
-    shmy.yield_seconds(0.5)
+    shmy.yield_seconds(0.4)
     shmy.set_mode(shmy.mode.NORMAL)
+
+    -- state.brian.queue:add_action(shmy.action.UsePortal{ "front_door" })
+    -- state.brian.queue:await(shmy.condition.Flag{ key="Player.Outside", val=1 })
+    -- state.brian.queue:add_action(shmy.action.SetPath{ { x=-3.8, y=-2.3 } })
 end)
 
-
-
-RegisterHandler("OnEntityDestinationReached", function(_, _)
-    print("reached dest")
-end)
 
 RegisterHandler("PrintDebug", function(_, args)
     print(args[1])
+end)
+
+RegisterHandler("OnFibEnd", function(_, _)
+    print("fib.a = " .. shmy.flags["fib.a"])
 end)
 

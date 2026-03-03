@@ -81,6 +81,10 @@ sfu::FloatCircle Entity::get_trigger_collider() const {
     return m_collider;
 }
 
+void Entity::set_navmesh(const nav::Mesh* pathfinder) {
+    m_tracker.set_mesh(pathfinder);
+}
+
 
 void Entity::set_animation(size_t index) {
     m_sprite.setRow((uint32_t)index);
@@ -106,6 +110,12 @@ nav::Vector2f Entity::get_world_position(const sf::Transform& screen_to_world) c
         const auto temp = screen_to_world.transformPoint(topl + m_boundary.get_center_of_mass());
         return { temp.x, temp.y };
     }
+}
+
+sf::Vector2f Entity::get_tooltip_position() const {
+    const auto temp = (m_sprite.getPosition() - m_sprite.getOrigin());
+    const auto cell = (sf::Vector2f)m_sprite.getAnimation().getCellSize();
+    return temp + sf::Vector2f(cell.x * 0.5f, cell.y * 0.3f);
 }
 
 void Entity::set_sorting_boundary(const sf::Vector2f& pos) {
@@ -142,6 +152,25 @@ bool Entity::contains(const sf::Vector2f& point) const {
 
 void Entity::set_hovered(bool hovered) {
     m_is_hovered = hovered;
+}
+
+
+void Entity::push_action_to_front(const shmy::sim::Event& action) {
+    // std::cout << "push front: " << m_id << "\n";
+    m_queue.push_front(action);
+}
+
+void Entity::push_action(const shmy::sim::Event& action) {
+    // std::cout << "push back: " << m_id << "\n";
+    m_queue.push_back(action);
+}
+
+std::optional<shmy::sim::Event> Entity::poll_action() {
+    if (m_busy_target != BusyTarget::None || m_queue.empty()) return {};
+    const auto act = m_queue.front();
+    m_queue.pop_front();
+    // std::cout << "pop: " << m_id << ", rem: " << m_queue.size() << "\n";
+    return act;
 }
 
 

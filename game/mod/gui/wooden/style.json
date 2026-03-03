@@ -1,15 +1,18 @@
 {
-    "background_color_1": [ 255, 255, 255 ],
-    "background_color_2": [ 190, 170, 170 ],
-    "background_color_3": [ 140, 130, 130 ],
-    "outline_color_1": [ 200, 130, 0 ],
-    "outline_color_2": [ 255, 255, 255 ],
-    "outline_color_3": [ 0, 0, 0 ],
-    "text_color_1": [ 255, 180, 50 ],
-    "text_color_2": [ 255, 255, 255 ],
-    "text_color_3": [ 0, 0, 0 ],
-    "outline_width": 1,
-    "default_cell": [ 0, 0, 1, 1 ],
+    "variants": [
+        {
+            "bg_1": [ 255, 255, 255 ],
+            "bg_2": [ 160, 140, 140 ],
+            "bg_3": [ 110, 95, 95 ],
+            "text": [ 255, 200, 80 ],
+        },
+        {
+            "bg_1": [ 255, 255, 255, 0 ],
+            "bg_2": [ 255, 255, 255, 100 ],
+            "bg_3": [ 255, 255, 255, 200 ],
+            "text": [ 255, 200, 80 ],
+        },
+    ],
     "font": "baskerville.ttf",
     "textured": true
 }

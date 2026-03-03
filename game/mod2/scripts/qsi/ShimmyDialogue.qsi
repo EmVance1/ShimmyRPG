@@ -1,0 +1,16 @@
+
+entry(ShimmyIntroScene.IsActive) = Shimmy: [ "Don't mind me, I'll just be serving these folks over here. Don't be shy, Brian doesn't bite." ] => exit
+
+entry(Shimmy.Approval >= 70) = Shimmy: [ "${player} old friend! What'll it be, this evening?" ] => {
+    "Whisky. (2 silver)" => v00{ Player.Alcohol += 2, Player.Coin -= 3 },
+    "Water."             => v01,
+    "[Twinvayne Local] A Shimmy brew, please. (3 silver)"  => v20{ Player.Alcohol += 4, Player.Coin -= 4 },
+}
+
+entry(default) = Shimmy: [ "Oh hallo there. What can I get ye?" ] => {
+    "Whisky. (3 silver)" => v00{ Player.Alcohol -= 2, Player.Coin -= 3 },
+    "Water."             => v01,
+    "Any specialties?"   => v02,
+}
+
+

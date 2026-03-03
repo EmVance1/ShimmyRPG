@@ -21,6 +21,8 @@ struct EntityStats {
     AbilityScores scores;
     AbilityScores scores_current;
 
+    uint32_t gold = 100;
+
     uint32_t max_hp() const;
     float max_movement() const;
 

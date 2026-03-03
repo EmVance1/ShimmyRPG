@@ -1,0 +1,7 @@
+
+module Default
+
+START = <Narrator: "This is a table"> => EXIT
+
+endmod
+

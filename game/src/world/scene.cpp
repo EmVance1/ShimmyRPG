@@ -1,15 +1,14 @@
 #include "pch.h"
 #include "scene.h"
-#include "util/env.h"
+#include "gui/layout.h"
+#include "scripting/lua/runtime.h"
 #include "util/random.h"
 #include "util/deltatime.h"
-#include "game/events.h"
 #include "objects/trigger.h"
 #include "game.h"
-#include "sorting.h"
-#include "assets/flags.h"
-#include "assets/manager.h"
-#include "assets/init/load_scene.h"
+#include "data/flags.h"
+#include "data/bundler.h"
+#include "config/init/load_scene.h"
 
 
 Scene::Scene(SceneLoader& loader, const std::string& r_id, const std::string& s_id)
@@ -18,160 +17,14 @@ Scene::Scene(SceneLoader& loader, const std::string& r_id, const std::string& s_
     loader.load(this, r_id, s_id);
 }
 
-Scene::Scene(Scene&& other) noexcept : lua_vm(std::move(other.lua_vm)) {
-    std::cerr << "ENGINE ERROR: scene object was moved\n";
-    abort();
-}
+Scene::Scene(Scene&& other) noexcept : lua_vm(std::move(other.lua_vm)) { std::cerr << "scene object moved\n"; abort(); }
 
 Scene::~Scene() {
     for (const auto& r : refs) {
-        AssetManager::release(r);
+        shmy::data::Bundler::release(r);
     }
 }
 
-
-Entity& Scene::get_player() {
-    return entities.at(player_id);
-}
-
-const Entity& Scene::get_player() const {
-    return entities.at(player_id);
-}
-
-Entity& Scene::get_entity_by_script_id(const std::string& id) {
-    return entities.at(script_to_uuid.at(id));
-}
-
-const Entity& Scene::get_entity_by_script_id(const std::string& id) const {
-    return entities.at(script_to_uuid.at(id));
-}
-
-
-void Scene::handle_trigger(const Trigger& trigger) {
-    FlagTable::Allow = !trigger.used;
-    if (!trigger.condition.evaluate(FlagTable::callback)) return;
-
-    switch (trigger.action.index()) {
-    case 0: {
-        const auto dostr = std::get<action::DoString>(trigger.action);
-        lua_vm.load_anon(dostr.str);
-        break; }
-    case 1: {
-        const auto doevent = std::get<action::DoEvent>(trigger.action);
-        lua_vm.on_event(doevent.event, event_arg::none());
-        break; }
-    case 2: {
-        const auto loaddia = std::get<action::LoadDia>(trigger.action);
-        begin_dialogue(shmy::speech::Graph::load_from_file(shmy::env::pkg_full() / loaddia.file), loaddia.file);
-        set_mode(GameMode::Dialogue);
-        break; }
-    case 3: {
-        const auto popup = std::get<action::Popup>(trigger.action);
-        auto pop = gui::Popup::create(gui::Position::center({0, 0}), sf::Vector2f(700, 150), game->style, popup.msg);
-        pop->set_position(gui::Position::center({0, 0}));
-        game->gui.add_widget("popup", pop);
-        get_player().get_tracker().stop();
-        break; }
-    case 4: {
-        const auto portal = std::get<action::Portal>(trigger.action);
-        if (FlagTable::get(portal.lock_id)) {
-            auto pop = gui::Popup::create(gui::Position::center({0, 0}), sf::Vector2f(700, 150), game->style, "This door is locked.");
-            pop->set_position(gui::Position::center({0, 0}));
-            game->gui.add_widget("lock_popup", pop);
-            get_player().get_tracker().stop();
-        } else {
-            game->queue_scene_swap((int)portal.index, portal.spawnpos);
-        }
-        break; }
-    }
-}
-
-void Scene::begin_dialogue(shmy::speech::Graph&& graph, const std::string& dia_id) {
-    game->cinematic_mode.dialogue.begin(std::move(graph), game->gamemode, dia_id);
-    const auto line = std::get<Dialogue::Line>(game->cinematic_mode.dialogue.get_current_element());
-    auto dia_gui = game->gui.get_widget<gui::Panel>("dialogue");
-    dia_gui->set_enabled(true);
-    dia_gui->set_visible(true);
-
-    auto speaker_gui = dia_gui->get_widget<gui::TextWidget>("speaker");
-    if (*line.speaker == "Narrator") {
-        speaker_gui->set_label("Narrator");
-    } else {
-        const auto& e = get_entity_by_script_id(*line.speaker);
-        speaker_gui->set_label(e.name());
-    }
-
-    auto line_gui = dia_gui->get_widget<gui::TextWidget>("lines");
-    line_gui->set_label(*line.line);
-}
-
-void Scene::begin_combat(
-        const std::unordered_set<std::string>& ally_tags,
-        const std::unordered_set<std::string>& enemy_tags,
-        const std::unordered_set<std::string>& enemysenemy_tags,
-        const std::unordered_set<std::string>& unaligned_tags
-    )
-{
-    game->combat_mode.participants.clear();
-    game->combat_mode.participants.push_back(CombatParticipant{ player_id, Random::d20(), CombatFaction::Ally });
-    get_player().get_tracker().stop();
-
-    for (auto& [id, e] : entities) {
-        for (const auto& t : ally_tags) {
-            if (e.get_tags().contains(t)) {
-                game->combat_mode.participants.push_back(CombatParticipant{ id, Random::d20(), CombatFaction::Ally });
-                e.get_tracker().stop();
-                goto contd;
-            }
-        }
-        for (const auto& t : enemy_tags) {
-            if (e.get_tags().contains(t)) {
-                game->combat_mode.participants.push_back(CombatParticipant{ id, Random::d20(), CombatFaction::Enemy });
-                e.get_tracker().stop();
-                goto contd;
-            }
-        }
-        for (const auto& t : enemysenemy_tags) {
-            if (e.get_tags().contains(t)) {
-                game->combat_mode.participants.push_back(CombatParticipant{ id, Random::d20(), CombatFaction::EnemysEnemy });
-                e.get_tracker().stop();
-                goto contd;
-            }
-        }
-        for (const auto& t : unaligned_tags) {
-            if (e.get_tags().contains(t)) {
-                game->combat_mode.participants.push_back(CombatParticipant{ id, Random::d20(), CombatFaction::UnalignedHostile });
-                e.get_tracker().stop();
-                goto contd;
-            }
-        }
-contd: ;
-    }
-
-    std::sort(game->combat_mode.participants.begin(), game->combat_mode.participants.end(),
-            [](const auto& lhs, const auto& rhs){ return lhs.initiative < rhs.initiative; });
-
-    game->combat_mode.active_turn = game->combat_mode.participants.size() - 1;
-    game->combat_mode.advance_turn = true;
-}
-
-
-void Scene::set_mode(GameMode mode) {
-    if (mode == GameMode::Cinematic && game->gamemode != GameMode::Cinematic) {
-        get_player().get_tracker().stop();
-        queued = {};
-    } else if (mode != GameMode::Cinematic && game->gamemode == GameMode::Cinematic) {
-        get_player().get_tracker().start();
-    } else if (mode == GameMode::Dialogue && game->gamemode != GameMode::Dialogue) {
-        get_player().get_tracker().stop();
-    } else if (mode != GameMode::Dialogue && game->gamemode == GameMode::Dialogue) {
-        get_player().get_tracker().start();
-    }
-    if (mode == GameMode::Cinematic || mode == GameMode::Dialogue) {
-        game->gui.get_widget("tooltip")->set_visible(false);
-    }
-    game->gamemode = mode;
-}
 
 void Scene::set_sleeping(bool _sleeping) {
     sleeping = _sleeping;
@@ -185,99 +38,133 @@ void Scene::set_sleeping(bool _sleeping) {
     }
 }
 
+void Scene::init_gui(gui::Panel& root) {
+    auto scn_pnl = gui::Panel::create(
+        gui::Position({ 0.f, 0.f }),
+        gui::lo::fill(),
+        game->style
+    );
+    root.add_widget(name, scn_pnl);
+    scn_pnl->set_background_color(sf::Color::Transparent);
+
+    auto label = gui::Text::create(
+        gui::Position{ gui::lo::xcenter(0), gui::lo::top(30) },
+        gui::Sizing({ 300.f, 40.f }),
+        game->style, name
+    );
+    scn_pnl->add_widget("area_label", label);
+    label->set_text_position(gui::lo::center({ 0.f, 0.f }));
+    label->set_background_texture(sf::IntRect({250, 0}, {50, 50}));
+    label->set_border({1, 1});
+
+    for (auto& [id, portal] : portals) {
+        portal.icon = gui::Button::create(
+            gui::Position({ 0.f, 0.f }),
+            gui::Sizing{ gui::lo::absolute(35.f), gui::lo::fitcontent() },
+            game->style, "Ex");
+        scn_pnl->add_widget(portal.icon);
+        portal.icon->set_background_texture(sf::IntRect({250, 0}, {50, 50}));
+        portal.icon->set_border({ 2, 2 });
+        portal.icon->set_character_size(22);
+        portal.icon->set_text_padding(4);
+        auto ptr = game;
+        portal.icon->set_callback([&, ptr](){ ptr->normal_mode.signal_action(shmy::sim::UsePortalAction{ ptr->player_id(), &portal }); });
+    }
+}
 
 
-void Scene::handle_event(const sf::Event& event) {
+void Scene::handle_trigger(const Trigger& trigger, uint32_t entity) {
+    (void)entity;
+    shmy::data::Flags::Allow() = !trigger.used;
+    if (!trigger.condition.evaluate(shmy::data::Flags::kv_hook)) return;
+
+    switch (trigger.action.index()) {
+    case 0: {
+        const auto dostr = std::get<action::DoString>(trigger.action);
+        lua_vm.load_anon(dostr.str);
+        break; }
+    case 1: {
+        const auto doevent = std::get<action::DoEvent>(trigger.action);
+        lua_vm.on_event(doevent.event, shmy::lua::EventArgs::nil());
+        break; }
+    case 2: {
+        const auto loaddia = std::get<action::LoadDia>(trigger.action);
+        game->set_mode(Game::Mode::Cinematic);
+        game->cinematic_mode.signal_action(shmy::sim::Cinematic::BeginSpeech{ loaddia.modpath });
+        break; }
+    case 3: {
+        const auto popup = std::get<action::Popup>(trigger.action);
+        auto pop = gui::Window::create(gui::lo::center({0, 0}), { gui::lo::percent(35), gui::lo::absolute(200) }, game->style);
+        game->gui.add_widget(pop, true);
+        pop->set_position(gui::lo::center({0, 0}));
+        pop->set_background_color(sf::Color::Transparent);
+
+        auto msg = gui::Text::create(gui::lo::center({0, 0}), gui::lo::fill(), game->style, popup.msg);
+        pop->add_widget(msg);
+        msg->set_text_position(gui::lo::center({0, 0}));
+        msg->set_background_texture(sf::IntRect({250, 0}, {50, 50}));
+        msg->set_border({2, 2});
+        game->player().get_tracker().stop();
+        break; }
+    }
+}
+
+void Scene::handle_event(const shmy::Event& event) {
     if (sleeping) return;
 
-    switch (game->gamemode) {
-    case GameMode::Normal:
-        game->normal_mode.handle_event(event);
-        break;
-    case GameMode::Cinematic: case GameMode::Dialogue:
-        game->cinematic_mode.handle_event(event);
-        break;
-    case GameMode::Combat:
-        game->combat_mode.handle_event(event);
-        break;
-    }
+    (void)event;
+}
 
-#ifdef SHMY_DEBUG
-    debugger.handle_event(event);
-#endif
+void Scene::handle_input(const sf::Event& event) {
+    if (sleeping) return;
+
+    (void)event;
 }
 
 void Scene::update() {
-    for (auto& [_, e] : entities) {
+    for (auto  E : entities) {
+        auto& e = game->entity(E);
         if (!e.is_offstage()) {
             e.update(world_to_screen);
-            if (e.get_tracker().reached_dest()) {
-                // std::cout << "ello?\n";
-                // lua_vm.on_event("OnEntityDestinationReached", event_arg::reached_dest(lua_vm, e));
-            }
         }
     }
     lua_vm.update();
 
     if (sleeping) return;
 
-    switch (game->gamemode) {
-    case GameMode::Normal:
-        game->normal_mode.update();
-        break;
-    case GameMode::Cinematic: case GameMode::Dialogue:
-        game->cinematic_mode.update();
-        break;
-    case GameMode::Combat:
-        game->combat_mode.update();
-        break;
-    }
-
-    sorted_entities = sprites_topo_sort(entities);
+    sprites_sort();
     camera.update(Time::deltatime());
     background.update(camera.getFrustum());
-    if (get_player().get_tracker().is_moving()) {
-        const auto vec = get_player().get_tracker().get_target_position();
+    if (game->player().get_tracker().is_moving()) {
+        const auto vec = game->player().get_tracker().get_target_position();
         motionguide_square.setPosition({ vec.x, vec.y });
     }
-
-    const auto g = FlagTable::get("Player.Coin", true);
-    game->gui.get_widget<gui::Panel>("gold_counter")->get_widget<gui::Text>("goldtxt")->set_label(std::to_string(g));
-
-    const auto crop_thresh = 100.f;
-    if (game->gamemode == GameMode::Cinematic && game->render_settings.crop.position.y <= crop_thresh) {
-        game->render_settings.crop.position.y += (crop_thresh + 10.f - game->render_settings.crop.position.y) * Time::deltatime();
-        game->render_settings.crop.size.y -= 2 * (crop_thresh + 10.f - game->render_settings.crop.position.y) * Time::deltatime();
-    } else if (game->gamemode != GameMode::Cinematic && game->render_settings.crop.position.y >= 0.f) {
-        game->render_settings.crop.position.y -= (game->render_settings.crop.position.y + 10.f) * Time::deltatime();
-        game->render_settings.crop.size.y += 2 * (game->render_settings.crop.position.y + 10.f) * Time::deltatime();
-    }
-
-#ifdef SHMY_DEBUG
-    debugger.update();
-#endif
 }
 
-void Scene::render(sf::RenderTarget& target) {
+void Scene::render(sf::RenderTarget& target, const Debugger* debugger) {
     target.setView(camera);
-
     target.draw(background);
 
 #ifdef SHMY_DEBUG
-    debugger.render_map(target);
+    debugger->render_map(target);
 #endif
 
-    if (get_player().get_tracker().is_moving()) {
+    if (game->player().get_tracker().is_moving()) {
         target.draw(motionguide_square, world_to_screen);
     }
 
-    for (const auto& e : sorted_entities) {
-        if (!e->is_offstage()) {
-            target.draw(e->get_sprite());
-            if (e->is_hovered()) {
-                target.draw(e->get_outline_sprite());
+    for (auto E : entities) {
+        const auto& e = game->entity(E);
+        if (!e.is_offstage()) {
+            target.draw(e.get_sprite());
+            if (e.is_hovered()) {
+                target.draw(e.get_outline_sprite());
             }
         }
     }
+
+#ifdef SHMY_DEBUG
+    debugger->render(target);
+#endif
 }
 

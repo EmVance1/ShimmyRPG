@@ -6,6 +6,7 @@
 
 #include <unordered_map>
 #include <unordered_set>
+#include <set>
 #include <vector>
 #include <string>
 #include <queue>
@@ -32,6 +33,11 @@ namespace std { namespace fs = filesystem; }
 #include <SFML/Audio.hpp>
 
 #include <luajit-2.1/lua.hpp>
+
+#include <imgui.h>
+#include <imgui-SFML.h>
+#include <imgui_stdlib.h>
+#include <imconfig.h>
 
 #include <rapidjson/rapidjson.h>
 #include <rapidjson/filereadstream.h>

@@ -1,0 +1,27 @@
+{
+    "label": "Fountain Road",
+    "scripts": [
+    ],
+    "tracks": [
+        // "tavern_simple.optimism"
+    ],
+    "portals": [
+        {
+            "id": "shimmy_shack",
+            "position": [ -0.2, -2.3 ],
+            "entrypos": [ -0.2, -2.0 ],
+            "exit": "shimmyshack.front_door",
+            "icon": "nav_icons.door",
+            "preload_radius": 1.0,
+        },
+    ],
+    "triggers": [
+    ],
+    "entities": [
+        {
+            "prop": "door_simple_wooden_single", "name": "Shimmy's Shack", "position": { "iso": [ 1160, 240 ] },
+            // speculative
+            "trait_door": { "lock": "some_lock", "exit": "some_place" },
+        }
+    ]
+}

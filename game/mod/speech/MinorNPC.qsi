@@ -1,0 +1,12 @@
+
+module Bill
+
+START = <Bill: "Say what you like about Shimmy, he sure knows how to brew a strong drink"> => EXIT
+
+endmod
+
+module Sally
+
+START = <Sally: "This curfew nonsense is a big fucking joke"> => EXIT
+
+endmod

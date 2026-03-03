@@ -4,78 +4,47 @@
         "scripts/ShimmyIntroScene.lua"
     ],
     "tracks": [
-        "tavern_simple.optimism"
+        // "tavern_simple.optimism"
+    ],
+    "portals": [
+        {
+            "id": "front_door",
+            "position": [ 1.8, 4.0 ],
+            "exit": "fountainroad.shimmyshack",
+            "icon": "nav_icons.door",
+            "mouseover_radius": 1.0,
+            "preload_radius": 1.0,
+        },
     ],
     "triggers": [
         {
-            // front door
-            "rect": [ 1.2, 4, 1.2, 0.3 ],
-            "act_portal": { "index": 1, "spawnpos": [ 0.3, -1.8 ] },
-            "condition": "!Ademmar.CurfewInPlace"
-        },
-        {
             // welcome cutscene
             "rect": [ 0, -1.2, 4, 3.5 ],
-            "act_event": "OnShimmyIntroCutsceneTriggered",
             "condition": "once",
+            "act_event": "OnShimmyIntroCutsceneTriggered",
         },
         {
             // behind bar
             "rect": [ 0.45, -1.2, 3.55, 0.9 ],
-            "act_dia": "speech/ShimmyBehindBar.shmy",
+            "act_dia": "speech/ShimmyDialogue.BehindBar",
         },
-        {
-            // curfew blocker
-            "rect": [ 1.2, 4, 1.2, 0.3 ],
-            "act_popup": "There is a curfew in place. It is unwise to go outside.",
-            "condition": "Ademmar.CurfewInPlace"
-        }
     ],
     "entities": [
+        { "character": "player",      "position": { "world": [ 2.0,  3.8 ] } },
+        { "character": "Shimmy",      "position": { "world": [ 2.0, -0.8 ] } },
+        { "character": "BrianPrime",  "position": { "world": [ 3.5,  1.0 ] } },
+        { "character": "Sally",       "position": { "world": [ 2.2,  0.0 ] } },
+        { "character": "Bill",        "position": { "world": [ 2.8,  0.0 ] } },
         {
-            "name": "Stanza", "texture": "NPC_placeholder.player", "position": { "world": [ 2, 3.8 ] }, "tags": [],
-            "trait_scriptable": { "id": "player" },
-            "trait_playable": { "active": true },
-            "trait_movement": { "speed": 1.3 },
-
-            // speculative, better composability
-            "trait_inventory": { "id": "player_inventory" },
+            "prop": "table_simple_wooden_long", "position": { "iso": [ 558, 478 ] },
+            "trait_examine": { "source": "speech/table.shmy" },
         },
-        {
-            "name": "Shimmy", "texture": "NPC_placeholder.friendly", "position": { "world": [ 2, -0.8 ] }, "tags": [ "shimmy_staff" ],
-            "trait_scriptable": { "id": "ShimmyPrime" },
-            "trait_movement": { "speed": 1.0 },
-            "trait_speech": { "source": "speech/ShimmyDialogue.shmy" },
-
-            // speculative, should ensure no overlapping entity instances
-            "trait_variant": { "npc": "Shimmy", "version": "prime" },
-        },
-        {
-            "name": "Brian", "texture": "NPC_placeholder.friendly", "position": { "world": [ 3.5, 1 ] }, "tags": [ "shimmy_customer" ],
-            "trait_scriptable": { "id": "BrianPrime" },
-            "trait_movement": { "speed": 1.0 },
-            "trait_speech": { "source": "speech/BrianDialogue.shmy" }
-        },
-        {
-            "name": "Sally", "texture": "NPC_placeholder.neutral", "position": { "world": [ 2.2, 0 ] }, "tags": [ "shimmy_customer" ],
-            "trait_scriptable": { "id": "Sally" },
-            "trait_movement": { "speed": 1.0 },
-            "trait_speech": { "source": "This curfew nonsense is a bad fucking joke..." }
-        },
-        {
-            "name": "Bill", "texture": "NPC_placeholder.neutral", "position": { "world": [ 2.8, 0 ] }, "tags": [ "shimmy_customer" ],
-            "trait_scriptable": { "id": "Bill" },
-            "trait_movement": { "speed": 1.0 },
-            "trait_speech": { "source": "Shimmy really knows how to brew a strong drink." }
-        },
-        {
-            "name": "Table", "texture": "tavern_simple.table_long", "position": { "iso": [ 558, 478 ] }, "tags": [ "furniture" ],
-            "trait_customsort": [ [0, 265], [378, 110] ],
-
-            // speculative
-            "trait_breakable": { "hp": 20, "material": "wood" },
-            "trait_pickup": { "item_id": "table_long" },
-        },
+        { "prop": "table_simple_wooden_round", "position": { "iso": [ 737, 749 ] } },
+        { "prop": "table_simple_wooden_round", "position": { "iso": [ 959, 649 ] } },
+        { "prop": "table_simple_wooden_round", "position": { "iso": [ 909, 870 ] } },
+        { "prop": "table_simple_wooden_round", "position": { "iso": [ 1114, 790 ] } },
+        { "prop": "door_simple_wooden_single", "position": { "iso": [ 1060, 273 ] }, "name": "Basement" },
+        { "prop": "door_simple_wooden_single", "position": { "iso": [ 765,  820 ] }, "name": "Fountain Road", "is_ghost": true },
 
         // current prop system is more or less exactly instancing behaviour i want. speculative structure:
         /*
@@ -95,27 +64,10 @@
             "trait_examine": { "file": "speech/table.shmy" },
         },
 
-        // scenery is just a sprite. foliage, dynamic backgrounds etc.
+        // scenery is just a sprite. foliage, animated backgrounds, asset reuse etc.
         {
             "scenery": "berry_bush_small", "position": { "iso": [ 737, 749 ] }
         },
         */
-
-        {
-            "prop": "table_simple_wooden_round", "position": { "iso": [ 737, 749 ] },
-            "trait_examine": { "file": "speech/table.shmy" },
-        },
-        {
-            "prop": "table_simple_wooden_round", "position": { "iso": [ 959, 649 ] }
-        },
-        {
-            "prop": "table_simple_wooden_round", "position": { "iso": [ 909, 870 ] }
-        },
-        {
-            "prop": "table_simple_wooden_round", "position": { "iso": [ 1114, 790 ] }
-        },
-        {
-            "prop": "door_simple_wooden_single", "position": { "iso": [ 1060, 273 ] }, "tags": [ "locked", "-y" ]
-        }
     ]
 }

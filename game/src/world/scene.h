@@ -2,20 +2,16 @@
 #include <SFML/Graphics.hpp>
 #include <sfutil/camera.h>
 #include <navmesh/lib.h>
-#include <unordered_map>
+#include <unordered_set>
 #include "graphics/background.h"
 #include "scripting/lua/runtime.h"
-#include "scripting/speech/graph.h"
-#include "objects/entity.h"
+#include "objects/portal.h"
 #include "objects/trigger.h"
-#include "game/rules/game_mode.h"
-#include "game/action.h"
-#ifdef SHMY_DEBUG
-#include "debugger.h"
-#endif
+#include "game/event.h"
 
 
 class Game;
+class Debugger;
 class SceneLoader;
 
 struct Scene {
@@ -23,59 +19,43 @@ struct Scene {
     std::string name;
 
     // environment
-    nav::Mesh pathfinder;
     shmy::BackgroundStream background;
+    nav::Mesh pathfinder;
     sf::Vector2f origin;
     float scale;
     sfu::Camera camera;
     sf::Transform world_to_screen;
     sf::Transform screen_to_world;
+
+    // assets
     std::unordered_set<std::string> refs;
     std::unordered_set<std::string> tracks;
 
     // entities, scripts, triggers
     shmy::lua::Runtime lua_vm;
+    std::unordered_map<std::string, Portal> portals;
     std::vector<Trigger> triggers;
-    std::unordered_map<std::string, Entity> entities;
-    std::unordered_map<std::string, std::string> script_to_uuid;
-    std::vector<Entity*> sorted_entities;
-    std::string player_id = "";
+    std::vector<uint32_t> entities;
 
     // misc data
     sf::RectangleShape motionguide_square;
-    std::optional<ContextAction> queued;
     bool sleeping = true;
-
-#ifdef SHMY_DEBUG
-    SceneDebugger debugger;
-#endif
 
     Scene(SceneLoader& loader, const std::string& r_id, const std::string& s_id);
     Scene(const Scene& other) = delete;
     Scene(Scene&& other) noexcept;
     ~Scene();
 
-    Entity& get_player();
-    const Entity& get_player() const;
+    uint32_t sprites_top(const sf::Vector2f& p);
+    void sprites_sort();
 
-    Entity& get_entity_by_script_id(const std::string& id);
-    const Entity& get_entity_by_script_id(const std::string& id) const;
-
-    void handle_trigger(const Trigger& trigger);
-
-    void begin_dialogue(shmy::speech::Graph&& graph, const std::string& id);
-    void begin_combat(
-            const std::unordered_set<std::string>& ally_tags,
-            const std::unordered_set<std::string>& enemy_tags,
-            const std::unordered_set<std::string>& enemysenemy_tags,
-            const std::unordered_set<std::string>& unaligned_tags
-        );
-
-    void set_mode(GameMode mode);
     void set_sleeping(bool sleeping);
+    void init_gui(gui::Panel& root);
 
-    void handle_event(const sf::Event& event);
+    void handle_trigger(const Trigger& trigger, uint32_t entity);
+    void handle_event(const shmy::Event& event);
+    void handle_input(const sf::Event& event);
     void update();
-    void render(sf::RenderTarget& target);
+    void render(sf::RenderTarget& target, const Debugger* debugger);
 };
 

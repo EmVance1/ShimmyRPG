@@ -3,7 +3,9 @@
 #include <sfutil/sfutil.h>
 #include <navmesh/lib.h>
 #include <unordered_set>
-#include "game/action.h"
+#include "data/bundler.h"
+#include "objects/inventory.h"
+#include "game/simulate.h"
 #include "stats.h"
 
 
@@ -29,13 +31,31 @@ struct SortBoundary {
 
 
 class Entity {
+public:
+    inline static constexpr uint32_t INVALID = UINT32_MAX;
+    enum class Action {
+        SetPath,
+        MoveTo,
+        Speak,
+        Examine,
+        UsePortal,
+    };
+    enum class BusyTarget {
+        None = 0,
+        DestReached,
+        SceneChange,
+    };
+
 private:
     std::string m_id;
     std::string m_name;
-    std::string m_script_id;
+    std::unordered_set<std::string> m_tags;
+
+    bool m_is_playable = false;
     bool m_is_offstage = false;
-    bool m_is_ghost = false;
     bool m_is_hovered = false;
+    bool m_is_ghost = false;
+    BusyTarget m_busy_target = BusyTarget::None;
 
     sfu::AlphaMap m_bitmap;
     sfu::AnimatedSprite m_sprite;
@@ -45,16 +65,18 @@ private:
     SortBoundary m_boundary;
     sfu::FloatCircle m_collider;
 
-    std::unordered_set<std::string> m_tags;
-    std::unordered_set<ContextAction> m_actions;
+    std::vector<Action> m_actions;
+    std::deque<shmy::sim::Event> m_queue;
 
     EntityStats m_stats;
+    Inventory m_inventory;
+    std::string m_dialogue;
+    std::string m_examination;
 
-private:
-    static const sfu::TextureAtlas& default_texture() { static sfu::TextureAtlas tex(sf::Image({1, 1}, sf::Color::White), {1, 1}); return tex; }
+    inline static const sfu::TextureAtlas default_texture{ sf::Image({1, 1}, sf::Color::White), {1, 1} };
 
 public:
-    Entity() : m_sprite(Entity::default_texture()), m_outline_sprite(Entity::default_texture()), m_tracker(nullptr) {}
+    Entity() : m_sprite(shmy::data::Bundler::nullsheet()), m_outline_sprite(shmy::data::Bundler::nullsheet()), m_tracker(nullptr) {}
     Entity(const std::string& id,
            const std::string& name,
            const sfu::TextureAtlas& texture,
@@ -72,32 +94,50 @@ public:
     void set_animation(size_t index);
     void set_position(const sf::Vector2f& position, const sf::Transform& world_to_screen);
     nav::Vector2f get_world_position(const sf::Transform& screen_to_world) const;
+    sf::Vector2f get_tooltip_position() const;
     void set_sprite_position(const sf::Vector2f& position);
+    void set_navmesh(const nav::Mesh* pathfinder);
 
     void set_sorting_boundary(const sf::Vector2f& pos);
     void set_sorting_boundary(const sf::Vector2f& left, const sf::Vector2f& right);
     SortBoundary get_sorting_boundary() const;
 
-    void set_script_id(const std::string& id) { m_script_id = id; }
-    const std::string& get_script_id() const { return m_script_id; }
+    const std::string& get_dialogue() const { return m_dialogue; }
+    std::string& get_dialogue() { return m_dialogue; }
+
+    const std::string& get_examination() const { return m_examination; }
+    std::string& get_examination() { return m_examination; }
 
     const nav::Agent& get_tracker() const { return m_tracker; }
     nav::Agent& get_tracker() { return m_tracker; }
 
-    const std::unordered_set<ContextAction>& get_actions() const { return m_actions; }
-    std::unordered_set<ContextAction>& get_actions() { return m_actions; }
-
     const std::unordered_set<std::string>& get_tags() const { return m_tags; }
     std::unordered_set<std::string>& get_tags() { return m_tags; }
 
+    const std::vector<Action>& get_actions() const { return m_actions; }
+    std::vector<Action>& get_actions() { return m_actions; }
+
+    void push_action(const shmy::sim::Event& action);
+    void push_action_to_front(const shmy::sim::Event& action);
+    std::optional<shmy::sim::Event> poll_action();
+
     const EntityStats& get_stats() const { return m_stats; }
     EntityStats& get_stats() { return m_stats; }
+
+    const Inventory& get_inventory() const { return m_inventory; }
+    Inventory& get_inventory() { return m_inventory; }
+
+    void set_playable(bool playable) { m_is_playable = playable; }
+    bool is_playable() const { return m_is_playable; }
 
     void set_offstage(bool offstage) { m_is_offstage = offstage; }
     bool is_offstage() const { return m_is_offstage; }
 
     void set_ghost(bool ghost) { m_is_ghost = ghost; }
     bool is_ghost() const { return m_is_ghost; }
+
+    void set_busy_until(BusyTarget busy) { m_busy_target = busy; }
+    void busy_reached(BusyTarget busy) { if (m_busy_target == busy) m_busy_target = BusyTarget::None; }
 
     bool is_interactible() const { return !(m_is_offstage || m_is_ghost); }
     bool is_character() const { return m_tracker.is_available(); }

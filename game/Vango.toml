@@ -19,6 +19,8 @@ engine  = { path="../engine" }
 audio   = { path="../audio" }
 SFUtil  = { path="../../SFUtil" }
 NavMesh = { path="../../NavMesh" }
+CQuosi  = { path="../../../c/quosi/" }
+ImGUI   = { path="../../_Libs/imgui-sfml" }
 SFML    = { path="../../_Libs/SFML-3", features=[ "graphics" ] }
 LuaJIT  = { path="../../_Libs/luajit" }
 thread_pool = { headers="../libs/thread_pool/include" }
@@ -26,4 +28,3 @@ rapidjson   = { headers="../libs/rapidjson/include" }
 utfcpp      = { headers="../libs/utfcpp/source" }
 libogg    = { path="../../_Libs/libogg" }
 libvorbis = { path="../../_Libs/vorbis" }
-
