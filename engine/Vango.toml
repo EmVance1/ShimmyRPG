@@ -15,7 +15,7 @@ defines = [ "SHMY_DEBUG" ]
 # defines = [ "SHMY_DEBUG" ]
 
 [dependencies]
-audio  = { path="../audio" }
+# audio  = { path="../audio" }
 SFML   = { path="../../_Libs/SFML-3" }
 LuaJIT = { path="../../_Libs/luajit" }
 SFUtil = { path="../../sfutil" }

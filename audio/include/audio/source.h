@@ -1,74 +1,46 @@
 #pragma once
 #include <filesystem>
 #include <optional>
-#include <cstdint>
-#include "types.h"
+#include <vector>
 
 
 namespace shmy { namespace audio {
 
-class Source {
+
+class Buffer {
+private:
+    uint64_t frame_count = 0;
+    uint32_t sample_rate = 0;
+    uint32_t channels = 0;
+    int format = 0;
+    std::vector<uint8_t> pcm;
+
+public:
+    static std::optional<Buffer> load_file(const std::filesystem::path& path);
+
+    friend class Player;
+};
+
+
+class Stream {
 private:
     struct ImplT;
     ImplT* m_impl = nullptr;
 
-private:
-    Source(Source::ImplT* impl);
-
 public:
-    enum class Attenuation {
-        None,
-        Inverse,
-        Linear,
-        Exponential,
-    };
+    Stream() = default;
+    Stream(const Stream&) = delete;
+    Stream(Stream&& other) noexcept;
+    ~Stream();
 
-public:
-    Source(const Source& other);
-    Source(Source&& other);
-    ~Source();
+    Stream& operator=(const Stream&) = delete;
+    Stream& operator=(Stream&& other) noexcept;
 
-    static std::optional<Source> load_from_file(const std::filesystem::path& path, bool spatial = false);
-    static std::optional<Source> stream_from_file(const std::filesystem::path& path, bool spatial = false);
+    static std::optional<Stream> open_file(const std::filesystem::path& path);
 
-    std::optional<Source> try_copy() const;
-    bool is_stream() const;
-
-    void set_cone(Cone cone);
-    void set_direction(Vec3 dir);
-    void set_position(Vec3 pos);
-    void set_velocity(Vec3 vel);
-    void set_attenuation_model(Attenuation model);
-    void set_rolloff(float rolloff);
-    void set_min_gain(float min);
-    void set_max_gain(float max);
-    void set_min_distance(float min);
-    void set_max_distance(float max);
-    void set_doppler_factor(float factor);
-
-    Cone get_cone();
-    Vec3 get_direction();
-    Vec3 get_position();
-    Vec3 get_velocity();
-    Attenuation get_attenuation_model();
-    float get_rolloff();
-    float get_min_gain();
-    float get_max_gain();
-    float get_min_distance();
-    float get_max_distance();
-    float get_doppler_factor();
-
-    void fade(float end_volume, uint32_t millis);
-
-    void set_volume(float volume);
-    float get_volume() const;
-
-    void start();
-    void stop();
-
-    void start_after(uint32_t millis);
-    void stop_after(uint32_t millis);
+    friend class Player;
 };
+
 
 } }
 

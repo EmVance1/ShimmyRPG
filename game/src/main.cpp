@@ -1,11 +1,11 @@
 #include "pch.h"
 #include "audio/lib.h"
+#include "util/env.h"
+#include "util/deltatime.h"
+#include "util/log.h"
 #include "config/settings.h"
 #include "world/game.h"
 #include "world/scene.h"
-#include "util/env.h"
-#include "util/deltatime.h"
-#include "log.h"
 
 
 #define SCREEN_MODE_WINDOWED   sf::Style::Close|sf::Style::Titlebar, sf::State::Windowed
@@ -54,21 +54,21 @@ int main(int argc, char** argv) {
     const auto mod_list = shmy::env::pkg_list();
     const auto module = (argc == 1) ? mod_list[0] : std::fs::path(argv[1]);
     if (argc == 1) {
-        shmy::Logger::info("loading detected module: ", module.string());
+        shmy::core::Logger::info("loading detected module: ", module.string());
     } else if (std::fs::exists(module / ".module")) {
-        shmy::Logger::info("loading specified module: ", module.string());
+        shmy::core::Logger::info("loading specified module: ", module.string());
     } else {
-        shmy::Logger::info("specified module: ", module.string(), " does not exist");
+        shmy::core::Logger::info("specified module: ", module.string(), " does not exist");
         return 1;
     }
     game.reload(module);
-    shmy::Logger::info("successfully loaded module: ", module.string(), "\n");
+    shmy::core::Logger::info("successfully loaded module: ", module.string(), "\n");
 
 
-    Time::reset();
+    shmy::core::Time::reset();
 
     while (window.isOpen()) {
-        Time::set_frame();
+        shmy::core::Time::set_frame();
 
         game.exec_scene_swap();
         game.handle_events();

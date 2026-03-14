@@ -19,15 +19,11 @@ Game::Game(sf::RenderWindow* _window, Viewport& viewport)
     ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     _ = ImGui::SFML::UpdateFontTexture();
 #endif
-    if (emergencies_only) abort();
-    emergencies_only = this;
 }
 
 Game::~Game() {
     shmy::data::Mixer::reset();
 }
-
-Game* Game::emergencies_only = nullptr;
 
 
 Entity& Game::entity(uint32_t handle) {
@@ -48,13 +44,6 @@ uint32_t Game::entity_handle(const std::string& id) const {
     return m_entity_map.at(id);
 }
 
-uint32_t Game::entity_hook(const char* id) {
-    if (strncmp(id, "Narrator", sizeof("Narrator")) == 0) {
-        return UINT32_MAX;
-    } else {
-        return emergencies_only->m_entity_map.at(id);
-    }
-}
 
 Entity& Game::player() {
     return m_entities.at(m_active_player);
@@ -123,7 +112,7 @@ void Game::queue_portal(const Portal& portal, uint32_t entity) {
 void Game::exec_scene_swap() {
     if (!m_portal_queue) return;
 
-    Time::stop();
+    shmy::core::Time::stop();
     auto& last = active_scene();
     gui.remove_widget(last.name);
     m_active_scene = m_portal_queue->exit_scene;
@@ -163,7 +152,7 @@ void Game::exec_scene_swap() {
     m_debugger.init(&scene);
 #endif
     scene.set_sleeping(false);
-    Time::start();
+    shmy::core::Time::start();
 }
 
 
@@ -280,5 +269,7 @@ void Game::render(sf::RenderWindow& window, sf::RenderTexture* src, sf::RenderTe
 #ifdef VANGO_DEBUG
     ImGui::SFML::Render(window);
 #endif
+
+    m_frame_arena.reset();
 }
 

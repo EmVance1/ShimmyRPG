@@ -1,15 +1,15 @@
 #include "pch.h"
 #include <rapidjson/document.h>
 #include "objects/trigger.h"
-#include "core/split.h"
 #include "util/json.h"
 #include "util/env.h"
 #include "util/iso_map.h"
+#include "util/split.h"
+#include "util/log.h"
 #include "world/scene.h"
 #include "world/game.h"
 #include "load_scene.h"
 #include "config/lua/lua_api.h"
-#include "log.h"
 #include "validation.h"
 
 
@@ -58,7 +58,7 @@ void SceneLoader::load(Scene* _scene, const std::string& r_id, const std::string
     scene->screen_to_world = screen_to_world(scene->origin, scale);
 
     for (const auto& s : cfg.scripts) {
-        scene->lua_vm.load_file(shmy::env::pkg_full() / s);
+        scene->lua_vm.load_file(shmy::env::pkg_full() / "scripts/lua" / s);
     }
 
     for (const auto& t : cfg.tracks) {
@@ -91,7 +91,7 @@ void SceneLoader::load(Scene* _scene, const std::string& r_id, const std::string
         } else if (E.HasMember("act_popup")) {
             t.action = action::Popup{    JSON_GET_STR(E, "act_popup") };
         } else {
-            ::shmy::Logger::error(ctx, ": invalid entity stub type");
+            shmy::core::Logger::error(ctx, ": invalid entity stub type");
             scene->triggers.pop_back();
             continue;
         }
@@ -107,7 +107,7 @@ void SceneLoader::load(Scene* _scene, const std::string& r_id, const std::string
         } else if (E.HasMember("prop")) {
             load_entity(E, JSON_GET_STR(E, "prop"), EntityType::Prop);
         } else {
-            ::shmy::Logger::error(ctx, ": invalid entity stub type");
+            shmy::core::Logger::error(ctx, ": invalid entity stub type");
         }
     }
 

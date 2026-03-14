@@ -6,7 +6,7 @@
 
 namespace rj = rapidjson;
 
-namespace shmy { namespace json {
+namespace shmy::json {
 
 sf::Vector2f into_vector2f(const rj::Value& arr) {
     return sf::Vector2f(arr.GetArray()[0].GetFloat(), arr.GetArray()[1].GetFloat());
@@ -134,5 +134,5 @@ const rj::Value& debug_get(const rj::Value& object, const char* name) {
 
 #endif
 
-} }
+}
 

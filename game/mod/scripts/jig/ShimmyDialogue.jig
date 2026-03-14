@@ -1,0 +1,81 @@
+
+module Default
+
+START = if (Shimmy.Approval >= 70) then
+    <Shimmy: "${player} old friend! What'll it be, this evening?"> (
+        "Whisky. (2 silver)" => EXIT
+        "Water."             => EXIT
+        "[Twinvayne Local] A Shimmy brew, please. (3 silver)" => EXIT
+    )
+else
+    <Shimmy: "Oh hallo there. What can I get ye?"> (
+        "Whisky. (3 silver)" => EXIT
+        "Water."             => EXIT
+        "A Shimmy brew, please. (3 silver)" => EXIT
+    )
+end
+
+endmod
+
+module BehindBar
+
+START = match (rng3) with
+    (0) <Shimmy: "Hey pal, ye shouldn't be back here.">         => EXIT
+    (1) <Shimmy: "Mate, this is the bar. You don't work here."> => EXIT
+    (_) <Shimmy: "You lost, friend? Staff only back here.">     => EXIT
+end
+
+endmod
+
+module IntroScene
+
+START = if (Player.Origin == Origin.Twinvayne) then
+    <Shimmy: "You're a long way from home pal. Good thing you made it before the curfew. What can I get ye?"> (
+        "Whisky. (3 silver)" :: ( Player.Alcohol = 2, Player.Coin -= 3 ) => v00
+        "Water."             => v01
+        "[Twinvayne Local] A Shimmy brew, please. (4 silver)" :: ( Player.Alcohol += 4, Player.Coin -= 4 ) => v20
+        "A curfew?"          :: (PrintDebug) => v03
+    )
+else
+    <Shimmy: "Allo, traveller. Pretty late in the day to be just coming in. You know theres a curfew in place. What can I get ye?"> (
+        "Whisky. (3 silver)" :: ( Player.Alcohol += 2, Player.Coin -= 3 ) => v00
+        "Water."             => v01
+        "Any specialties?"   => v02
+        "A curfew?"          => v03
+    )
+end
+
+v00 = <Shimmy: "Right away.">                      => brian
+v01 = <Shimmy: "Yer not a fekin dryshite are ye?"> (
+    "Fine. Whisky." :: ( Player.Alcohol += 2 ) => v10
+    "I said water." => v11
+    if (Player.Origin == Origin.Twinvayne) then
+        "[Twinvayne Local] I know better than to trust your drinks, Shimmy" => v12
+    end
+)
+v02 = <Shimmy: "Well... Since yez ask... Got here my special brew. Gots to be strong enough for it though."> (
+    "Sure I am. (4 silver)"              :: ( Player.Alcohol += 4, Player.Coin -= 4 ) => v20
+    "Mmm, maybe just whisky. (3 silver)" :: ( Player.Alcohol += 2, Player.Coin -= 3 ) => v21
+)
+v03 = <Shimmy: "Aye. Nasty business. We've got rooms if you need one, but best not be going outside much longer."> (
+    "Much appreciated."                         => brian
+    "I think I'd rather pass out on the table." => v13
+)
+
+v10 = <Shimmy: "That's more like it."> => brian
+v11 = <Shimmy: "Suit yerself...">      => brian
+v12 = <Shimmy: "Hush now, not so loud. I've come up in the world you know. You might find yourself pleasantly surprised."> => brian
+v13 = <Shimmy: "You'll fit right in here, so long as you dont give me too much to clean. So what'll it be?" > (
+    "Whisky."          :: ( Player.Alcohol += 2 ) => v00
+    "Water."           => v01
+    "Any specialties?" => v02
+)
+
+v20 = <Shimmy: "Now that is the spirit. Enjoy."> => brian
+v21 = <Shimmy: "Tease... Suit yerself.">         => brian
+
+brian = <Shimmy: "See that guy Brian over there, he looks like a lonely fella, why don't you go chat with him while I serve these other folks?">
+    :: ( OnShimmyIntroCutsceneFinished ) => EXIT
+
+endmod
+

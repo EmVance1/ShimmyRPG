@@ -1,41 +1,59 @@
 #include "pch.h"
 #include "gui/list.h"
-#include "gui/button.h"
 
 
 namespace gui {
 
-ButtonList::ButtonList(const Position& position, const sf::Vector2f& size, const Style& style)
-    : Container(position, sf::Vector2f(size.x, 0.f), style), m_blocksize(size)
+VerticalList::VerticalList(const Position& position, const Sizing& sizing, const Style& style)
+    : Container(position, sizing, style)
 {}
 
-ButtonList::ButtonList(const Position& position, const sf::Vector2f& size, const Style& style, const std::vector<std::string>& values)
-    : Container(position, sf::Vector2f(size.x, 0.f), style), m_blocksize(size)
-{
-    for (size_t i = 0; i < values.size(); i++) {
-        auto b = Button::create(Position::topleft({0.f, get_size().y}), size, style, values[i]);
-        b->set_container(this);
-        add_widget(b);
-        set_size(get_size() + sf::Vector2f(0.f, size.y));
+
+void VerticalList::add_widget(const std::string& name, const std::shared_ptr<Widget>& widget, bool top) {
+    float size = 0.f;
+    for (const auto& [k, v] : m_children) {
+        size += v->get_absolute_size().y;
+    }
+    Container::add_widget(name, widget, top);
+    widget->set_position(Position({ 0.f, size }));
+    set_sizing({ get_sizing().x_size, lo::absolute(size + widget->get_absolute_size().y) });
+    m_order.push_back(name);
+}
+
+std::string VerticalList::add_widget(const std::shared_ptr<Widget>& widget, bool top) {
+    float size = 0.f;
+    for (const auto& [k, v] : m_children) {
+        size += v->get_absolute_size().y;
+    }
+    const auto id = Container::add_widget(widget, top);
+    widget->set_position(Position({ 0.f, size }));
+    set_sizing({ get_sizing().x_size, lo::absolute(size + widget->get_absolute_size().y) });
+    m_order.push_back(id);
+    return id;
+}
+
+std::shared_ptr<Widget> VerticalList::remove_widget(const std::string& id) {
+    if (has_widget(id)) {
+        auto w = Container::remove_widget(id);
+        m_order.erase(std::find(m_order.begin(), m_order.end(), id));
+        return w;
+    } else {
+        return nullptr;
     }
 }
 
-
-std::shared_ptr<Button> ButtonList::add_button(const std::string& value) {
-    auto b = Button::create(Position::topleft({0.f, get_size().y}), m_blocksize, get_style(), value);
-    b->set_container(this);
-    add_widget(b);
-    set_size(get_size() + sf::Vector2f(0.f, m_blocksize.y));
-    return b;
+void VerticalList::clear() {
+    Container::clear();
+    set_sizing({ get_sizing().x_size, lo::absolute(0.f) });
 }
 
-std::shared_ptr<Button> ButtonList::add_button(const std::string& value, std::function<void()> callback) {
-    auto b = Button::create(Position::topleft({0.f, get_size().y}), m_blocksize, get_style(), value);
-    b->set_container(this);
-    b->set_callback(callback);
-    add_widget(b);
-    set_size(get_size() + sf::Vector2f(0.f, m_blocksize.y));
-    return b;
+void VerticalList::refresh() {
+    float size = 0.f;
+    for (auto w : m_order) {
+        get_widget(w)->set_position(Position({ 0.f, size }));
+        size += get_widget(w)->get_absolute_size().y;
+    }
+    set_sizing({ get_sizing().x_size, lo::absolute(size) });
 }
 
 }

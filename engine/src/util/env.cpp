@@ -3,7 +3,7 @@
 #include "util/env.h"
 
 
-namespace shmy { namespace env {
+namespace shmy::env {
 
 static std::fs::path s_localappdata = "";
 
@@ -19,7 +19,7 @@ void init(Env env) {
     initlocalappdata();
     s_app_dir = "./res";
     switch (env) {
-        case Env::CWD:
+    case Env::CWD:
         s_user_dir = ".";
         break;
     case Env::LocalAppData:
@@ -46,7 +46,7 @@ std::vector<std::fs::path> pkg_list() {
     auto res = std::vector<std::fs::path>();
     auto it = std::fs::directory_iterator(s_user_dir);
     for (const auto& p : it) {
-        if (p.is_directory() && std::fs::exists(p.path() / ".module")) {
+        if (p.is_directory() && std::fs::exists(p.path() / "module.json")) {
             res.push_back(p);
         }
     }
@@ -58,7 +58,7 @@ void set_pkg(const std::fs::path& pkg) {
     s_pkg_full = s_user_dir / pkg;
 }
 
-} }
+}
 
 
 #ifdef _WIN32
@@ -66,7 +66,7 @@ void set_pkg(const std::fs::path& pkg) {
 #include <userenv.h>
 #include <shlobj.h>
 
-namespace shmy { namespace env {
+namespace shmy::env {
 
 static void initlocalappdata() {
     WCHAR* p = nullptr;
@@ -75,14 +75,14 @@ static void initlocalappdata() {
     CoTaskMemFree(p);
 }
 
-} }
+}
 
 #else
 #include <unistd.h>
 #include <sys/types.h>
 #include <pwd.h>
 
-namespace shmy { namespace env {
+namespace shmy::env {
 
 static void initlocalappdata() {
     struct passwd* pw = getpwuid(getuid());
@@ -90,7 +90,7 @@ static void initlocalappdata() {
     s_localappdata = std::fs::path(homedir) / ".config" / "shimmy";
 }
 
-} }
+}
 
 #endif
 

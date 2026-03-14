@@ -11,7 +11,7 @@
         "Shimmy": {
             "texture": "NPC_placeholder.friendly", "name": "Shimmy", "tags": [ "shimmy_staff" ],
             "trait_movement": { "speed": 1.0 },
-            "trait_speech": { "source": "speech/ShimmyDialogue.Default" },
+            "trait_speech": { "file": "ShimmyDialogue.Default" },
 
             // speculative
             "trait_inventory": { "initial": [], "type": "trader" },
@@ -20,7 +20,7 @@
         "BrianPrime": {
             "name": "Brian", "texture": "NPC_placeholder.friendly", "tags": [ "shimmy_customer" ],
             "trait_movement": { "speed": 1.0 },
-            "trait_speech": { "source": "speech/BrianDialogue.Default" },
+            "trait_speech": { "file": "BrianDialogue.Default" },
 
             // speculative
             "trait_variant": { "version": "prime" }, // should ensure no overlapping entity instances
@@ -28,7 +28,7 @@
         "Sally": {
             "name": "Sally", "texture": "NPC_placeholder.neutral", "tags": [ "shimmy_customer" ],
             "trait_movement": { "speed": 1.0 },
-            "trait_speech": { "source": "speech/MinorNPC.Sally" },
+            "trait_speech": { "file": "MinorNPC.Sally" },
 
             // speculative
             "is_pacifist": true,
@@ -36,7 +36,7 @@
         "Bill": {
             "name": "Bill", "texture": "NPC_placeholder.neutral", "tags": [ "shimmy_customer" ],
             "trait_movement": { "speed": 1.0 },
-            "trait_speech": { "source": "speech/MinorNPC.Bill" },
+            "trait_speech": { "file": "MinorNPC.Bill" },
         },
     },
     "props": {

@@ -3,7 +3,7 @@
 namespace std { namespace fs = filesystem; }
 
 
-namespace shmy { namespace env {
+namespace shmy::env {
 
 const std::fs::path& app_dir();
 const std::fs::path& user_dir();
@@ -15,4 +15,4 @@ enum class Env { CWD, LocalAppData };
 void init(Env env);
 void set_pkg(const std::fs::path& pkg);
 
-} }
+}

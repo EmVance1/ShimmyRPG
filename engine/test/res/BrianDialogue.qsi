@@ -1,0 +1,41 @@
+
+module main
+
+# conditions must be mutually exclusive AND collectively infallible - exactly one vertex per name
+START = if (ShimmyIntroScene.IsActive && once) then
+    BrianPrime: [ "Oh hello there. Fancy a game of cards?" ] {
+        "Love to. Names {{$player}} by the way."     => v01
+        "If that's what counts for fun around here." => v02
+    }
+else
+    BrianPrime: [ "Lovely spot this, don't you think?" ] => EXIT
+end
+
+
+v01 = <BrianPrime: "Good on ye.", "abcdefg"> => game
+v02 = <BrianPrime: "You need to open yourself up to new experiences friend.", "unique", "lines", "how", "far", "can", "i", "take", "this"> => game
+
+
+game = <BrianPrime: "Why don't you pick a card, any card."> (
+    "*Pick higher up*"  ( _pick = rng3 ) => vWin0,
+    "*Pick lower down*" ( _pick = rng3 ) => vLoss0,
+)
+
+pick = match (_pick) with
+    (0) Narrator: [ "*You draw an ace.*" ]            :: (Player.Win) => vWin0
+    (1) Narrator: [ "*You draw a 3.*" ]               => vLoss0
+    (_) Narrator: [ "*You draw a 9. As did Brian.*" ] => Draw0
+end
+
+
+vWin0 = <Narrator:   "*You draw an ace.*"> => vWin1
+vWin1 = <BrianPrime: "Lucky lucky."> => EXIT
+
+vLoss0 = <Narrator:   "*You draw a 3.*"> => vLoss1
+vLoss1 = <BrianPrime: "Bad luck friend."> => EXIT
+
+vDraw0 = <Narrator:   "*You draw a 9. As did Brian.*"> => vDraw1
+vDraw1 = <BrianPrime: "Well well."> => EXIT
+
+endmod
+

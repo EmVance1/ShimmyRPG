@@ -11,12 +11,11 @@ const std::string& Entity::name() const { return m_list->name[m_id]; }
 std::unordered_set<std::string>& Entity::tags() { return m_list->tags[m_id]; }
 const std::unordered_set<std::string>& Entity::tags() const { return m_list->tags[m_id]; }
 
-sfu::AlphaMap& Entity::bitmap() { return m_list->bitmap[m_id]; }
-const sfu::AlphaMap& Entity::bitmap() const { return m_list->bitmap[m_id]; }
+const sfu::AlphaMap& Entity::bitmap() const { return m_list->bitmap[m_id].get(); }
 sfu::AnimatedSprite& Entity::sprite() { return m_list->sprite[m_id]; }
 const sfu::AnimatedSprite& Entity::sprite() const { return m_list->sprite[m_id]; }
-sfu::AnimatedSprite& Entity::outline_sprite() { return m_list->outline_sprite[m_id]; }
-const sfu::AnimatedSprite& Entity::outline_sprite() const { return m_list->outline_sprite[m_id]; }
+sfu::AnimatedSprite& Entity::sprite_outline() { return m_list->sprite_outline[m_id]; }
+const sfu::AnimatedSprite& Entity::sprite_outline() const { return m_list->sprite_outline[m_id]; }
 
 nav::Agent& Entity::tracker() { return m_list->tracker[m_id]; }
 const nav::Agent& Entity::tracker() const { return m_list->tracker[m_id]; }
@@ -41,9 +40,29 @@ const Inventory& Entity::inventory() const { return m_list->inventory[m_id]; }
 uint32_t& Entity::flags() { return m_list->flags[m_id]; }
 const uint32_t& Entity::flags() const { return m_list->flags[m_id]; }
 
+bool Entity::is_loaded() const   { return (m_list->flags[m_id] & Entity::Flag::Loaded) > 0; }
 bool Entity::is_playable() const { return (m_list->flags[m_id] & Entity::Flag::Playable) > 0; }
 bool Entity::is_offstage() const { return (m_list->flags[m_id] & Entity::Flag::Offstage) > 0; }
 bool Entity::is_hovered() const  { return (m_list->flags[m_id] & Entity::Flag::Hovered) > 0; }
 bool Entity::is_ghost() const    { return (m_list->flags[m_id] & Entity::Flag::Ghost) > 0; }
 
+
+
+void EntityList::load(uint32_t _id) {
+    bitmap[_id].acquire();
+    const auto anref = anim[_id].acquire();
+    sprite[_id].setAnimation(anref.get());
+    const auto aoref = anim_outline[_id].acquire();
+    sprite_outline[_id].setAnimation(aoref.get());
+    flags[_id] |= (uint32_t)Entity::Flag::Loaded;
 }
+void EntityList::unload(uint32_t _id) {
+    bitmap[_id].release();
+    anim[_id].release();
+    anim_outline[_id].release();
+    flags[_id] &= ~(uint32_t)Entity::Flag::Loaded;
+}
+
+
+}
+

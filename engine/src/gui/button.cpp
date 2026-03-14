@@ -4,8 +4,8 @@
 
 namespace gui {
 
-Button::Button(const Position& position, const sf::Vector2f& size, const Style& style, const std::string& label)
-    : TextWidget(position, size, style)
+Button::Button(const Position& position, const Sizing& sizing, const Style& style, const std::string& label)
+    : TextWidget(position, sizing, style)
 {
     set_label(label);
 }
@@ -13,21 +13,25 @@ Button::Button(const Position& position, const sf::Vector2f& size, const Style& 
 
 bool Button::handle_event(const sf::Event& event) {
     TextWidget::handle_event(event);
-    bool clicked = false;
     if (event.is<sf::Event::MouseButtonPressed>()) {
-        if (is_hovered()) {
-            clicked = true;
-            if (m_has_callback) {
-                m_callback();
-            }
+        m_clicked = is_hovered();
+        if (m_clicked && m_has_callback) {
+            m_callback();
         }
+    } else if (event.is<sf::Event::MouseButtonReleased>()) {
+        // if (is_hovered() && m_clicked && m_has_callback) {
+        //     m_callback();
+        // }
+        m_clicked = false;
+    } else if (!event.is<sf::Event::MouseMoved>()) {
+        return false;
     }
-    if (clicked) {
-        set_background_color(get_style().background_color_3);
+    if (m_clicked) {
+        set_background_color(get_style_variant().bg_3);
     } else if (is_hovered()) {
-        set_background_color(get_style().background_color_2);
+        set_background_color(get_style_variant().bg_2);
     } else {
-        set_background_color(get_style().background_color_1);
+        set_background_color(get_style_variant().bg_1);
     }
     return is_hovered();
 }

@@ -2,6 +2,7 @@
 #include "util/random.h"
 
 
+namespace shmy::core {
 
 std::random_device Random::seeder;
 std::mt19937 Random::gen{ Random::seeder() };
@@ -24,6 +25,9 @@ uint32_t Random::d(uint32_t sides) {
     return dist(gen);
 }
 
+uint32_t Random::d2() {
+    return (uint32_t)d(2);
+}
 uint32_t Random::d4() {
     return (uint32_t)d(4);
 }
@@ -42,7 +46,14 @@ uint32_t Random::d12() {
 uint32_t Random::d20() {
     return (uint32_t)d(20);
 }
+uint32_t Random::d30() {
+    return (uint32_t)d(30);
+}
+uint32_t Random::d50() {
+    return (uint32_t)d(50);
+}
 uint32_t Random::d100() {
     return (uint32_t)d(100);
 }
 
+}

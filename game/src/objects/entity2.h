@@ -42,11 +42,18 @@ public:
         Examine,
         ExitScene,
     };
+    enum class Type {
+        Character,
+        Mob,
+        Prop,
+        Scenery,
+    };
     enum Flag {
-        Playable = 1,
-        Offstage = 1 << 1,
-        Hovered  = 1 << 2,
-        Ghost    = 1 << 3,
+        Loaded   = 1,
+        Playable = 1 << 1,
+        Offstage = 1 << 2,
+        Hovered  = 1 << 3,
+        Ghost    = 1 << 4,
     };
 
 private:
@@ -63,12 +70,11 @@ public:
     std::unordered_set<std::string>& tags();
     const std::unordered_set<std::string>& tags() const;
 
-    sfu::AlphaMap& bitmap();
     const sfu::AlphaMap& bitmap() const;
     sfu::AnimatedSprite& sprite();
     const sfu::AnimatedSprite& sprite() const;
-    sfu::AnimatedSprite& outline_sprite();
-    const sfu::AnimatedSprite& outline_sprite() const;
+    sfu::AnimatedSprite& sprite_outline();
+    const sfu::AnimatedSprite& sprite_outline() const;
 
     nav::Agent& tracker();
     const nav::Agent& tracker() const;
@@ -93,6 +99,7 @@ public:
     uint32_t& flags();
     const uint32_t& flags() const;
 
+    bool is_loaded() const;
     bool is_playable() const;
     bool is_offstage() const;
     bool is_hovered() const;
@@ -102,15 +109,88 @@ public:
 };
 
 
+template<typename T>
+struct Asset {
+    enum LoadState { Unloaded, Loading, Loaded } state;
+    T object;
+    size_t refcount;
+
+    void load()       { state = LoadState::Loaded; }
+    void unload()     { state = LoadState::Unloaded; }
+    void async_load() { state = LoadState::Loading; }
+};
+template<typename T>
+class AssetRef {
+    Asset<T>* ref;
+
+public:
+    AssetRef(Asset<T>* ptr) : ref(ptr) {}
+
+    const T& get() const { ref->load(); return ref->object; }
+    const std::optional<T&> get_opt() const {
+        if (ref->state == Asset<T>::LoadState::Loaded) {
+            return ref->object;
+        } else {
+            return {};
+        }
+    }
+    void release() { ref->release(); }
+};
+template<typename T>
+class AssetHandle {
+private:
+    Asset<T>* ref;
+
+public:
+    AssetRef<T> prepare() {
+        if (ref->refcount == 0) ref->async_load();
+        ref->refcount++;
+        return { ref };
+    }
+    AssetRef<T> acquire() {
+        if (ref->refcount == 0) ref->load();
+        ref->refcount++;
+        return { ref };
+    }
+    void release() {
+        ref->refcount--;
+        if (ref->refcount == 0) ref->unload();
+    }
+
+    // no clean invariants for me
+    const T& get() const {
+        if (ref->state == Asset<T>::LoadState::Loading) {
+            ref->load();
+        }
+        return ref->object;
+    }
+    const std::optional<T&> get_opt() const {
+        if (ref->state == Asset<T>::LoadState::Loaded) {
+            return ref->object;
+        } else {
+            return {};
+        }
+    }
+};
+
 class EntityList {
+public:
+    size_t n_npc;
+    size_t n_mob;
+    size_t n_prop;
+    size_t n_scenery;
+
 public:
     std::vector<std::string> id;
     std::vector<std::string> name;
     std::vector<std::unordered_set<std::string>> tags;
 
-    std::vector<sfu::AlphaMap> bitmap;
+    std::vector<AssetHandle<sfu::AlphaMap>> bitmap;
+    std::vector<AssetHandle<sfu::TextureAtlas>> anim;
+    std::vector<AssetHandle<sfu::TextureAtlas>> anim_outline;
+
     std::vector<sfu::AnimatedSprite> sprite;
-    std::vector<sfu::AnimatedSprite> outline_sprite;
+    std::vector<sfu::AnimatedSprite> sprite_outline;
 
     std::vector<nav::Agent> tracker;
     std::vector<SortBoundary> boundary;
@@ -126,6 +206,8 @@ public:
     std::vector<uint32_t> flags;
 
     Entity get(uint32_t _id) { return Entity(this, _id); }
+    void load(uint32_t _id);
+    void unload(uint32_t _id);
 };
 
 

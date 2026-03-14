@@ -2,6 +2,8 @@
 #include <SFML/System.hpp>
 
 
+namespace shmy::core {
+
 class Time {
 private:
     static sf::Clock clock;
@@ -30,3 +32,4 @@ public:
     static void start() { clock.start(); }
 };
 
+}

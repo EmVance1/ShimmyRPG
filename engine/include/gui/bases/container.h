@@ -9,18 +9,25 @@
 namespace gui {
 
 class Container : public Widget {
-private:
+protected:
     std::unordered_map<std::string, std::shared_ptr<Widget>> m_children;
+    virtual void update_transform() override;
 
 public:
-    Container(const Position& position, const sf::Vector2f& size, const Style& style);
+    Container(const Position& position, const Sizing& sizing, const Style& style);
 
-    static std::shared_ptr<Container> create(const Position& position, const sf::Vector2f& size, const Style& style) {
-        return std::make_shared<Container>(position, size, style);
+    static std::shared_ptr<Container> create(const Position& position, const Sizing& sizing, const Style& style) {
+        return std::make_shared<Container>(position, sizing, style);
     }
 
-    void add_widget(const std::string& name, const std::shared_ptr<Widget>& widget, bool inherit_style = true);
-    void add_widget(const std::shared_ptr<Widget>& widget, bool inherit_style = true);
+    virtual void set_style(const Style& style) override;
+    virtual void set_style_variant(size_t variant) override;
+
+    virtual void add_widget(const std::string& name, const std::shared_ptr<Widget>& widget, bool top = false);
+    virtual std::string add_widget(const std::shared_ptr<Widget>& widget, bool top = false);
+    virtual std::shared_ptr<Widget> remove_widget(const std::string& id);
+    virtual void clear() { m_children.clear(); }
+
     std::shared_ptr<Widget> get_widget(const std::string& id);
     std::shared_ptr<const Widget> get_widget(const std::string& id) const;
     template<typename T>
@@ -32,12 +39,6 @@ public:
         return std::dynamic_pointer_cast<const T>(get_widget(id));
     }
     bool has_widget(const std::string& id) const;
-    std::shared_ptr<Widget> remove_widget(const std::string& id);
-
-    virtual void clear() { m_children.clear(); }
-
-    void set_position(const Position& position) override;
-    void set_style(const Style& style) override;
 
     void update() override;
     bool handle_event(const sf::Event& event) override;

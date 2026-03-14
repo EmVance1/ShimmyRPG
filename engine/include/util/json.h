@@ -5,7 +5,7 @@
 #include <stdexcept>
 
 
-namespace shmy { namespace json {
+namespace shmy::json {
 
 sf::Vector2f into_vector2f(const rapidjson::Value& arr);
 sf::Vector2i into_vector2i(const rapidjson::Value& arr);
@@ -41,7 +41,7 @@ const rapidjson::Value& debug_get(const rapidjson::Value& object, const char* na
 
 #endif
 
-} }
+}
 
 #ifdef SHMY_DEBUG
 

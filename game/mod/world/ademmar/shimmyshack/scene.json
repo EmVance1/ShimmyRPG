@@ -1,7 +1,7 @@
 {
     "label": "Shimmy's Shack",
     "scripts": [
-        "scripts/ShimmyIntroScene.lua"
+        "ShimmyIntroScene.lua"
     ],
     "tracks": [
         // "tavern_simple.optimism"
@@ -26,7 +26,7 @@
         {
             // behind bar
             "rect": [ 0.45, -1.2, 3.55, 0.9 ],
-            "act_dia": "speech/ShimmyDialogue.BehindBar",
+            "act_dia": "ShimmyDialogue.BehindBar",
         },
     ],
     "entities": [
@@ -37,11 +37,11 @@
         { "character": "Bill",        "position": { "world": [ 2.8,  0.0 ] } },
         {
             "prop": "table_simple_wooden_long", "position": { "iso": [ 558, 478 ] },
-            "trait_examine": { "source": "speech/table.shmy" },
+            "trait_examine": { "file": "Inanimate.Table" },
         },
-        { "prop": "table_simple_wooden_round", "position": { "iso": [ 737, 749 ] } },
-        { "prop": "table_simple_wooden_round", "position": { "iso": [ 959, 649 ] } },
-        { "prop": "table_simple_wooden_round", "position": { "iso": [ 909, 870 ] } },
+        { "prop": "table_simple_wooden_round", "position": { "iso": [ 737,  749 ] } },
+        { "prop": "table_simple_wooden_round", "position": { "iso": [ 959,  649 ] } },
+        { "prop": "table_simple_wooden_round", "position": { "iso": [ 909,  870 ] } },
         { "prop": "table_simple_wooden_round", "position": { "iso": [ 1114, 790 ] } },
         { "prop": "door_simple_wooden_single", "position": { "iso": [ 1060, 273 ] }, "name": "Basement" },
         { "prop": "door_simple_wooden_single", "position": { "iso": [ 765,  820 ] }, "name": "Fountain Road", "is_ghost": true },

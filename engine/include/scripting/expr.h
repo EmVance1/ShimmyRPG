@@ -8,39 +8,36 @@ namespace shmy {
 
 struct Expr {
     enum Instr : uint8_t {
-        IEndOf,
-        IStrict,
-
-        CTrue,
         CFalse,
+        CTrue,
 
+        IEndOf,
         IPushC,
         IPushV,
-        IPushK,
+        IAdd,
+        ISub,
+        IMul,
+        IDiv,
+        ILogAnd,
+        ILogOr,
+        ILogNot,
         ICmpEq,
         ICmpNe,
         ICmpLt,
         ICmpGt,
         ICmpLe,
         ICmpGe,
-        ILogNot,
-        ILogOr,
-        ILogAnd,
         IAssign,
-        ISetV,
-        IAddV,
     };
     using ByteCode = std::vector<uint8_t>;
     using IdTable = std::vector<std::string>;
-    using Callback = uint64_t*(*)(const char* key, bool strict);
+    using Callback = uint64_t*(*)(const char* key);
 
     ByteCode bytecode;
     IdTable idents;
 
     static Expr True();
     static Expr False();
-    static Expr Constant(int64_t n);
-    static Expr Variable(std::string&& id);
     static Expr from_string(const std::string& expr);
 
     static int64_t evaluate(const uint8_t* bytecode, const std::vector<std::string>& idents, Callback ctx);

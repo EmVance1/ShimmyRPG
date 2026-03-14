@@ -8,11 +8,11 @@ vango_test(test_resize) {
     auto window = sf::RenderWindow(sf::VideoMode({ 800, 800 }), "Shimmy GUI - test resize", sf::Style::Default);
     auto view = sf::View({400, 400}, {800, 800});
 
-    gui::Widget::VIEWPORT_SIZE = sf::Vector2u{ 800, 800 };
+    gui::Widget::viewport = sf::Vector2f{ 800.f, 800.f };
 
     auto gui_style = gui::Style();
     gui_style.load_from_dir("test/res/wooden");
-    auto gui_layer = gui::Panel::create(gui::Position::topleft({ 0, 0 }), { 800, 800 }, gui_style);
+    auto gui_layer = gui::Panel::create(gui::Position({ 0, 0 }), gui::Sizing({ 800, 800 }), gui_style);
 
     while (window.isOpen()) {
         Time::set_frame();

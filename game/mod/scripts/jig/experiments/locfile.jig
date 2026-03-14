@@ -1,0 +1,41 @@
+
+# module BrianDialogue.Default
+
+START = if (ShimmyIntroScene.IsActive && once) then
+    [START.l0] <BrianPrime: "Oh hello there. Fancy a game of cards?"> (
+        [START.l0.r0] "Love to. Names ${player} by the way." => v01
+        [START.l0.r1] "If that's what counts for fun around here." => v02
+    )
+else
+    [START.l1] <BrianPrime: "Lovely spot this, don't you think?"> => EXIT
+end
+
+
+v01 = [v01.l0] <BrianPrime: "Good on ye."> => game
+v02 = [v02.l0] <BrianPrime: "You need to open yourself up to new experiences friend."> => game
+
+game = [game.l0] <BrianPrime: "Why don't you pick a card, any card."> (
+    [game.l0.r0] "*Pick higher up*"  => pick
+    [game.l0.r1] "*Pick lower down*" => pick
+)
+
+# etc...
+#
+# ====================================
+#
+# BrianDialogue.loc.yaml
+
+START:
+  l0:
+    eng: "Oh hello there. Fancy a game of cards?"
+    ger: "Abend. Lust auf ne Runde Karten?"
+
+    r0:
+      eng: "Love to. Names ${player} by the way."
+      ger: "Mega gern. Heisse übrigens ${player}."
+
+    r1:
+      eng: "If that's what counts for fun around here."
+      ger: "Na ja nicht unbedingt aber lass."
+
+# etc...

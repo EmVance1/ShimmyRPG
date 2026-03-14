@@ -1,0 +1,27 @@
+#
+# a = 0
+# b = 1
+# for i in 0..5 {
+#     temp = a + b
+#     a = b
+#     b = temp
+# }
+
+module Default
+
+START = <Narrator: "init"> :: ( fib.i = 0, fib.a = 0, fib.b = 1, fib.max = 0 ) => init
+
+init = <Narrator: "input"> (
+    "1" :: ( fib.max *= 2, fib.max += 1 ) => init
+    "0" :: ( fib.max *= 2 )               => init
+    "begin" => loop
+)
+
+loop = if (fib.i < fib.max) then
+    <Narrator: "loop"> :: ( fib.temp = fib.a + fib.b, fib.a = fib.b, fib.b = fib.temp, fib.i += 1 ) => loop
+else
+    <Narrator: "exit">  :: ( OnFibEnd ) => EXIT
+end
+
+endmod
+

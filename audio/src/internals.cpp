@@ -1,6 +1,6 @@
 #define MINIAUDIO_IMPLEMENTATION
 #include <miniaudio/miniaudio.h>
-#include <miniaudio/extras/decoders/libvorbis/miniaudio_libvorbis.c>
+// #include <miniaudio/extras/decoders/libvorbis/miniaudio_libvorbis.c>
 
 
 namespace shmy { namespace audio {
@@ -12,15 +12,19 @@ int create_context() {
     ma_result result;
 
     // The order in the array defines the order of priority. The vtables will be passed in to the resource manager config.
+    /*
     ma_decoding_backend_vtable* pCustomBackendVTables[] = {
         ma_decoding_backend_libvorbis,
     };
+    */
 
     ma_resource_manager_config resourceManagerConfig;
     resourceManagerConfig = ma_resource_manager_config_init();
+    /*
     resourceManagerConfig.ppCustomDecodingBackendVTables = pCustomBackendVTables;
     resourceManagerConfig.customDecodingBackendCount     = 1;
     resourceManagerConfig.pCustomDecodingBackendUserData = NULL;
+    */
 
     result = ma_resource_manager_init(&resourceManagerConfig, &s_shmy_audio_resources);
     if (result != MA_SUCCESS) {

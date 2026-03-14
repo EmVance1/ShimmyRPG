@@ -10,6 +10,8 @@ namespace shmy { namespace lua {
 struct EventArgs {
     bool manage;
     int ref;
+
+    static EventArgs nil() { return { false, -1 }; }
 };
 
 class Runtime {
@@ -52,6 +54,7 @@ public:
 
     void on_event(const std::string& event, EventArgs args);
     void set_paused(bool paused);
+    bool is_paused() const { return m_paused; }
     void update();
 };
 

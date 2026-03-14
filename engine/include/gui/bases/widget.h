@@ -2,69 +2,57 @@
 #include <SFML/Graphics.hpp>
 #include <memory>
 #include "../style.h"
+#include "../layout.h"
 
 
 namespace gui {
 
 class Widget : public sf::Drawable, public std::enable_shared_from_this<Widget> {
 public:
-    static sf::Vector2u VIEWPORT_SIZE;
+    inline static sf::Vector2f viewport;
 
 private:
-    sf::RectangleShape m_background;
-    sf::Transform m_transform;
     const Widget* p_container = nullptr;
+    const Style* p_style = nullptr;
+    size_t m_style_variant = 0;
+    Position m_position;
+    Sizing m_sizing;
     bool m_enabled = true;
     bool m_visible = true;
     bool m_hovered = false;
     bool m_destroy = false;
-    bool m_inherit_style = true;
-    int32_t m_sortinglayer = 0;
-    Position m_position;
-    sf::FloatRect m_bounds;
-
-    const Style* m_style;
+    int m_layer = 0;
 
 protected:
-    sf::Vector2f compute_absolute_position() {
-        if (p_container) {
-            return m_position.get_absolute_topleft(p_container->get_bounds(), m_bounds.size);
-        } else {
-            return m_position.get_absolute_topleft(sf::FloatRect({0, 0}, sf::Vector2f(VIEWPORT_SIZE)), m_bounds.size);
-        }
-    }
-    sf::Vector2f compute_relative_position() {
-        if (p_container) {
-            return m_position.get_relative_topleft(p_container->get_bounds(), m_bounds.size);
-        } else {
-            return m_position.get_relative_topleft(sf::FloatRect({0, 0}, sf::Vector2f(VIEWPORT_SIZE)), m_bounds.size);
-        }
-    }
-    void update_position() {
-        m_bounds.position = compute_absolute_position();
-        m_transform = sf::Transform().translate(compute_relative_position());
+    sfu::BorderShape m_background;
+    sf::FloatRect m_bounds;
+
+    virtual void update_transform() {
+        const auto parent_box = p_container ? p_container->m_bounds : sf::FloatRect({ 0.f, 0.f }, viewport);
+        m_bounds.size = m_sizing.get_size(parent_box);
+        m_bounds.position = m_position.get_absolute(parent_box, m_bounds.size);
+        m_background.setSize(m_bounds.size);
+        m_background.setPosition(m_bounds.position);
     }
 
 public:
-    Widget(const Position& position, const sf::Vector2f& size, const Style& style)
-        : m_position(position), m_bounds(compute_absolute_position(), size), m_style(&style)
+    Widget(const Position& position, const Sizing& sizing, const Style& style)
+        : p_style(&style), m_position(position), m_sizing(sizing)
     {
-        m_transform.translate(compute_relative_position());
-        m_background.setSize(size);
-        m_background.setFillColor(style.background_color_1);
-        m_background.setOutlineColor(style.outline_color_1);
-        m_background.setOutlineThickness(style.outline_width);
+        update_transform();
+        m_background.setFillColor(style.variant[0].bg_1);
         if (style.textured) {
-            m_background.setTexture(&style.background_texture);
-            m_background.setTextureRect(style.default_cell);
+            m_background.setTexture(&style.background_texture, {0, 0});
+            m_background.setTextureRect({ {0, 0}, {1, 1} });
         }
     }
 
     void set_container(const Widget* container) {
         p_container = container;
-        update_position();
+        p_style = container->p_style;
+        update_transform();
     }
-    const Widget& get_container() { return *p_container; }
+    const Widget* get_container() { return p_container; }
 
     void set_enabled(bool enabled) { m_enabled = enabled; }
     bool is_enabled() const { return m_enabled; }
@@ -72,18 +60,20 @@ public:
     void set_visible(bool visible) { m_visible = visible; }
     bool is_visible() const { return m_visible; }
 
-    void set_sorting_layer(int32_t layer) { m_sortinglayer = layer; }
-    int32_t get_sorting_layer() const { return m_sortinglayer; }
+    void set_sorting_layer(int32_t layer) { m_layer = layer; }
+    int32_t get_sorting_layer() const { return m_layer; }
 
-    void set_style_inherited(bool inherit) { m_inherit_style = inherit; }
-    bool is_style_inherited() const { return m_inherit_style; }
+    void set_background_color(const sf::Color& color) { m_background.setColor(color); }
+    const sf::Color& get_background_color() { return m_background.getFillColor(); }
 
-    void set_background_color(const sf::Color& color) { m_background.setFillColor(color); }
     void set_background_texture(const sf::Vector2i& cell) {
         m_background.setTextureRect(sf::IntRect{ cell, (sf::Vector2i)m_bounds.size });
     }
     void set_background_texture(const sf::IntRect& rect) {
         m_background.setTextureRect(rect);
+    }
+    void set_border(const sf::Vector2f& dims) {
+        m_background.setBorders(dims);
     }
 
     void destroy() { m_destroy = true; }
@@ -91,22 +81,27 @@ public:
 
     bool is_hovered() const { return m_hovered; }
 
-    const sf::FloatRect& get_bounds() const { return m_bounds; }
-    const sf::Transform& get_transform() const { return m_transform; }
-
-    virtual void set_style(const Style& style) { m_style = &style; }
-    virtual const Style& get_style() const { return *m_style; }
-
-    virtual void set_position(const sf::Vector2f& position) { set_position(Position::topleft(position)); }
-    virtual void set_position(const Position& position) {
-        m_position = position;
-        update_position();
-    }
+    virtual void set_position(const Position& position) { m_position = position; update_transform(); }
     virtual const sf::Vector2f& get_absolute_position() const { return m_bounds.position; }
     virtual const Position& get_position() const { return m_position; }
 
-    virtual void set_size(const sf::Vector2f& size) { m_bounds.size = size; }
-    virtual const sf::Vector2f& get_size() const { return m_bounds.size; }
+    virtual void set_sizing(const Sizing& sizing) { m_sizing = sizing; update_transform(); }
+    virtual const sf::Vector2f& get_absolute_size() const { return m_bounds.size; }
+    virtual const Sizing& get_sizing() const { return m_sizing; }
+
+    const sf::FloatRect& get_bounds() const { return m_bounds; }
+
+    virtual void set_style(const Style& style) {
+        p_style = &style;
+        m_background.setFillColor(get_style_variant().bg_1);
+    }
+    const Style& get_style() const { return *p_style; }
+
+    virtual void set_style_variant(size_t variant) {
+        m_style_variant = variant;
+        m_background.setFillColor(get_style_variant().bg_1);
+    }
+    const Style::Element& get_style_variant() const { return p_style->variant[m_style_variant]; }
 
     virtual void update() {}
     virtual bool handle_event(const sf::Event& event) {
@@ -121,9 +116,10 @@ public:
     }
 
     virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const {
-        states.transform *= get_transform();
         target.draw(m_background, states);
     }
+
+    friend class Container;
 };
 
 }

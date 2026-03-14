@@ -1,13 +1,13 @@
 #include "pch.h"
-#include "imgui.h"
+#include <imgui.h>
 #include "debugger.h"
 #include "util/deltatime.h"
-#include "core/split.h"
+#include "util/split.h"
+#include "util/log.h"
 #include "data/flags.h"
 #include "objects/trigger.h"
 #include "world/game.h"
 #include "world/scene.h"
-#include "log.h"
 
 
 void Debugger::handle_command() {
@@ -148,7 +148,7 @@ void Debugger::handle_input(const sf::Event& event) {
 }
 
 void Debugger::update() {
-    ImGui::SFML::Update(*(p_game->render_ctx.window), sf::seconds(Time::deltatime()));
+    ImGui::SFML::Update(*(p_game->render_ctx.window), sf::seconds(shmy::core::Time::deltatime()));
 
     for (const auto& E : p_scene->entities) {
         auto& e = p_game->entity(E);
@@ -178,7 +178,7 @@ void Debugger::update() {
 
     ImGui::SetNextWindowBgAlpha(0.3f);
     ImGui::Begin("Diagnostics");
-    ImGui::Text("FPS:    %d", Time::framerate());
+    ImGui::Text("FPS:    %d", shmy::core::Time::framerate());
     if (ImGui::CollapsingHeader("cursor", ImGuiTreeNodeFlags_DefaultOpen)) {
         ImGui::Text("screen: ( %d, %d )", cursor_screen.x, cursor_screen.y);
         ImGui::Text("cart:   ( %d, %d )", (int)cursor_cart.x, (int)cursor_cart.y);
@@ -201,7 +201,7 @@ void Debugger::update() {
         ImGui::Text("%s", console_out.c_str());
         ImGui::End();
         ImGui::Begin("Log");
-        ImGui::Text("%s", shmy::Logger().get_log().c_str());
+        ImGui::Text("%s", shmy::core::Logger().get_log().c_str());
         ImGui::End();
         ImGui::EndTabBar();
     }

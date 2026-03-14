@@ -2,8 +2,8 @@
 #include "simulate.h"
 #include "cinematic.h"
 #include "util/env.h"
-#include "core/fs.h"
-#include "core/split.h"
+#include "util/fs.h"
+#include "util/split.h"
 #include "data/flags.h"
 #include "world/game.h"
 #include "world/scene.h"
@@ -73,10 +73,22 @@ void Cinematic::hide() {
 }
 
 
+static uint32_t khook(const char* key, void* user_data) {
+    (void)user_data; return shmy::data::Flags::key_hook(key);
+}
+static uint64_t* vhook(uint32_t key, void* user_data) {
+    (void)user_data; return shmy::data::Flags::value_hook(key);
+}
+static uint32_t ehook(const char* id, void* user_data) {
+    if (strncmp(id, "Narrator", sizeof("Narrator")) == 0) {
+        return UINT32_MAX;
+    } else {
+        auto game = (Game*)user_data;
+        return game->entity_handle(id);
+    }
+}
+
 void Cinematic::signal_action(const Event& event) {
-    auto khook = shmy::data::Flags::key_hook;
-    auto vhook = shmy::data::Flags::value_hook;
-    auto ehook = Game::entity_hook;
 
     std::visit([&](auto&& v) {
         using T = std::decay_t<decltype(v)>;
@@ -85,62 +97,60 @@ void Cinematic::signal_action(const Event& event) {
 
         if constexpr (std::is_same_v<T, BeginSpeech>) {
             const auto toks = shmy::core::split(v.modpath, '.');
-            const auto src = shmy::core::read_to_string(shmy::env::pkg_full() / (toks[0] + ".qsi")).unwrap();
-            shmy::data::Flags::begin_temps();
-            quosiError errors;
-            quosiSymbolCtx ctx = { .data_lkp=khook, .speaker_lkp=ehook };
-            m_current_file = quosi_file_compile_from_src(src.c_str(), &errors, ctx, quosi_malloc_allocator());
+            const auto src = shmy::core::read_to_string(shmy::env::pkg_full() / "scripts/jig" / (toks[0] + ".jig")).unwrap();
+            jigError errors;
+            jigSymbolCtx ctx = { .data_lkp=khook, .speaker_lkp=ehook, .data_context=nullptr, .speaker_context=p_game };
+            m_current_file = jig_file_compile_from_src(src.c_str(), &errors, ctx, jig_malloc_allocator());
             if (errors.list != NULL) {
-                for (size_t i = 0; i < quosi_error_list_len(&errors); i++) {
-                    printf("quosi compile error (%u:%u): %s\n", errors.list[i].span.row, errors.list[i].span.col, quosi_error_to_string(errors.list[i]));
+                for (size_t i = 0; i < jig_error_list_len(&errors); i++) {
+                    printf("jig compile error (%u:%u): %s\n", errors.list[i].span.row, errors.list[i].span.col, jig_error_to_string(errors.list[i]));
                 }
-                quosi_error_list_free(&errors);
+                jig_error_list_free(&errors);
                 exit(1);
             }
-            shmy::data::Flags::end_temps();
-            // quosi_file_prettyprint(m_current_file, toks[1].c_str(), stdout);
-            quosi_vm_init(&m_interpreter, m_current_file, toks[1].c_str());
-            m_once_prefix = "once_quosi_" + v.modpath + "_";
+            // jig_file_prettyprint(m_current_file, toks[1].c_str(), stdout);
+            jig_vm_init(&m_interpreter, m_current_file, toks[1].c_str());
+            m_once_prefix = "once_jig_" + v.modpath + "_";
             show();
         } else if constexpr (std::is_same_v<T, SelectEvent>) {
-            quosi_vm_push_value(&m_interpreter, v.prop.idx);
+            jig_vm_push_value(&m_interpreter, v.prop.idx);
         }
 
 repeat:
         const auto once_id = m_once_prefix + std::to_string(m_interpreter.PC);
         shmy::data::Flags::Allow() = !shmy::data::Flags::check_once(once_id);
-        const auto upcall = quosi_vm_exec(&m_interpreter, vhook);
+        const auto upcall = jig_vm_exec(&m_interpreter, vhook, nullptr);
         shmy::data::Flags::set_once(once_id);
         switch (upcall) {
-        case QUOSI_UPCALL_EVENT:
-            scene.lua_vm.load_anon(std::string("DispatchEvent('") + quosi_vm_line(&m_interpreter) + "', {})");
+        case JIG_UPCALL_EVENT:
+            scene.lua_vm.load_anon(std::string("DispatchEvent('") + jig_vm_line(&m_interpreter) + "', {})");
             goto repeat;
-        case QUOSI_UPCALL_LINE: {
+        case JIG_UPCALL_LINE: {
             auto cont = root->get_widget<::gui::VerticalList>("text");
             auto choice_gui = cont->get_widget("choices");
             choice_gui->set_enabled(false);
             choice_gui->set_visible(false);
             auto speaker_gui = root->get_widget<::gui::TextWidget>("speaker");
-            if (quosi_vm_id(&m_interpreter) == UINT32_MAX) {
+            if (jig_vm_id(&m_interpreter) == UINT32_MAX) {
                 speaker_gui->set_label("Narrator");
             } else {
-                speaker_gui->set_label(p_game->entity(quosi_vm_id(&m_interpreter)).name());
+                speaker_gui->set_label(p_game->entity(jig_vm_id(&m_interpreter)).name());
             }
             auto line_gui = cont->get_widget<::gui::TextWidget>("lines");
             line_gui->set_enabled(true);
             line_gui->set_visible(true);
-            line_gui->set_label(quosi_vm_line(&m_interpreter));
+            line_gui->set_label(jig_vm_line(&m_interpreter));
             cont->refresh();
             break; }
-        case QUOSI_UPCALL_PICK: {
+        case JIG_UPCALL_PICK: {
             auto cont = root->get_widget<::gui::VerticalList>("text");
             cont->get_widget<::gui::TextWidget>("lines")->set_enabled(false);
             auto choice_gui = cont->get_widget<::gui::VerticalList>("choices");
             choice_gui->clear();
             choice_gui->set_enabled(true);
             choice_gui->set_visible(true);
-            for (uint32_t i = 0; i < quosi_vm_nq(&m_interpreter); i++) {
-                const auto prop = quosi_vm_dequeue_text(&m_interpreter);
+            for (uint32_t i = 0; i < jig_vm_nq(&m_interpreter); i++) {
+                const auto prop = jig_vm_dequeue_text(&m_interpreter);
                 auto b = ::gui::Button::create(
                     ::gui::Position({0, 0}),
                     ::gui::Sizing{ ::gui::lo::percent(100), ::gui::lo::absolute(30) },
@@ -154,7 +164,7 @@ repeat:
             }
             cont->refresh();
             break; }
-        case QUOSI_UPCALL_EXIT: {
+        case JIG_UPCALL_EXIT: {
             free(m_current_file);
             auto choice_gui = root->get_widget<::gui::VerticalList>("text")->get_widget("choices");
             choice_gui->set_enabled(false);

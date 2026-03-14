@@ -19,7 +19,7 @@ engine  = { path="../engine" }
 audio   = { path="../audio" }
 SFUtil  = { path="../../SFUtil" }
 NavMesh = { path="../../NavMesh" }
-CQuosi  = { path="../../../c/quosi/" }
+Jig     = { path="../../../c/jig/" }
 ImGUI   = { path="../../_Libs/imgui-sfml" }
 SFML    = { path="../../_Libs/SFML-3", features=[ "graphics" ] }
 LuaJIT  = { path="../../_Libs/luajit" }

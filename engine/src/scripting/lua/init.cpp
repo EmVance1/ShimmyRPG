@@ -2,7 +2,7 @@
 #include "scripting/lua/runtime.h"
 
 
-namespace shmy { namespace lua {
+namespace shmy::lua {
 
 int l_register_handler(lua_State* L) {
     const auto event = lua_tostring(L, 1);
@@ -56,5 +56,5 @@ int l_dispatch_event(lua_State* L) {
     return 0;
 }
 
-} }
+}
 

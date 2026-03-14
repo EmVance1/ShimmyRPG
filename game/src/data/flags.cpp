@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "flags.h"
-#include "core/split.h"
+#include "util/split.h"
 #include "util/random.h"
 
 
@@ -8,8 +8,6 @@ namespace shmy::data {
 
 std::vector<uint64_t> Flags::cache;
 std::unordered_map<std::string, uint32_t> Flags::cache_lkp;
-uint32_t Flags::temps_ptr;
-std::unordered_map<std::string, uint32_t> Flags::temps_lkp;
 std::unordered_set<std::string> Flags::once_set;
 
 enum class Reserved : uint32_t {
@@ -26,7 +24,7 @@ enum class Reserved : uint32_t {
 uint64_t* Flags::value_hook(uint32_t key) {
     if ((uint32_t)Reserved::Rng & key) {
         static uint64_t TEMP = 0;
-        TEMP = (uint64_t)Random::integer(0, (uint32_t)Reserved::Rng ^ key);
+        TEMP = (uint64_t)shmy::core::Random::integer(0, (uint32_t)Reserved::Rng ^ key);
         return &TEMP;
     } else {
         return &cache[key];
@@ -34,14 +32,8 @@ uint64_t* Flags::value_hook(uint32_t key) {
 }
 uint32_t Flags::key_hook(const char* key) {
     if (strncmp(key, "rng", 3) == 0) {
-        const uint32_t mod = (uint32_t)Random::integer(0, atoll(key+3)-1);
+        const uint32_t mod = (uint32_t)shmy::core::Random::integer(0, atoll(key+3)-1);
         return (uint32_t)Reserved::Rng | mod;
-    } else if (key[0] == '_') {
-        if (!temps_lkp.contains(key)) {
-            temps_lkp[key] = (uint32_t)temps_ptr;
-            cache[temps_ptr++] = 0;
-        }
-        return temps_lkp.at(key);
     } else {
         if (!cache_lkp.contains(key)) {
             std::cerr << "runtime error - invalid flag table key '" << key << "'\n";
@@ -55,6 +47,31 @@ uint64_t* Flags::kv_hook(const char* key) {
     return value_hook(key_hook(key));
 }
 
+
+uint32_t Flags::create(const std::string& key) {
+    const auto idx = cache.size();
+    cache.push_back(0);
+    cache_lkp[key] = (uint32_t)idx;
+    return (uint32_t)idx;
+}
+
+uint64_t Flags::get(uint32_t key) {
+    return *Flags::value_hook(key);
+}
+uint64_t Flags::get(const std::string& key) {
+    return Flags::get(cache_lkp.at(key));
+}
+
+void Flags::set(uint32_t key, uint64_t val) {
+    *Flags::value_hook(key) = val;
+}
+void Flags::set(const std::string& key, uint64_t val) {
+    Flags::set(cache_lkp.at(key), val);
+}
+
+bool Flags::has(const std::string& key) {
+    return cache_lkp.contains(key);
+}
 
 void Flags::mod(const std::string& key, const Mod& mod) {
     Flags::mod(cache_lkp.at(key), mod);
@@ -73,24 +90,6 @@ void Flags::mod(const uint32_t key, const Mod& mod) {
         *ptr = (uint64_t)mod.val;
         break;
     }
-}
-
-void Flags::set(uint32_t key, uint64_t val) {
-    *Flags::value_hook(key) = val;
-}
-void Flags::set(const std::string& key, uint64_t val) {
-    Flags::set(cache_lkp.at(key), val);
-}
-
-uint64_t Flags::get(uint32_t key) {
-    return *Flags::value_hook(key);
-}
-uint64_t Flags::get(const std::string& key) {
-    return Flags::get(cache_lkp.at(key));
-}
-
-bool Flags::has(const std::string& key) {
-    return cache_lkp.contains(key);
 }
 
 
@@ -117,8 +116,6 @@ void Flags::init(const std::fs::path& dir) {
     cache_lkp["once"]  = 2;
     cache_lkp["inf"]   = 3;
     load_dir(dir, "", cache, cache_lkp);
-    temps_ptr = (uint32_t)cache.size();
-    cache.resize(cache.size() + MAX_TEMPS);
 }
 
 

@@ -1,26 +1,57 @@
 #include "pch.h"
-#include "core/uuid.h"
+#include "util/uuid.h"
 #include "gui/bases/container.h"
 
 
 namespace gui {
 
-Container::Container(const Position& position, const sf::Vector2f& size, const Style& style)
-    : Widget(position, size, style)
+Container::Container(const Position& position, const Sizing& sizing, const Style& style)
+    : Widget(position, sizing, style)
 {}
 
 
-void Container::add_widget(const std::string& name, const std::shared_ptr<Widget>& widget, bool inherit_style) {
-    widget->set_container(this);
-    widget->set_style_inherited(inherit_style);
-    if (inherit_style) {
-        widget->set_style(get_style());
+void Container::update_transform() {
+    Widget::update_transform();
+    for (auto& [_, w] : m_children) {
+        w->update_transform();
     }
-    m_children[name] = widget;
 }
 
-void Container::add_widget(const std::shared_ptr<Widget>& widget, bool inherit_style) {
-    add_widget(shmy::core::generate_uuid_v4(), widget, inherit_style);
+
+void Container::set_style(const Style& style) {
+    Widget::set_style(style);
+    for (auto& [_, w] : m_children) {
+        w->set_style(style);
+    }
+}
+
+void Container::set_style_variant(size_t variant) {
+    Widget::set_style_variant(variant);
+    for (auto& [_, w] : m_children) {
+        w->set_style_variant(variant);
+    }
+}
+
+
+void Container::add_widget(const std::string& name, const std::shared_ptr<Widget>& widget, bool top) {
+    m_children[name] = widget;
+    widget->set_style(get_style());
+    widget->set_container(this);
+    if (top) {
+        int layer = 0;
+        for (const auto& [_, w] : m_children) {
+            if (w->get_sorting_layer() > layer) {
+                layer = w->get_sorting_layer();
+            }
+        }
+        widget->set_sorting_layer(layer + 1);
+    }
+}
+
+std::string Container::add_widget(const std::shared_ptr<Widget>& widget, bool top) {
+    const auto id = shmy::core::generate_uuid_v4();
+    add_widget(id, widget, top);
+    return id;
 }
 
 
@@ -43,24 +74,6 @@ std::shared_ptr<Widget> Container::remove_widget(const std::string& id) {
 }
 
 
-
-void Container::set_position(const Position& position) {
-    Widget::set_position(position);
-    for (auto& [_, w] : m_children) {
-        w->set_position(w->get_position());
-    }
-}
-
-void Container::set_style(const Style& style) {
-    Widget::set_style(style);
-    for (auto& [_, w] : m_children) {
-        if (w->is_style_inherited()) {
-            w->set_style(style);
-        }
-    }
-}
-
-
 void Container::update() {
     auto kill_list = std::vector<std::string>();
     for (auto& [k, w] : m_children) {
@@ -77,15 +90,15 @@ void Container::update() {
 }
 
 bool Container::handle_event(const sf::Event& event) {
-    bool hovered = false;
+    bool consumed = false;
     for (auto& [_, w] : m_children) {
         if (w->is_enabled()) {
             if (w->handle_event(event)) {
-                hovered = true;
+                consumed = true;
             }
         }
     }
-    return hovered;
+    return consumed;
 }
 
 void Container::draw(sf::RenderTarget& target, sf::RenderStates states) const {
@@ -97,7 +110,6 @@ void Container::draw(sf::RenderTarget& target, sf::RenderStates states) const {
     }
     std::sort(sorted.begin(), sorted.end(), [](const auto& a, const auto& b){ return a->get_sorting_layer() < b->get_sorting_layer(); });
     Widget::draw(target, states);
-    states.transform *= get_transform();
     for (const auto& w : sorted) {
         target.draw(*w, states);
     }

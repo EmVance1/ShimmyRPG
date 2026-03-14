@@ -2,8 +2,8 @@
 #include "load_scene.h"
 #include "world/game.h"
 #include "world/scene.h"
-#include "core/uuid.h"
-#include "core/split.h"
+#include "util/uuid.h"
+#include "util/split.h"
 #include "util/json.h"
 #include "data/bundler.h"
 #include <stdexcept>
@@ -35,22 +35,22 @@ static void trait_speech(Entity& entity, const rapidjson::Value& stub, const rap
     if (edef.HasMember("trait_speech")) {
         const auto& dia = JSON_GET(edef, "trait_speech");
         entity.get_actions().emplace_back(Entity::Action::Speak);
-        entity.get_dialogue() = JSON_GET_STR(dia, "source");
+        entity.get_dialogue() = JSON_GET_STR(dia, "file");
     } else if (stub.HasMember("trait_speech")) {
         const auto& dia = JSON_GET(stub, "trait_speech");
         entity.get_actions().emplace_back(Entity::Action::Speak);
-        entity.get_dialogue() = JSON_GET_STR(dia, "source");
+        entity.get_dialogue() = JSON_GET_STR(dia, "file");
     }
 }
 static void trait_examine(Entity& entity, const rapidjson::Value& stub, const rapidjson::Value& edef) {
     if (edef.HasMember("trait_examine")) {
         const auto& dia = JSON_GET(edef, "trait_examine");
         entity.get_actions().emplace_back(Entity::Action::Examine);
-        entity.get_examination() = JSON_GET_STR(dia, "source");
+        entity.get_examination() = JSON_GET_STR(dia, "file");
     } else if (stub.HasMember("trait_examine")) {
         const auto& dia = JSON_GET(stub, "trait_examine");
         entity.get_actions().emplace_back(Entity::Action::Examine);
-        entity.get_examination() = JSON_GET_STR(dia, "source");
+        entity.get_examination() = JSON_GET_STR(dia, "file");
     }
 }
 static void trait_customsort(Entity& entity, const rapidjson::Value& stub, const rapidjson::Value& edef) {

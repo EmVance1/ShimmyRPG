@@ -4,8 +4,8 @@
 
 namespace gui {
 
-Text::Text(const Position& position, const sf::Vector2f& size, const Style& style, const std::string& label)
-    : TextWidget(position, size, style)
+Text::Text(const Position& position, const Sizing& sizing, const Style& style, const std::string& label)
+    : TextWidget(position, sizing, style)
 {
     set_label(label);
 }

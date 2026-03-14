@@ -1,7 +1,7 @@
 #include "pch.h"
-#include "core/split.h"
 #include "util/env.h"
 #include "util/json.h"
+#include "util/split.h"
 #include "world/game.h"
 #include "data/flags.h"
 #include "data/bundler.h"
@@ -57,8 +57,8 @@ void Game::reload(const std::fs::path& _module, int start_area) {
     const auto init_scene = initials[1];
 
     try {
-        shmy::data::Flags::init(shmy::env::pkg_full() / "flags");
-        shmy::data::Bundler::init(shmy::env::pkg_full() / "bundles", p_viewport->box.size);
+        shmy::data::Bundler::init(shmy::env::pkg_full() / "assets", p_viewport->box.size);
+        shmy::data::Flags::init(shmy::env::pkg_full() / "data/flags");
     } catch (const std::exception& e) {
         std::cerr << "load module error - " << e.what() << "\n";
         exit(1);

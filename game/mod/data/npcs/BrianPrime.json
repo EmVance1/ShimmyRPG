@@ -1,0 +1,12 @@
+{
+    "id": "BrianPrime",
+    "name": "Brian",
+    "texture": "NPC_placeholder.friendly",
+    "tags": [ "shimmy_customer" ],
+
+    "trait_movement": { "speed": 1.0 },
+    "trait_speech": { "file": "BrianDialogue.Default" },
+
+    // speculative
+    "trait_variant": { "version": "prime" }, // should ensure no overlapping entity instances
+}

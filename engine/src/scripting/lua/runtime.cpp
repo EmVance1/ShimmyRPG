@@ -1,10 +1,10 @@
 #include "pch.h"
 #include "scripting/lua/runtime.h"
-#include "core/fs.h"
+#include "util/fs.h"
 #include "util/deltatime.h"
 
 
-namespace shmy { namespace lua {
+namespace shmy::lua {
 
 #ifdef SHMY_DEBUG
 #define LUA_CHECK(f, pre) if (f != LUA_OK) { \
@@ -61,7 +61,7 @@ void Runtime::load_anon(const std::string& str) {
     lua_rawgeti(m_L, LUA_REGISTRYINDEX, m_sandboxref);
     lua_setfenv(m_L, -2);
 
-    LUA_CHECK(lua_pcall(m_L, 0, 0, 0), "lua pcall error");
+    LUA_CHECK(lua_pcall(m_L, 0, 0, 0), "lua pcall error (" << str << ")");
 }
 
 void Runtime::load_file(const std::filesystem::path& path) {
@@ -76,7 +76,7 @@ void Runtime::load_file(const std::filesystem::path& path) {
     lua_setfield(m_L, LUA_REGISTRYINDEX, "_locstate");
     m_states.push_back(locstate);
 
-    LUA_CHECK(lua_pcall(m_L, 0, 0, 0), "lua pcall error");
+    LUA_CHECK(lua_pcall(m_L, 0, 0, 0), "lua pcall error (" << path.string() << ")");
 
     lua_pushnil(m_L);
     lua_setfield(m_L, LUA_REGISTRYINDEX, "_locstate");
@@ -102,7 +102,7 @@ void Runtime::on_event(const std::string& event, EventArgs args) {
         } else {
             lua_rawgeti(m_L, LUA_REGISTRYINDEX, args.ref);
         }
-        LUA_CHECK(lua_pcall(m_L, 2, 0, 0), "lua pcall error");
+        LUA_CHECK(lua_pcall(m_L, 2, 0, 0), "lua pcall error (" << event << ")");
     }
 
     for (auto& cb : m_async_handlers[event]) {
@@ -155,13 +155,13 @@ void Runtime::set_paused(bool paused) {
 void Runtime::update() {
     if (m_paused) return;
 
-    const auto deltatime = Time::deltatime();
+    const auto deltatime = shmy::core::Time::deltatime();
 
     for (auto& cb : m_handlers["OnUpdate"]) {
         lua_rawgeti(m_L, LUA_REGISTRYINDEX, cb.func);
         lua_rawgeti(m_L, LUA_REGISTRYINDEX, cb.state);
         lua_pushnumber(m_L, (lua_Number)deltatime);
-        LUA_CHECK(lua_pcall(m_L, 2, 0, 0), "lua pcall error");
+        LUA_CHECK(lua_pcall(m_L, 2, 0, 0), "lua pcall error (OnUpdate)");
     }
 
     for (auto& cb : m_async_handlers["OnUpdate"]) {
@@ -288,5 +288,5 @@ static int s_init_env(lua_State* m_L, const char* api) {
 }
 
 
-} }
+}
 

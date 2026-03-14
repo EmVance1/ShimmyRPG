@@ -176,12 +176,12 @@ std::optional<shmy::sim::Event> Entity::poll_action() {
 
 void Entity::update(const sf::Transform& world_to_screen) {
     if (is_character()) {
-        m_tracker.update(Time::deltatime());
+        m_tracker.update(shmy::core::Time::deltatime());
         const auto pos = m_tracker.get_position();
         m_sprite.setPosition(world_to_screen.transformPoint({pos.x, pos.y}));
         m_outline_sprite.setPosition(m_sprite.getPosition());
         m_collider.position = { pos.x, pos.y };
     }
-    m_sprite.update(Time::deltatime());
+    m_sprite.update(shmy::core::Time::deltatime());
 }
 

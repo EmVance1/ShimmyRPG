@@ -1,30 +1,27 @@
 #pragma once
 #include <SFML/Graphics.hpp>
-#include <functional>
 #include "bases/container.h"
-#include "button.h"
 
 
 namespace gui {
 
-class ButtonList : public Container {
+class VerticalList : public Container {
 private:
-    sf::Vector2f m_blocksize;
+    std::vector<std::string> m_order;
 
 public:
-    ButtonList(const Position& position, const sf::Vector2f& size, const Style& style);
-    ButtonList(const Position& position, const sf::Vector2f& size, const Style& style, const std::vector<std::string>& values);
+    VerticalList(const Position& position, const Sizing& sizing, const Style& style);
+    VerticalList(const Position& position, const Sizing& sizing, const Style& style, const std::vector<std::string>& values);
 
-    static std::shared_ptr<ButtonList> create(const Position& position, const sf::Vector2f& size, const Style& style) {
-        return std::make_shared<ButtonList>(position, size, style);
-    }
-    static std::shared_ptr<ButtonList> create(const Position& position, const sf::Vector2f& size, const Style& style, const std::vector<std::string>& values) {
-        return std::make_shared<ButtonList>(position, size, style, values);
+    static std::shared_ptr<VerticalList> create(const Position& position, const Sizing& sizing, const Style& style) {
+        return std::make_shared<VerticalList>(position, sizing, style);
     }
 
-    std::shared_ptr<Button> add_button(const std::string& value);
-    std::shared_ptr<Button> add_button(const std::string& value, std::function<void()> callback);
-    void clear() { Container::clear(); set_size({get_size().x, 0}); }
+    virtual void add_widget(const std::string& name, const std::shared_ptr<Widget>& widget, bool top = false) override;
+    virtual std::string add_widget(const std::shared_ptr<Widget>& widget, bool top = false) override;
+    virtual std::shared_ptr<Widget> remove_widget(const std::string& id) override;
+    virtual void clear() override;
+    void refresh();
 };
 
 }

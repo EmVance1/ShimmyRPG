@@ -8,45 +8,45 @@ namespace gui {
 
 class TextWidget : public Widget {
 private:
-    sf::Text m_label;
+    std::vector<sf::Text> m_labels;
     std::u32string m_label_value;
-    uint32_t m_character_size = 25;
-    Position::Alignment m_text_alignment = Position::Alignment::TopLeft;
-    float m_text_padding = 5.f;
+    uint32_t m_character_size = 22;
+    float m_text_padding = 0.f;
+    float m_line_spacing = 0.f;
+    float m_char_spacing = 0.f;
+    Position m_textpos = Position{sf::Vector2f(0, 0)};
 
 protected:
-    void apply_text_alignment();
+    void update_textalign();
+    void update_textpos();
+    virtual void update_transform() override;
 
 public:
-    TextWidget(const Position& position, const sf::Vector2f& size, const Style& style)
-        : Widget(position, size, style), m_label(style.font)
-    {
-        m_label.setCharacterSize(m_character_size);
-        m_label.setFillColor(style.text_color_1);
-        apply_text_alignment();
-    }
+    TextWidget(const Position& position, const Sizing& sizing, const Style& style);
+
+    virtual void set_style(const Style& style) override;
+    virtual void set_style_variant(size_t variant) override;
 
     void set_character_size(uint32_t character_size);
     uint32_t get_character_size() const { return m_character_size; }
 
-    void set_text_alignment(Position::Alignment alignment);
-    Position::Alignment get_text_alignment() const { return m_text_alignment; }
+    void set_text_position(Position position);
+    Position get_text_position() const { return m_textpos; }
 
     void set_text_padding(float padding);
     float get_text_padding() const { return m_text_padding; }
 
-    void set_text_color(const sf::Color& color);
-    sf::Color get_text_color() { return m_label.getFillColor(); }
+    void set_text_line_spacing(float spacing);
+    float get_text_line_spacing() const { return m_line_spacing; }
+
+    void set_text_char_spacing(float spacing);
+    float get_text_char_spacing() const { return m_char_spacing; }
 
     void set_label(const std::string& label);
     void set_label(const std::u32string& label);
     const std::u32string& get_label() const { return m_label_value; }
 
-    virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const {
-        Widget::draw(target, states);
-        states.transform *= get_transform();
-        target.draw(m_label, states);
-    }
+    virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 };
 
 }

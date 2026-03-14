@@ -1,9 +1,9 @@
 #include "pch.h"
 #include "scene.h"
-#include "gui/layout.h"
-#include "scripting/lua/runtime.h"
 #include "util/random.h"
 #include "util/deltatime.h"
+#include "gui/layout.h"
+#include "scripting/lua/runtime.h"
 #include "objects/trigger.h"
 #include "game.h"
 #include "data/flags.h"
@@ -133,7 +133,7 @@ void Scene::update() {
     if (sleeping) return;
 
     sprites_sort();
-    camera.update(Time::deltatime());
+    camera.update(shmy::core::Time::deltatime());
     background.update(camera.getFrustum());
     if (game->player().get_tracker().is_moving()) {
         const auto vec = game->player().get_tracker().get_target_position();

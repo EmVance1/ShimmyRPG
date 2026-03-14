@@ -3,6 +3,7 @@
 #include <audio/lib.h>
 #include <unordered_map>
 #include <string>
+#include "util/alloc.h"
 #include "game/simulate.h"
 #include "game/cinematic.h"
 #include "game/event.h"
@@ -48,14 +49,13 @@ private:
     const Portal* m_portal_queue = nullptr;
     uint32_t m_portal_entity;
 
-    Viewport* p_viewport;
+    shmy::core::ArenaAllocator m_frame_arena;
     shmy::EventQueue m_eventqueue;
+    Viewport* p_viewport;
 
 #ifdef SHMY_DEBUG
     Debugger m_debugger;
 #endif
-
-    static Game* emergencies_only;
 
 public:
     enum class Mode {
@@ -87,7 +87,6 @@ public:
     Entity& entity_by_id(const std::string& id);
     const Entity& entity_by_id(const std::string& id) const;
     uint32_t entity_handle(const std::string& id) const;
-    static uint32_t entity_hook(const char* id);
 
     Entity& player();
     const Entity& player() const;
